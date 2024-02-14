@@ -5,16 +5,37 @@ from typing import Callable
 from corewaeasy import CoReManager
 from gwpy.timeseries import TimeSeries
 import numpy as np
+import pandas as pd
+import scipy as sp
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
+from sklearn.model_selection import train_test_split
 
 from . import ioo
 from .detectors import project_et
-from .synthetic import NonwhiteGaussianNoise
+from .synthetic import (NonwhiteGaussianNoise, sine_gaussian_waveform, gaussian_waveform,
+                        ring_down_waveform)
 from .tima import resample
 from .units import *
 
 
+__all__ = ['CoReDataset', 'InjectedDataset', 'SyntheticDataset']
+
+
 class BaseDataset:
+    """Base class for all datasets.
+    
+    ATTRIBUTES
+    ----------
+    strains: dict {eos_i: gw_strains}
+        Latest version of the strains.
+    
+    strains_history: dict {"step": strains_after_that_step}
+        Copy of 'strains' at each step of the process.
+    
+    units: str
+        Flag indicating whether the data is in 'geometrized' or 'IS' units.
+    
+    """
     def __init__(self):
         """Overwrite when inheriting!"""
 
@@ -25,12 +46,12 @@ class BaseDataset:
         self.units = None
         self.distance = None  # Mpc
 
-        # Extra attributes present in this class:
+        # Additional attributes used by the methods of this class:
         self.strains_history = {'initial': deepcopy(self.strains)}
         self.sample_rate = None
         self.max_length = self._find_max_length()
 
-    def resample(self, sample_rate, verbose=False):
+    def resample(self, sample_rate, verbose=False) -> None:
         for eos, key in self.unroll_strain_indices():
             strain = self.strains[eos][key]
             strain_resampled, sf_up, factor_down = resample(strain, sample_rate)
@@ -42,23 +63,24 @@ class BaseDataset:
         self.strains_history[f'resampling-{sample_rate}'] = deepcopy(self.strains)
         self.sample_rate = sample_rate
     
-    def export_strains_to_hdf5(self, file: str):
-        """CAUTION! THIS DOES NOT SAVE THE ENTIRE INSTANCE!"""
+    def export_strains_to_hdf5(self, file: str) -> None:
+        """Export all strains and their metadata to a single HDF5 file."""
 
         ioo.save_to_hdf5(file, data=self.strains, metadata=self.metadata)
     
-    def export_strains_to_gwf(self, path: str, t0_gps: float = 0, verbose=False):
-        """Export all strains to GWF format.
-        
-        CAUTION! THIS DOES NOT SAVE THE ENTIRE INSTANCE!
-        
-        """
+    def export_strains_to_gwf(self,
+                              path: str,
+                              channel: str,  # Name of the channel in which to save strains in the GWFs.
+                              t0_gps: float = 0,
+                              verbose=False) -> None:
+        """Export all strains to GWF format, one file per strain."""
+
         for indices in self.unroll_strain_indices():
             times, strain = self.get_strain(*indices)
             ts = TimeSeries(
                 data=strain,
                 times=t0_gps + times,
-                channel='ET:ET1'
+                channel=channel
             )
             indices = [str(i) for i in indices]
             file = Path(path) / ('strain_' + '_'.join(indices) + '.gwf')
@@ -117,9 +139,262 @@ class BaseDataset:
         return max_length
 
 
-class CleanDataset(BaseDataset):
-    """Manage all operations needed to perform over a noiseless dataset.
+class SyntheticDataset(BaseDataset):
+    """Class for building and managing synthetically generated wavforms.
 
+    Workflow:  # TODO: Update when finished the refactor.
+    1- Generate (random sample) all metadata, i.e. the waveforms'
+        parameters:
+            `Dataset.gen_metadata()`
+    2- Generate the actual dataset, i.e. waveforms, as time series:
+            `Dataset.gen_dataset()`
+    3- Split the dataset into train / test subsets:
+            `Dataset.train_test_split(train_size)
+    4- Generate the background noise to make injections.
+
+    NOTES
+    -----
+    - Times begin at 0; adjust 'peak_time' w.r.t. this choice.
+    - Assumes balanced classes.
+    - Numpy's random state of the RNG is saved before each step in which is
+      called (e.g. metadata generation).
+
+    """
+    classes = {'SG': 'Sine Gaussian', 'G': 'Gaussian', 'RD': 'Ring-Down'}
+    n_classes = len(classes)
+
+    def __init__(self, *, n_samples, length, peak_time, amp_threshold, tukey_alpha,
+                 sample_rate, wave_parameters_limits, train_size, noise_psd, noise_duration,
+                 random_seed=None):
+        self.n_samples = n_samples
+        self.n_samples_total = self.n_samples * self.n_classes
+        self.length = length
+        self.sample_rate = sample_rate
+        self.wave_limits = wave_parameters_limits
+        self.peak_time = peak_time  # Reffered to as 't0' at waveform functions.
+        self.tukey_alpha = tukey_alpha
+        self.amp_threshold = amp_threshold
+        self.train_size = train_size
+        self.random_seed = random_seed
+        self.random_states = {}
+        self.rng = np.random.default_rng(random_seed)
+
+        self.metadata = None
+        self.dataset = None  # (samples, features)
+        self.times = None
+
+        # ORIGINAL (NOISE-FREE) WAVEFORMS
+        # Timeseries data:
+        self.Xtrain = None  # (samples, features)
+        self.Xtest = None   # (samples, features)
+        # Labels:
+        self.Ytrain = None
+        self.Ytest = None
+        # Indices w.r.t. 'self.dataset':
+        self.Itrain = None
+        self.Itest = None
+
+        # BACKGROUND NOISE FOR INJECTIONS
+        self.noise = NonwhiteGaussianNoise(
+            duration=noise_duration, psd=noise_psd, sample_rate=self.sample_rate, rng=self.rng
+        )
+
+    def gen_metadata(self):
+        self.random_states['gen_metadata'] = self.rng.bit_generator.state
+        md = pd.DataFrame(
+            np.zeros((self.n_samples_total, 5), dtype=float),
+            columns=('Class', 'f0', 'Q', 'hrss', 'duration')
+        )
+        for iclass, class_ in enumerate(self.classes):
+            for i in range(iclass*self.n_samples, (iclass+1)*self.n_samples):
+                f0, Q, hrss, duration = self._gen_parameters[class_](self)
+                md.at[i, 'Class'] = class_
+                md.at[i, 'f0'] = f0
+                md.at[i, 'Q'] = Q
+                md.at[i, 'hrss'] = hrss
+                md.at[i, 'duration'] = duration  # Will be adjusted afterwards to take into account
+                                                 # the amplitude threshold.
+
+        self.metadata = md
+
+    def _gen_parameters_sine_gaussian(self):
+        """Generate random parameters for a single Sine Gaussian."""
+
+        lims = self.wave_limits
+        thres = self.amp_threshold
+        f0   = self.rng.integers(lims['mf0'], lims['Mf0'])  # Central frequency
+        Q    = self.rng.integers(lims['mQ'], lims['MQ']+1)  # Quality factor
+        hrss = self.rng.uniform(lims['mhrss'], lims['Mhrss'])
+        duration = 2 * Q / (np.pi * f0) * np.sqrt(-np.log(thres))
+        
+        return (f0, Q, hrss, duration)
+
+    def _gen_parameters_gaussian(self):
+        """Generate random parameters for a single Gaussian."""
+
+        lims = self.wave_limits
+        f0   = None  #  Casted to np.nan afterwards.
+        Q    = None  #-/
+        hrss = self.rng.uniform(lims['mhrss'], lims['Mhrss'])
+        duration = self.rng.uniform(lims['mT'], lims['MT'])  # Duration
+        
+        return (f0, Q, hrss, duration)
+
+    def _gen_parameters_ring_down(self):
+        """Generate random parameters for a single Ring-Down."""
+
+        lims = self.wave_limits
+        thres = self.amp_threshold
+        f0   = self.rng.integers(lims['mf0'], lims['Mf0'])  # Central frequency
+        Q    = self.rng.integers(lims['mQ'], lims['MQ']+1)  # Quality factor
+        hrss = self.rng.uniform(lims['mhrss'], lims['Mhrss'])
+        duration = -np.sqrt(2) * Q / (np.pi * f0) * np.log(thres)
+        
+        return (f0, Q, hrss, duration)
+    
+    wave_functions = {
+        'SG': sine_gaussian_waveform,
+        'G': gaussian_waveform,
+        'RD': ring_down_waveform
+    }
+
+    _gen_parameters = {
+        'SG': _gen_parameters_sine_gaussian,
+        'G': _gen_parameters_gaussian,
+        'RD': _gen_parameters_ring_down
+    }
+
+    def gen_dataset(self):
+        if self.metadata is None:
+            raise AttributeError("'metadata' needs to be generated first!")
+
+        self.times = np.arange(0, self.length/self.sample_rate, 1/self.sample_rate)
+        self.dataset = np.empty((self.n_samples_total, self.length))
+        
+        for i in range(self.n_samples_total):
+            params = self.metadata.loc[i].to_dict()
+            class_ = params['Class']
+            self.dataset[i] = self.wave_functions[class_](
+                self, self.times, t0=self.peak_time, **params
+            )
+
+        self._apply_threshold_windowing()
+
+    def _apply_threshold_windowing(self):
+        """Shrink waves in the dataset and update its duration in the metadata.
+
+        Shrink them according to their pre-computed duration in the metadata to
+        avoid almost-but-not-zero edges, and correct those marginal durations
+        longer than the window.
+
+        """
+        for i in range(self.n_samples_total):
+            duration = self.metadata.at[i,'duration']
+            ref_length = int(duration * self.sample_rate)
+            
+            if self.metadata.at[i,'Class'] == 'RD':
+                # Ring-Down waves begin at the center.
+                i0 = self.length // 2
+                i1 = i0 + ref_length
+            else:
+                # SG and G are both centered.
+                i0 = (self.length - ref_length) // 2
+                i1 = self.length - i0
+
+            new_lenght = i1 - i0
+            if i0 < 0:
+                new_lenght += i0
+                i0 = 0
+            if i1 > self.length:
+                new_lenght -= i1 - self.length
+                i1 = self.length
+
+            window = sp.signal.windows.tukey(new_lenght, alpha=self.tukey_alpha)
+            self.dataset[i,:i0] = 0
+            self.dataset[i,i0:i1] *= window
+            self.dataset[i,i1:] = 0
+
+            self.metadata.at[i,'duration'] = new_lenght / self.sample_rate
+
+    def train_test_split(self):
+        labels = np.repeat(range(self.n_classes), self.n_samples)
+        indices = range(self.n_samples_total)  # keep track of samples after shuffle.
+        
+        # WARNING: This function returns A COPY, so if I modify any of the
+        # original data (e.g. a change in units) I will need to either apply
+        # the exact same transformation to the splitted data or compute
+        # again the split, making sure the random distribution is equal or
+        # at least tracked!!!
+        Xtrain, Xtest, Ytrain, Ytest, Itrain, Itest = train_test_split(
+            self.dataset, labels, indices, train_size=self.train_size,
+            random_state=self.random_seed, shuffle=True, stratify=labels
+        )
+
+        # Timeseries data:
+        self.Xtrain = Xtrain
+        self.Xtest = Xtest
+        # Labels:
+        self.Ytrain = Ytrain
+        self.Ytest = Ytest
+        # Indices:
+        self.Itrain = Itrain
+        self.Itest = Itest
+
+    def setup_all(self):
+        self.gen_metadata()
+        self.gen_dataset()
+        self.train_test_split()
+
+    def inject_train_test(self, *, snr, noise_pos, highpass_orders=None):
+        """Inject training and testing sets into the pre-computed noise.
+
+        Inject training and testing sets into the pre-computed noise at the
+        given index position w.r.t. the noise array, at the specified SNR.
+        Optionally performs a highpass filter to remove lowest frequencies.
+
+        highpass_orders: list, optional
+            Orders [N, wn] of the Butterworth filter applied to perform the
+            highpass.
+
+        """
+        Xtrain = self._inject_signals(self.Xtrain, snr=snr, position=noise_pos)
+        Xtest = self._inject_signals(self.Xtest, snr=snr, position=noise_pos)
+
+        if highpass_orders is not None:
+            N, wn = highpass_orders
+            Xtrain = self._highpass_signals(Xtrain, N=N, wn=wn)
+            Xtest = self._highpass_signals(Xtest, N=N, wn=wn)
+
+        return Xtrain, Xtest
+
+    def _inject_signals(self, signals, *, snr, position):
+        injections = np.empty_like(signals)
+        n = signals.shape[0]
+        for i in range(n):
+            injections[i], _ = self.noise.inject(
+                signals[i], snr=snr, sample_rate=self.sample_rate, pos=position, l2_normed=False
+            )
+
+        return injections
+
+    def _highpass_signals(self, signals, *, N, wn):
+        filtered = np.empty_like(signals)
+        n = signals.shape[0]
+        for i in range(n):
+            filtered[i] = self.noise.apply_frequency_filter(
+                signals[i], N=N, wn=wn, btype='highpass'
+            )
+
+        return filtered        
+
+
+class CoReDataset(BaseDataset):
+    """Manage all operations needed to perform over a noiseless CoRe dataset.
+
+    Initial strains and metadata are expected to be obtained from a CoReManager
+    instance.
+
+    Workflow:  # TODO: Improve this shit
     - Load the strains from a CoreWaEasy instance, discarding or cropping those
       indicated at the parameter file.
     - Resample.
@@ -156,8 +431,8 @@ class CleanDataset(BaseDataset):
         self.inclination = inclination
         self.phi = phi
 
-        # Note: I'm passing 'self.units' as return value just for consistence,
-        # it could've been set its initial value ('IS') here.
+        # Note: I'm passing 'self.units' as return value just for consistence;
+        # its initial value ('IS') could've been set here directly though.
         self.strains, self.metadata, self.units = self._get_strain_and_metadata(cdb)
         self.strains_history = {'initial': deepcopy(self.strains)}
         self.max_length = self._find_max_length()
@@ -304,7 +579,7 @@ class InjectedDataset(BaseDataset):
 
     """
     def __init__(self,
-                 clean_dataset: CleanDataset, *,
+                 clean_dataset: BaseDataset, *,
                  psd: np.ndarray | Callable,
                  noise_length: int,
                  freq_cutoff: int | float,
@@ -312,10 +587,12 @@ class InjectedDataset(BaseDataset):
                  rng: np.random.Generator | int):
         """Initialize the injected dataset from a clean dataset.
 
-        Relevant attributes are inherited from the CleanDataset instance.
+        Relevant attributes are inherited from the clean dataset instance,
+        which can be any inherited from BaseDataset whose strains have not
+        been injected yet.
         
-        WARNING: This does not perform the injections! For that call the method
-        'gen_injections'.
+        WARNING: This method does not perform the injections! For that use the
+        method 'gen_injections'.
         
         """
         # Inherit clean strain instance attributes.

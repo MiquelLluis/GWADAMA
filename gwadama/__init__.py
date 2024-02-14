@@ -10,14 +10,14 @@ DEPENDENCIES
 ------------
 bilby
 clawdia
-corewaeasy
 gwpy
 h5py
 numpy
+pandas
 scipy
 yaml
 
 """
-from .datasets import CleanDataset, InjectedDataset
+from .datasets import *
 from . import ioo
 from . import synthetic

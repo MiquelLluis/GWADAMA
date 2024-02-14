@@ -316,7 +316,7 @@ def sine_gaussian_waveform(times: np.ndarray,
         Time of the peak.
     
     f0: float
-        Peak frequency.
+        Central frequency.
     
     Q: float
         Quality factor of the wave.
@@ -400,7 +400,7 @@ def ring_down_waveform(times: np.ndarray,
         Time of the peak.
 
     f0: float
-        Peak frequency.
+        Central frequency.
     
     Q: float
         Quality factor of the wave.
