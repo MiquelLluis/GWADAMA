@@ -305,8 +305,31 @@ def sine_gaussian_waveform(times: np.ndarray,
                            Q: float,
                            hrss: float,
                            **_) -> np.ndarray:
-    """Note: Other kwargs will be ignored for compatibility reasons."""
-
+    """Generate a Sine-Gaussian-like waveform.
+    
+    PARAMETERS
+    ----------
+    times: NDArray
+        Time samples.
+    
+    t0: float
+        Time of the peak.
+    
+    f0: float
+        Peak frequency.
+    
+    Q: float
+        Quality factor of the wave.
+    
+    hrss: float
+        Root sum squared amplitude of the wave.
+        REF: (2015) Powell J, Trifirò D, Cuoco E, Heng I S and Cavaglià M,
+                Class. Quantum Grav. 32 215012.
+    
+    **_:
+        Will be ignored for compatibility reasons.
+    
+    """
     h0  = np.sqrt(np.sqrt(2) * np.pi * f0 / Q) * hrss
     env = h0 * np.exp( -(np.pi * f0 / Q * (times-t0)) ** 2)
     arg = 2 * np.pi * f0 * (times - t0)
@@ -319,17 +342,37 @@ def gaussian_waveform(times: np.ndarray,
                       t0: float,
                       hrss: float,
                       duration: float,
+                      amp_threshold: float,
                       **_) -> np.ndarray:
-    """Note: Other kwargs will be ignored for compatibility reasons.
+    """Generate a Gaussian-like waveform.
     
-    T: float
-        Duration in seconds.
-
+    PARAMETERS
+    ----------
+    times: NDArray
+        Time samples.
+    
+    t0: float
+        Time of the peak.
+    
+    hrss: float
+        Root sum squared amplitude of the wave.
+        REF: (2015) Powell J, Trifirò D, Cuoco E, Heng I S and Cavaglià M,
+                Class. Quantum Grav. 32 215012.
+    
+    duration: float
+        In seconds.
+    
+    amp_threshold: float
+        Fraction w.r.t. the maximum absolute amplitude of the wave where to
+        consider the amplitude of the wave zero.
+        Here is used to compute the effective duration of the wave.
+    
+    **_:
+        Will be ignored for compatibility reasons.
+    
     """
-    thres = self.amp_threshold
-    T = duration
-    h0  = (-8*np.log(thres))**(1/4) * hrss / np.sqrt(T)
-    env = h0 * np.exp(4 * np.log(thres) * ((times-t0) / T)**2)
+    h0  = (-8*np.log(amp_threshold))**(1/4) * hrss / np.sqrt(duration)
+    env = h0 * np.exp(4 * np.log(amp_threshold) * ((times-t0) / duration)**2)
 
     return env
 
@@ -341,10 +384,34 @@ def ring_down_waveform(times: np.ndarray,
                        Q: float,
                        hrss: float,
                        **_) -> np.ndarray:
-    """Note: Other kwargs will be ignored for compatibility reasons.
+    """Generate a Sine-Gaussian-like waveform.
 
-    This waveform has its peak at the beginning, therefore it needs to be
-    manually shifted to be centered with the rest of the waveforms' peaks.
+    This waveform has its peak at the beginning. In order to synchronise it
+    with other waveforms which have their peak at the center, it is recommended
+    to use the 't0' parameter.
+
+    
+    PARAMETERS
+    ----------
+    times: NDArray
+        Time samples.
+    
+    t0: float
+        Time of the peak.
+
+    f0: float
+        Peak frequency.
+    
+    Q: float
+        Quality factor of the wave.
+    
+    hrss: float
+        Root sum squared amplitude of the wave.
+        REF: (2015) Powell J, Trifirò D, Cuoco E, Heng I S and Cavaglià M,
+                Class. Quantum Grav. 32 215012.
+    
+    **_:
+        Will be ignored for compatibility reasons.
 
     """
     t0_ = 0
@@ -353,8 +420,8 @@ def ring_down_waveform(times: np.ndarray,
     arg = 2 * np.pi * f0 * (times - t0_)
 
     h = env * np.sin(arg)
-    pad = int(t0 * self.sample_rate)
-    h = np.pad(h, pad_width=(pad, 0))[:-pad]  # Largest wave will be trimmed
-                                                # at its end by 0.03s.
+    sample_rate = int(1/np.median(np.diff(times)))
+    pad = int(t0 * sample_rate)
+    h = np.pad(h, pad_width=(pad, 0))[:-pad]
 
     return h
