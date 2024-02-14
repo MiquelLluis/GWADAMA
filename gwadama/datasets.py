@@ -275,10 +275,7 @@ class CleanDataset(BaseDataset):
         CAUTION! THIS DOES NOT SAVE THE ENTIRE INSTANCE!
         
         """
-        with h5py.File(file, 'w') as hf:
-            save_to_hdf5_recursive(
-                data_dict=self.strains, metadata_dict=self.metadata, h5_group=hf
-            )
+        ioo.save_to_hdf5(file=file, data=self.strains, metadata=self.metadata)
 
 
 class InjectedDataset(BaseDataset):

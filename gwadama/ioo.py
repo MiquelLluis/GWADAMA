@@ -54,7 +54,7 @@ def save_to_hdf5(file: str, *, data: dict, metadata: dict) -> None:
     """
     with h5py.File(file, 'w') as hf:
         _save_to_hdf5_recursive(
-            h5_group=hf, data=self.strains, metadata=self.metadata
+            h5_group=hf, data=data, metadata=metadata
         )
     
 
