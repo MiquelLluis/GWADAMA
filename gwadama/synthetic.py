@@ -295,3 +295,66 @@ class NonwhiteGaussianNoise:
         filtered = sp.signal.sosfiltfilt(sos, signal)
 
         return filtered
+
+
+
+def sine_gaussian_waveform(times: np.ndarray,
+                           *,
+                           t0: float,
+                           f0: float,
+                           Q: float,
+                           hrss: float,
+                           **_) -> np.ndarray:
+    """Note: Other kwargs will be ignored for compatibility reasons."""
+
+    h0  = np.sqrt(np.sqrt(2) * np.pi * f0 / Q) * hrss
+    env = h0 * np.exp( -(np.pi * f0 / Q * (times-t0)) ** 2)
+    arg = 2 * np.pi * f0 * (times - t0)
+    
+    return env * np.sin(arg)
+
+
+def gaussian_waveform(times: np.ndarray,
+                      *,
+                      t0: float,
+                      hrss: float,
+                      duration: float,
+                      **_) -> np.ndarray:
+    """Note: Other kwargs will be ignored for compatibility reasons.
+    
+    T: float
+        Duration in seconds.
+
+    """
+    thres = self.amp_threshold
+    T = duration
+    h0  = (-8*np.log(thres))**(1/4) * hrss / np.sqrt(T)
+    env = h0 * np.exp(4 * np.log(thres) * ((times-t0) / T)**2)
+
+    return env
+
+
+def ring_down_waveform(times: np.ndarray,
+                       *,
+                       t0: float,
+                       f0: float,
+                       Q: float,
+                       hrss: float,
+                       **_) -> np.ndarray:
+    """Note: Other kwargs will be ignored for compatibility reasons.
+
+    This waveform has its peak at the beginning, therefore it needs to be
+    manually shifted to be centered with the rest of the waveforms' peaks.
+
+    """
+    t0_ = 0
+    h0  = np.sqrt(np.sqrt(2) * np.pi * f0 / Q) * hrss
+    env = h0 * np.exp(- np.pi / np.sqrt(2) * f0 / Q * (times - t0_))
+    arg = 2 * np.pi * f0 * (times - t0_)
+
+    h = env * np.sin(arg)
+    pad = int(t0 * self.sample_rate)
+    h = np.pad(h, pad_width=(pad, 0))[:-pad]  # Largest wave will be trimmed
+                                                # at its end by 0.03s.
+
+    return h

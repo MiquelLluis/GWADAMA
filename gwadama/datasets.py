@@ -9,7 +9,7 @@ from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 
 from . import ioo
 from .detectors import project_et
-from .noise_symulation import NonwhiteGaussianNoise
+from .synthetic import NonwhiteGaussianNoise
 from .tima import resample
 from .units import *
 
