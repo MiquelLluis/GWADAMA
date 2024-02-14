@@ -25,7 +25,10 @@ class BaseDataset:
     
     ATTRIBUTES
     ----------
-    strains: dict {eos_i: gw_strains}
+    classes: list[str]
+        List of labels, one per class (category).
+
+    strains: dict {class_i: gw_strains}
         Latest version of the strains.
     
     strains_history: dict {"step": strains_after_that_step}
@@ -39,7 +42,7 @@ class BaseDataset:
         """Overwrite when inheriting!"""
 
         # Need to be defined:
-        self.eos: list[str] = None
+        self.classes: list[str] = None
         self.strains = None
         self.metadata = None
         self.units = None
@@ -51,13 +54,13 @@ class BaseDataset:
         self.max_length = self._find_max_length()
 
     def resample(self, sample_rate, verbose=False) -> None:
-        for eos, key in self.unroll_strain_indices():
-            strain = self.strains[eos][key]
+        for clas, key in self.unroll_strain_indices():
+            strain = self.strains[clas][key]
             strain_resampled, sf_up, factor_down = resample(strain, sample_rate)
-            self.strains[eos][key] = strain_resampled
+            self.strains[clas][key] = strain_resampled
             if verbose:
                 print(
-                    f"Strain {eos}::{key} up. to {sf_up} Hz, down by factor {factor_down}"
+                    f"Strain {clas}::{key} up. to {sf_up} Hz, down by factor {factor_down}"
                 )
         self.strains_history[f'resampling-{sample_rate}'] = deepcopy(self.strains)
         self.sample_rate = sample_rate
@@ -95,17 +98,17 @@ class BaseDataset:
         Return the unrolled combinations of all strains by a hierarchical
         recursive search. Useful to iterate over all the strains.
         
-        E.g: A strain dataset with a two-level hierarchy, EOS-key, can be
+        E.g: A strain dataset with a two-level hierarchy, class-key, can be
         iterated over doing:
         ```
-        for eos, key in self._unroll_strain_indices():
-            do_stuff(eos, key)
+        for clas, key in self._unroll_strain_indices():
+            do_stuff(clas, key)
         ```
         instead of:
         ```
-        for eos in self.eos:
-            for key in self.strains[eos].keys():
-                do_stuff(eos, key)
+        for clas in self.classes:
+            for key in self.strains[clas].keys():
+                do_stuff(clas, key)
         ```
         
         RETURNS
@@ -130,8 +133,8 @@ class BaseDataset:
         """Return the length of the longest signal present in strains."""
 
         max_length = 0
-        for eos, key in self.unroll_strain_indices():
-            l = self.strains[eos][key].shape[-1]
+        for clas, key in self.unroll_strain_indices():
+            l = self.strains[clas][key].shape[-1]
             if l > max_length:
                 max_length = l
 
@@ -393,9 +396,12 @@ class CoReDataset(BaseDataset):
     Initial strains and metadata are expected to be obtained from a CoReManager
     instance.
 
-    Workflow:  # TODO: Improve this shit
+    NOTE: By default this class treats as different classes (categories) each
+    equation of state (EOS) present in the CoReManager instance.
+
+    Workflow:  # TODO: Update this shit
     - Load the strains from a CoreWaEasy instance, discarding or cropping those
-      indicated at the parameter file.
+      indicated with their respective arguments.
     - Resample.
     - Project onto the ET detector arms.
     - Change units and scale from geometrized to IS and vice versa.
@@ -417,12 +423,12 @@ class CoReDataset(BaseDataset):
     def __init__(self,
                  cdb: ioo.CoReManager,
                  *,
-                 eos: list[str],
+                 classes: list[str],
                  discarded: set,
                  cropped: dict,
                  # Source:
                  distance: float, inclination: float, phi: float):
-        self.eos = eos
+        self.classes = classes
         self.discarded = discarded
         self.cropped = cropped
         # Source parameters
@@ -442,7 +448,7 @@ class CoReDataset(BaseDataset):
         strains = self._init_strains_dict()
         metadata = self._init_strains_dict()
         units = 'IS'  # CoReManager.gen_strain() method's output.
-        for eos in self.eos:
+        for eos in self.classes:
             # Get and filter out GW simulations.
             keys = set(cdb.filter_by('id_eos', eos).index)
             try:
@@ -479,7 +485,7 @@ class CoReDataset(BaseDataset):
         return strains, metadata, units
 
     def _init_strains_dict(self) -> dict:
-        return {eos: {} for eos in self.eos}
+        return {clas: {} for clas in self.classes}
     
     def project(self, *, detector: str, ra, dec, geo_time, psi):
         """Project strains into the ET detector at specified coordinates.
@@ -500,13 +506,13 @@ class CoReDataset(BaseDataset):
         
         """
         project_pars = dict(ra=ra, dec=dec, geocent_time=geo_time, psi=psi)
-        for eos, key in self.unroll_strain_indices():
-            times, hp, hc = self.strains[eos][key]
+        for clas, key in self.unroll_strain_indices():
+            times, hp, hc = self.strains[clas][key]
             projected = project_et(
                 hp, hc, parameters=project_pars, sf=self.sample_rate, 
                 nfft=2*self.sample_rate, detector=detector
             )
-            self.strains[eos][key] = np.stack([times, projected])
+            self.strains[clas][key] = np.stack([times, projected])
         self.strains_history['projected'] = deepcopy(self.strains)
     
     def convert_to_IS_units(self) -> None:
@@ -515,12 +521,12 @@ class CoReDataset(BaseDataset):
         if self.units == 'IS':
             raise RuntimeError("data already in IS units")
 
-        for eos, key in self.unroll_strain_indices():
-            mass = self.metadata[eos][key]['mass']
+        for clas, key in self.unroll_strain_indices():
+            mass = self.metadata[clas][key]['mass']
             # Time
-            self.strains[eos][key][0] *= mass * MSUN_SEC
+            self.strains[clas][key][0] *= mass * MSUN_SEC
             # Strain
-            self.strains[eos][key][1:] *=  mass * MSUN_MET / (self.distance * MPC_MET)
+            self.strains[clas][key][1:] *=  mass * MSUN_MET / (self.distance * MPC_MET)
 
         self.units = 'IS'
         # NOTE: No need to save a copy into 'strains_history' since the
@@ -532,12 +538,12 @@ class CoReDataset(BaseDataset):
         if self.units == 'geometrized':
             raise RuntimeError("data already in geometrized units")
 
-        for eos, key in self.unroll_strain_indices():
-            mass = self.metadata[eos][key]['mass']
+        for clas, key in self.unroll_strain_indices():
+            mass = self.metadata[clas][key]['mass']
             # Time
-            self.strains[eos][key][0] /= mass * MSUN_SEC
+            self.strains[clas][key][0] /= mass * MSUN_SEC
             # Strain
-            self.strains[eos][key][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
+            self.strains[clas][key][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
 
         self.units = 'geometrized'
         # NOTE: No need to save a copy into 'strains_history' since the
@@ -595,7 +601,7 @@ class InjectedDataset(BaseDataset):
         
         """
         # Inherit clean strain instance attributes.
-        self.eos = clean_dataset.eos
+        self.classes = clean_dataset.classes
         self.sample_rate = clean_dataset.sample_rate
         self.strains_clean = deepcopy(clean_dataset.strains)
         self.metadata = deepcopy(clean_dataset.metadata)
@@ -680,7 +686,7 @@ class InjectedDataset(BaseDataset):
         in the metadata attribute.
         
         """
-        return {eos: {key: {} for key in self.metadata[eos]} for eos in self.eos}
+        return {clas: {key: {} for key in self.metadata[clas]} for clas in self.classes}
     
     def gen_injections(self, snr: int | float | list, pad: int = 0) -> None:
         """Inject all strains in simulated ET noise with the given SNR values.
@@ -721,8 +727,8 @@ class InjectedDataset(BaseDataset):
             convert_back = False
         
         sr = self.sample_rate
-        for eos, key in unroll_nested_dictionary_keys(self.strains_clean):
-            gw_clean = self.strains_clean[eos][key]
+        for clas, key in unroll_nested_dictionary_keys(self.strains_clean):
+            gw_clean = self.strains_clean[clas][key]
             strain_clean_padded = np.pad(gw_clean[1], pad)
             t0 = gw_clean[0,0] - pad/sr
             t1 = gw_clean[0,-1] + pad/sr
@@ -736,7 +742,7 @@ class InjectedDataset(BaseDataset):
                     strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order
                 )
                 injected, _ = self.noise.inject(strain_clean_padded, snr=snr_)
-                self.strains[eos][key][snr_] = np.stack([new_times, injected])
+                self.strains[clas][key][snr_] = np.stack([new_times, injected])
         
         # Record new SNR values and related padding.
         self.snr_list += snr_list
@@ -779,36 +785,36 @@ class InjectedDataset(BaseDataset):
         # operation is reversible.
     
     def _convert_strain_to_IS_units(self) -> None:
-        for eos, key, snr in self.unroll_strain_indices():
-            mass = self.metadata[eos][key]['mass']
+        for clas, key, snr in self.unroll_strain_indices():
+            mass = self.metadata[clas][key]['mass']
             # Time
-            self.strains[eos][key][snr][0] *= mass * MSUN_SEC
+            self.strains[clas][key][snr][0] *= mass * MSUN_SEC
             # Strain
-            self.strains[eos][key][snr][1:] *=  mass * MSUN_MET / (self.distance * MPC_MET)
+            self.strains[clas][key][snr][1:] *=  mass * MSUN_MET / (self.distance * MPC_MET)
     
     def _convert_strain_clean_to_IS_units(self) -> None:
-        for eos, key in self.unroll_strain_indices():
-            mass = self.metadata[eos][key]['mass']
+        for clas, key in self.unroll_strain_indices():
+            mass = self.metadata[clas][key]['mass']
             # Time
-            self.strains_clean[eos][key][0] *= mass * MSUN_SEC
+            self.strains_clean[clas][key][0] *= mass * MSUN_SEC
             # Strain
-            self.strains_clean[eos][key][1:] *=  mass * MSUN_MET / (self.distance * MPC_MET)
+            self.strains_clean[clas][key][1:] *=  mass * MSUN_MET / (self.distance * MPC_MET)
     
     def _convert_strain_to_scaled_geometrized_units(self) -> None:
-        for eos, key, snr in self.unroll_strain_indices():
-            mass = self.metadata[eos][key]['mass']
+        for clas, key, snr in self.unroll_strain_indices():
+            mass = self.metadata[clas][key]['mass']
             # Time
-            self.strains[eos][key][snr][0] /= mass * MSUN_SEC
+            self.strains[clas][key][snr][0] /= mass * MSUN_SEC
             # Strain
-            self.strains[eos][key][snr][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
+            self.strains[clas][key][snr][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
     
     def _convert_strain_clean_to_scaled_geometrized_units(self) -> None:
-        for eos, key in self.unroll_strain_indices():
-            mass = self.metadata[eos][key]['mass']
+        for clas, key in self.unroll_strain_indices():
+            mass = self.metadata[clas][key]['mass']
             # Time
-            self.strains_clean[eos][key][0] /= mass * MSUN_SEC
+            self.strains_clean[clas][key][0] /= mass * MSUN_SEC
             # Strain
-            self.strains_clean[eos][key][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
+            self.strains_clean[clas][key][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
 
 
 def unroll_nested_dictionary_keys(dictionary: dict) -> list:
