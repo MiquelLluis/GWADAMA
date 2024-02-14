@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 import scipy.signal
 
-from .estimators import find_merger
+from clawdia.estimators import find_merger
 
 
 
