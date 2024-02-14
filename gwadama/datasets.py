@@ -2,7 +2,6 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Callable
 
-from corewaeasy import CoReManager
 from gwpy.timeseries import TimeSeries
 import numpy as np
 import pandas as pd
@@ -416,7 +415,7 @@ class CoReDataset(BaseDataset):
 
     """
     def __init__(self,
-                 cdb: CoReManager,
+                 cdb: ioo.CoReManager,
                  *,
                  eos: list[str],
                  discarded: set,
@@ -439,7 +438,7 @@ class CoReDataset(BaseDataset):
 
         self.sample_rate = None  # Set up after resampling
     
-    def _get_strain_and_metadata(self, cdb: CoReManager) -> dict[dict[np.ndarray]]:
+    def _get_strain_and_metadata(self, cdb: ioo.CoReManager) -> dict[dict[np.ndarray]]:
         strains = self._init_strains_dict()
         metadata = self._init_strains_dict()
         units = 'IS'  # CoReManager.gen_strain() method's output.
