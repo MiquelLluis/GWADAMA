@@ -15,8 +15,7 @@ class NonwhiteGaussianNoise:
     ¡¡¡OLD VERSION FROM MASTER'S THESIS!!! (Tweaked)
 
     I changed several things:
-    - Now the PSD argument is expected to be a function which takes frequency
-      points as argument and returns the desired PSD interpolated.
+    - Now the PSD argument can be either a function or an array.
 
     Attributes
     ----------
