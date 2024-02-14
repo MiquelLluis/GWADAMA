@@ -15,6 +15,9 @@ h5py
 numpy
 pandas
 scipy
+sklearn
+tqdm
+watpy
 yaml
 
 """
