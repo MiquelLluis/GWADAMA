@@ -69,28 +69,6 @@ class BaseDataset:
         """Export all strains and their metadata to a single HDF5 file."""
 
         ioo.save_to_hdf5(file, data=self.strains, metadata=self.metadata)
-    
-    def export_strains_to_gwf(self,
-                              path: str,
-                              channel: str,  # Name of the channel in which to save strains in the GWFs.
-                              t0_gps: float = 0,
-                              verbose=False) -> None:
-        """Export all strains to GWF format, one file per strain."""
-
-        for indices in self.unroll_strain_indices():
-            times, strain = self.get_strain(*indices)
-            ts = TimeSeries(
-                data=strain,
-                times=t0_gps + times,
-                channel=channel
-            )
-            indices = [str(i) for i in indices]
-            file = Path(path) / ('strain_' + '_'.join(indices) + '.gwf')
-            ts.write(file)
-
-            if verbose:
-                print("Strain exported to", file)
-
 
     def unroll_strain_indices(self) -> list:
         """Return the unrolled combinations of all strains.
@@ -122,6 +100,12 @@ class BaseDataset:
         return unrolled
     
     def get_strain(self, *indices) -> np.ndarray:
+        """Get a single strain from the complete index coordinates.
+        
+        This is just a shortcut to avoid having to write several squared
+        brackets.
+        
+        """
         strain = self.strains
         for key in indices:
             strain = strain[key]
@@ -577,15 +561,19 @@ class InjectedDataset(BaseDataset):
         Clean strains used for injection.
     
     psd: NDArray | function
-        Chosen PSD of the ET detector. If NDArray, it must have shape
+        Chosen PSD of the simulated detector. If NDArray, it must have shape
         (2, psd_length) so that:
             psd[0] = time samples
             psd[1] = psd samples
+    
+    detector: str
+        Name of the simulated detector.
 
     """
     def __init__(self,
                  clean_dataset: BaseDataset, *,
                  psd: np.ndarray | Callable,
+                 detector: str,
                  noise_length: int,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
@@ -611,6 +599,7 @@ class InjectedDataset(BaseDataset):
 
         # Noise instance and related attributes.
         self.psd, self._psd = self._setup_psd(psd)
+        self.detector = detector
         self.freq_cutoff = freq_cutoff
         self.freq_butter_order = freq_butter_order
         self.rng = np.random.default_rng(rng)
@@ -689,7 +678,7 @@ class InjectedDataset(BaseDataset):
         return {clas: {key: {} for key in self.metadata[clas]} for clas in self.classes}
     
     def gen_injections(self, snr: int | float | list, pad: int = 0) -> None:
-        """Inject all strains in simulated ET noise with the given SNR values.
+        """Inject all strains in simulated noise with the given SNR values.
 
         - The SNR is computed using a matched filter against the noise PSD.
         - If `pad > 0`, it also updates the time arrays.
@@ -815,6 +804,33 @@ class InjectedDataset(BaseDataset):
             self.strains_clean[clas][key][0] /= mass * MSUN_SEC
             # Strain
             self.strains_clean[clas][key][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
+    
+    def export_strains_to_gwf(self,
+                              path: str,
+                              channel: str,  # Name of the channel in which to save strains in the GWFs.
+                              t0_gps: float = 0,
+                              verbose=False) -> None:
+        """Export all strains to GWF format, one file per strain."""
+
+        for indices in self.unroll_strain_indices():
+            times, strain = self.get_strain(*indices)
+            ts = TimeSeries(
+                data=strain,
+                times=t0_gps + times,
+                channel=channel
+            )
+            key = indices[1].replace(':', '_') + '_snr' + str(indices[2])
+            fields = [
+                self.detector,
+                key,
+                str(int(t0_gps)),
+                str(int(ts.duration.value * 1000))  # In milliseconds
+            ]
+            file = Path(path) / ('-'.join(fields) + '.gwf')
+            ts.write(file)
+
+            if verbose:
+                print("Strain exported to", file)
 
 
 def unroll_nested_dictionary_keys(dictionary: dict) -> list:
