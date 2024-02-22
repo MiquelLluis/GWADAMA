@@ -34,7 +34,7 @@ class BaseDataset:
         range of lengths.
         The class key is the name of the class, a string which must exist in
         the 'classes' attribute.
-        The 'key' is an identifier of each strain.
+        The 'key' is an unique identifier for each strain.
     
     labels: NDArray[int]
         Indices of the classes, one per waveform.
@@ -142,6 +142,26 @@ class BaseDataset:
             strain = strain[key]
         
         return strain
+
+    def items(self):
+        """Return a new view of the dataset's items with unrolled indices.
+
+        Each iteration consists on a tuple containing all the nested keys in
+        'self.strains' along with the corresponding strain, (clas, key, *, strain).
+        
+        It can be thought as the same as what Python's `dict.items()` does.
+        Useful to quickly iterate over all items in the dataset.
+
+        Basic example with only 2-level nested dictionary of strains:
+        ```
+        for clas, key, strain in dataset.items():
+            print(f"Working with strain {key} of class {clas}...")
+            do_something(strain)
+        ```
+        
+        """
+        for indices in self.unroll_strain_indices():
+            yield (*indices, self.get_strain(*indices))
 
     def _init_strains_dict(self) -> dict:
         return {clas: {} for clas in self.classes}
@@ -691,14 +711,28 @@ class SyntheticDataset(BaseDataset):
 
         self._apply_threshold_windowing()
     
+    def _random_log_uniform(self, min, max):
+        """Returns a random number between [min, max] spaced logarithmically."""
+
+        exponent = self.rng.uniform(np.log10(min), np.log10(max))
+        random = 10**exponent
+
+        return random
+    
+    def _random_log_int(self, min, max):
+        """Returns a random integer between [min, max] spaced logarithmically."""
+
+        return int(self._random_log_uniform(min, max))
+
+    
     def _gen_parameters_sine_gaussian(self):
         """Generate random parameters for a single Sine Gaussian."""
 
         limits = self.wave_parameters_limits
         thres = self.amp_threshold
-        f0   = self.rng.integers(limits['mf0'], limits['Mf0'])  # Central frequency
-        Q    = self.rng.integers(limits['mQ'], limits['MQ']+1)  # Quality factor
-        hrss = self.rng.uniform(limits['mhrss'], limits['Mhrss'])
+        f0   = self._random_log_int(limits['mf0'], limits['Mf0'])  # Central frequency
+        Q    = self._random_log_int(limits['mQ'], limits['MQ']+1)  # Quality factor
+        hrss = self._random_log_uniform(limits['mhrss'], limits['Mhrss'])
         duration = 2 * Q / (np.pi * f0) * np.sqrt(-np.log(thres))
         
         return (f0, Q, hrss, duration)
@@ -709,8 +743,8 @@ class SyntheticDataset(BaseDataset):
         lims = self.wave_parameters_limits
         f0   = None  #  Casted to np.nan afterwards.
         Q    = None  #-/
-        hrss = self.rng.uniform(lims['mhrss'], lims['Mhrss'])
-        duration = self.rng.uniform(lims['mT'], lims['MT'])  # Duration
+        hrss = self._random_log_uniform(lims['mhrss'], lims['Mhrss'])
+        duration = self._random_log_uniform(lims['mT'], lims['MT'])  # Duration
         
         return (f0, Q, hrss, duration)
 
@@ -719,9 +753,9 @@ class SyntheticDataset(BaseDataset):
 
         lims = self.wave_parameters_limits
         thres = self.amp_threshold
-        f0   = self.rng.integers(lims['mf0'], lims['Mf0'])  # Central frequency
-        Q    = self.rng.integers(lims['mQ'], lims['MQ']+1)  # Quality factor
-        hrss = self.rng.uniform(lims['mhrss'], lims['Mhrss'])
+        f0   = self._random_log_int(lims['mf0'], lims['Mf0'])  # Central frequency
+        Q    = self._random_log_int(lims['mQ'], lims['MQ']+1)  # Quality factor
+        hrss = self._random_log_uniform(lims['mhrss'], lims['Mhrss'])
         duration = -np.sqrt(2) * Q / (np.pi * f0) * np.log(thres)
         
         return (f0, Q, hrss, duration)
