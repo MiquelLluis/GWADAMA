@@ -252,14 +252,15 @@ class InjectedDataset(BaseDataset):
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
                  rng: np.random.Generator | int):
-        """Initialize the injected dataset from a clean dataset.
-
+        """
         Relevant attributes are inherited from the clean dataset instance,
         which can be any inherited from BaseDataset whose strains have not
         been injected yet.
         
         WARNING: This method does not perform the injections! For that use the
         method 'gen_injections'.
+
+        TODO: Parameters
         
         """
         # Inherit clean strain instance attributes.
@@ -569,8 +570,7 @@ class SyntheticDataset(BaseDataset):
                  sample_rate: int,
                  train_size: int | float, 
                  random_seed: int = None):
-        """Initializer.
-        
+        """
         PARAMETERS
         ----------
         n_samples_per_class: int
@@ -806,7 +806,88 @@ class SyntheticDataset(BaseDataset):
 
 
 class InjectedSyntheticDataset(InjectedDataset):
-    # TODO: Init, crear el NonwhiteGaussianNoise().
+    def __init__(self,
+                 *,
+                 n_samples_per_class: int,
+                 wave_parameters_limits: dict,
+                 max_length: int,
+                 peak_time_max_length: float,
+                 amp_threshold: float,
+                 tukey_alpha: float,
+                 sample_rate: int,
+                 train_size: int | float, 
+                 random_seed: int = None):
+        """        
+        PARAMETERS
+        ----------
+        n_samples_per_class: int
+            Number of samples per class to produce.
+
+        wave_parameters_limits: dict
+            Min/Max limits of the waveforms' parameters, 9 in total.
+            Keys:
+            - mf0,   Mf0:   min/Max central frequency (SG and RD).
+            - mQ,    MQ:    min/Max quality factor (SG and RD).
+            - mhrss, Mhrss: min/Max sum squared amplitude of the wave.
+            - mT,    MT:    min/Max duration (only G).
+        
+        max_length: int
+            Maximum length of the waves. This parameter is used to generate the
+            initial time array with which the waveforms are computed.
+        
+        peak_time_max_length: float
+            Time of the peak of the envelope of the waves in the initial time
+            array (built with 'max_length').
+        
+        amp_threshold: float
+            Fraction w.r.t. the maximum absolute amplitude of the wave envelope
+            below which to end the wave by shrinking the array and applying a
+            windowing to the edges.
+        
+        tukey_alpha: float
+            Alpha parameter (width) of the Tukey window applied to each wave to
+            make sure their values end at the exact duration determined by either
+            the duration parameter or the amplitude threshold.
+        
+        train_size: int | float
+            If int, total number of samples to include in the train dataset.
+            If float, fraction of the total samples to include in the train
+            dataset.
+            For more details see 'sklearn.model_selection.train_test_split'
+            with the flag `stratified=True`.
+        
+        sample_rate: int
+        
+        random_seed: int, optional.
+        
+        """
+        self.n_samples_per_class = n_samples_per_class
+        self.n_samples = self.n_samples_per_class * self.n_classes
+        self.sample_rate = sample_rate
+        self.wave_parameters_limits = wave_parameters_limits
+        self.max_length = max_length
+        self.peak_time_max_length = peak_time_max_length
+        self.tukey_alpha = tukey_alpha
+        self.amp_threshold = amp_threshold
+        self.train_size = train_size
+        self.random_seed = random_seed
+        self.rng = np.random.default_rng(random_seed)
+
+        self.metadata = None
+        self.strains = None
+        self.labels = np.repeat(np.arange(self.n_classes), self.n_samples_per_class)
+
+        # SPLITTED TRAIN-TEST SETS.
+        # Timeseries data:
+        self.Xtrain = None  # (samples, features)
+        self.Xtest = None   # (samples, features)
+        # Labels:
+        self.Ytrain = None
+        self.Ytest = None
+        # Indices w.r.t. 'self.strains':
+        self.Itrain = None
+        self.Itest = None
+    
     def inject_train_test(self, *, snr, noise_pos, highpass_orders=None):
         """Inject training and testing sets into the pre-computed noise.
 
@@ -900,6 +981,8 @@ class CoReDataset(BaseDataset):
                  cropped: dict,
                  # Source:
                  distance: float, inclination: float, phi: float):
+        """TODO"""
+        
         self.classes = classes
         self.discarded = discarded
         self.cropped = cropped
