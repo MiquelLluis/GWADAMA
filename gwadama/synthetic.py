@@ -302,8 +302,7 @@ def sine_gaussian_waveform(times: np.ndarray,
                            t0: float,
                            f0: float,
                            Q: float,
-                           hrss: float,
-                           **_) -> np.ndarray:
+                           hrss: float) -> np.ndarray:
     """Generate a Sine-Gaussian-like waveform.
     
     PARAMETERS
@@ -325,9 +324,6 @@ def sine_gaussian_waveform(times: np.ndarray,
         REF: (2015) Powell J, Trifirò D, Cuoco E, Heng I S and Cavaglià M,
                 Class. Quantum Grav. 32 215012.
     
-    **_:
-        Will be ignored for compatibility reasons.
-    
     """
     h0  = np.sqrt(np.sqrt(2) * np.pi * f0 / Q) * hrss
     env = h0 * np.exp( -(np.pi * f0 / Q * (times-t0)) ** 2)
@@ -341,8 +337,7 @@ def gaussian_waveform(times: np.ndarray,
                       t0: float,
                       hrss: float,
                       duration: float,
-                      amp_threshold: float,
-                      **_) -> np.ndarray:
+                      amp_threshold: float) -> np.ndarray:
     """Generate a Gaussian-like waveform.
     
     PARAMETERS
@@ -366,9 +361,6 @@ def gaussian_waveform(times: np.ndarray,
         consider the amplitude of the wave zero.
         Here is used to compute the effective duration of the wave.
     
-    **_:
-        Will be ignored for compatibility reasons.
-    
     """
     h0  = (-8*np.log(amp_threshold))**(1/4) * hrss / np.sqrt(duration)
     env = h0 * np.exp(4 * np.log(amp_threshold) * ((times-t0) / duration)**2)
@@ -381,8 +373,7 @@ def ring_down_waveform(times: np.ndarray,
                        t0: float,
                        f0: float,
                        Q: float,
-                       hrss: float,
-                       **_) -> np.ndarray:
+                       hrss: float) -> np.ndarray:
     """Generate a Sine-Gaussian-like waveform.
 
     This waveform has its peak at the beginning. In order to synchronise it
@@ -408,9 +399,6 @@ def ring_down_waveform(times: np.ndarray,
         Root sum squared amplitude of the wave.
         REF: (2015) Powell J, Trifirò D, Cuoco E, Heng I S and Cavaglià M,
                 Class. Quantum Grav. 32 215012.
-    
-    **_:
-        Will be ignored for compatibility reasons.
 
     """
     t0_ = 0
