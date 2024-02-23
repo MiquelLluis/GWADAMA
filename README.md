@@ -1,4 +1,26 @@
 # GWADAMA
 GWADAMA: Gravitational Wave Dataset Manager
 
-Collection of classes and functions I use to automate creating and managing my GW data sets for training and testing my GW models. Feel free to use, modify, sniff, delete, burn or desintegrate it.
+Collection of ad-hoc classes and functions intended to automate all
+dataset-related operations:
+- Wave generation
+- Data input
+- Train/Test splitting
+- Injections
+- Pre-processing (normalization, resampling, whitening, filtering, ...)
+- Export to several formats.
+
+
+DEPENDENCIES
+------------
+- bilby
+- clawdia
+- gwpy
+- h5py
+- numpy
+- pandas
+- scipy
+- sklearn
+- tqdm
+- watpy
+- yaml
