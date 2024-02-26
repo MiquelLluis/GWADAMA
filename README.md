@@ -11,16 +11,11 @@ dataset-related operations:
 - Export to several formats.
 
 
-DEPENDENCIES
+REQUIREMENTS
 ------------
+- python >= 3.8
 - bilby
 - clawdia
 - gwpy
-- h5py
-- numpy
-- pandas
-- scipy
 - sklearn
-- tqdm
 - watpy
-- yaml
