@@ -17,14 +17,8 @@ DEPENDENCIES
 bilby
 clawdia
 gwpy
-h5py
-numpy
-pandas
-scipy
 sklearn
-tqdm
 watpy
-yaml
 
 """
 from .datasets import *
