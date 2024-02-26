@@ -28,5 +28,5 @@ yaml
 
 """
 from .datasets import *
-from . import ioo
+from .ioo import CoReManager
 from . import synthetic
