@@ -20,9 +20,11 @@ from sklearn.model_selection import train_test_split
 
 from . import ioo
 from .detectors import project_et
+from .dictools import (_get_value_from_nested_dict, _replicate_structure_nested_dict,
+                       _set_value_to_nested_dict)
 from .synthetic import (NonwhiteGaussianNoise, sine_gaussian_waveform, gaussian_waveform,
                         ring_down_waveform)
-from .tima import resample
+from .timat import resample
 from .units import *
 
 
@@ -179,7 +181,7 @@ class Base:
             The unrolled combination in a Python list.
         
         """
-        keys = unroll_nested_dictionary_keys(self.strains)
+        keys = _unroll_nested_dictionary_keys(self.strains)
 
         return keys
 
@@ -290,9 +292,23 @@ class Base:
 class BaseInjected(Base):
     """Manage an injected dataset with multiple SNR values.
 
-    - Single noise realization, the same for all injections.
-    - Manage multiple SNR values.
-    - Export all strains to individual GWFs.
+    It is designed to store strains as nested dictionaries, with each level's
+    key identifying a class/property of the strain. Each individual strain is a
+    1D NDArray containing the features.
+    
+    By default there are THREE basic levels:
+        - Class; to group up strains in categories.
+        - Id; An unique identifier for each strain, which must exist in the
+          metadata DataFrame as Index.
+        - SNR; the signal-to-noise ratio at which has been injected w.r.t. a
+          power spectral density of reference (e.g. the sensitivity of a GW
+          detector).
+    
+    Extra depths can be added, and will be thought of as modifications of the
+    same original strains from the upper identifier level. However they should
+    be added between the 'Id' and 'SNR' layer, since the SNR is the final
+    realization of any variations made of a given (Class, Id) signal.
+
 
     Atributes
     ---------
@@ -331,19 +347,18 @@ class BaseInjected(Base):
         self.strains_clean = deepcopy(clean_dataset.strains)
         self.sample_rate = clean_dataset.sample_rate
         self.max_length = clean_dataset.max_length
-        self.distance = clean_dataset.distance
         # Train/Test distribution indices.
         self.Itrain = np.asarray(clean_dataset.Xtrain.keys())
         self.Itest = np.asarray(clean_dataset.Xtest.keys())
 
         # Noise instance and related attributes.
         #
-        self.psd, self._psd = self._setup_psd(psd)
+        self.random_seed = random_seed
+        self.rng = np.random.default_rng(random_seed)
         self.detector = detector
         self.freq_cutoff = freq_cutoff
         self.freq_butter_order = freq_butter_order
-        self.random_seed = random_seed
-        self.rng = np.random.default_rng(random_seed)
+        self.psd, self._psd = self._setup_psd(psd)
         self.noise = self._generate_background_noise(noise_length)
 
         # Injection related.
@@ -351,6 +366,7 @@ class BaseInjected(Base):
         self.strains = None
         self.snr_list = []
         self.pad = {}  # {snr: pad}
+
         # Train/Test subset views.
         #   Timeseries:
         self.Xtrain = None
@@ -362,7 +378,7 @@ class BaseInjected(Base):
     def __getstate__(self):
         """Avoid error when trying to pickle PSD interpolator.
         
-        Turns out pickle tries to serialize the PSD interpolant, however
+        Turns out Pickle tries to serialize the PSD interpolant, however
         Pickle is not able to serialize encapsulated functions.
         
         """
@@ -393,7 +409,8 @@ class BaseInjected(Base):
             psd_array = np.stack([freqs, psd(freqs)])
             i_cut = np.argmin((freqs - self.freq_cutoff) < 0)
             psd_array[1,:i_cut] = 0
-        else:
+        
+        elif isinstance(psd, np.ndarray):
             # Build a spline quadratic interpolant for the input PSD array
             # which ensures to be 0 below the cutoff frequency.
             _psd_interp = sp_make_interp_spline(psd[0], psd[1], k=2)
@@ -403,6 +420,9 @@ class BaseInjected(Base):
                 psd[:i_cut] = 0
                 return psd
             psd_array = np.asarray(psd)
+        
+        else:
+            raise TypeError("'psd' type not recognized")
             
         return psd_fun, psd_array
     
@@ -421,10 +441,14 @@ class BaseInjected(Base):
         """Initializes the nested dictionary of strains.
         
         Initializes the nested dictionary of strains following the hierarchy
-        in the metadata attribute.
+        in the clean strains attribute, and adding the (lowest) SNR layer.
         
         """
-        return {clas: {key: {} for key in self.metadata[clas]} for clas in self.classes}
+        strains_dict = _replicate_structure_nested_dict(self.strains_clean)
+        for indices in _unroll_nested_dictionary_keys(strains_dict):
+            _set_value_to_nested_dict(strains_dict, indices, {})
+
+        return strains_dict
     
     def gen_injections(self, snr: int | float | list, pad: int = 0) -> None:
         """Inject all strains in simulated noise with the given SNR values.
@@ -455,7 +479,7 @@ class BaseInjected(Base):
             self.strains = self._init_strains_dict()
         
         sr = self.sample_rate
-        for clas, key in unroll_nested_dictionary_keys(self.strains_clean):
+        for clas, key in _unroll_nested_dictionary_keys(self.strains_clean):
             gw_clean = self.strains_clean[clas][key]
             strain_clean_padded = np.pad(gw_clean[1], pad)
             
@@ -1035,78 +1059,3 @@ class CoReWaves(Base):
             self.strains_clean[clas][key][0] /= mass * MSUN_SEC
             # Strain
             self.strains_clean[clas][key][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
-
-
-
-
-def unroll_nested_dictionary_keys(dictionary: dict) -> list:
-    """Returns a list of all combinations of keys inside a nested dictionary.
-    
-    Useful to iterate over all keys of a nested dictionary without having to
-    use multiple loops.
-
-    Parameters
-    ----------
-    dictionary: dict
-        Nested dictionary.
-    
-    Returns
-    -------
-    : list
-        Unrolled combinations of all keys of the nested dictionary.
-    
-    """
-    return _unroll_nested_dictionary_keys(dictionary)
-
-
-def _unroll_nested_dictionary_keys(dictionary: dict, current_keys: list = None) -> list:
-    """Returns a list of all combinations of keys inside a nested dictionary.
-    
-    This is the recurrent function. Use the main function.
-    
-    """
-    if current_keys is None:
-        current_keys = []
-
-    unrolled_keys = []
-
-    for key, value in dictionary.items():
-        new_keys = current_keys + [key]
-
-        if isinstance(value, dict):
-            unrolled_keys += _unroll_nested_dictionary_keys(value, current_keys=new_keys)
-        else:
-            unrolled_keys.append(new_keys)
-
-    return unrolled_keys
-
-
-def _get_value_from_nested_dict(dict_, keys: list):
-    value = dict_
-    for key in keys:
-        value = value[key]
-    
-    return value
-
-
-def _set_value_to_nested_dict(dict_, keys, value):
-        """Set a value to an arbitrarily-depth nested dictionary.
-        
-        Parameters
-        ----------
-        dict_: dict
-            Nested dictionary.
-        
-        keys: iterable
-            Sequence of keys necessary to get to the element inside the nested
-            dictionary.
-        
-        value: Any
-        
-        """
-        key = keys[0]
-        element = dict_[key]
-        if isinstance(element, dict):
-            _set_value_to_nested_dict(element, keys[1:], value)
-        else:
-            dict_[key] = value
