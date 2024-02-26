@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 import watpy
-import yaml
 
 from .units import *
 
@@ -421,12 +420,6 @@ class CoReManager:
 
 
 
-
-def load_config(file):
-    with open(file) as f:
-        cfg = yaml.safe_load(f)
-    
-    return cfg
 
 
 def save_to_hdf5(file: str, *, data: dict, metadata: dict) -> None:
