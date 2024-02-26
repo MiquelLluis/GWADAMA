@@ -2,8 +2,14 @@
 
 Gravitational Wave Dataset Management.
 
-Intended to automate all the dataset building, train and test splitting,
-signal generation, and pre-processing.
+Collection of ad-hoc classes and functions intended to automate all
+dataset-related operations:
+- Wave generation
+- Data input
+- Train/Test splitting
+- Injections
+- Pre-processing (normalization, resampling, whitening, filtering, ...)
+- Export to several formats.
 
 
 DEPENDENCIES
