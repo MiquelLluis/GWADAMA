@@ -68,7 +68,7 @@ class NonwhiteGaussianNoise:
         self.duration = duration  # May be corrected after calling _gen_noise()
         self.freq_cutoff = freq_cutoff
         self.sample_rate = sample_rate
-        self.f_nyquist = sample_rate // 2
+        self.freq_nyquist = sample_rate // 2
         self.rng = rng  # Shared with the parent scope.
         self.psd, self._psd = self._setup_psd(psd)
         self._check_initial_parameters()
@@ -207,7 +207,7 @@ class NonwhiteGaussianNoise:
         a PSD estimation function or an array realization like I did here.
 
         """
-        freqs = np.linspace(self.freq_cutoff, self.f_nyquist, 2*self.sample_rate)
+        freqs = np.linspace(self.freq_cutoff, self.freq_nyquist, 2*self.sample_rate)
         psd = np.array([freqs, self.psd(freqs)])
         snr = clawdia.estimators.snr(x, psd=psd, at=1/self.sample_rate, window=('tukey',0.1))
         
@@ -235,11 +235,13 @@ class NonwhiteGaussianNoise:
         
         # Positive frequencies + 0
         n = length // 2
-        f = np.arange(0, self.f_nyquist, self.f_nyquist/n)
+        f = np.arange(0, self.freq_nyquist, self.freq_nyquist/n)
+        i_cut = np.argmax(f >= self.freq_cutoff)
         
         # Noise components of the positive and zero frequencies in Fourier space
         # weighted by the PSD amplitude and the normal distribution.
         psd = self.psd(f)
+        psd[:i_cut] = 0  # Ensure no components are computed under the cutoff frequency.
         nf = np.sqrt(length * self.sample_rate * psd) / 2
         nf = nf*self.rng.normal(size=n) + 1j*nf*self.rng.normal(size=n)
         

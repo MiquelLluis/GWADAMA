@@ -21,7 +21,7 @@ from sklearn.model_selection import train_test_split
 from . import ioo
 from .detectors import project_et
 from .dictools import (_get_value_from_nested_dict, _replicate_structure_nested_dict,
-                       _set_value_to_nested_dict)
+                       _set_value_to_nested_dict, _unroll_nested_dictionary_keys)
 from .synthetic import (NonwhiteGaussianNoise, sine_gaussian_waveform, gaussian_waveform,
                         ring_down_waveform)
 from .timat import resample
@@ -309,6 +309,11 @@ class BaseInjected(Base):
     be added between the 'Id' and 'SNR' layer, since the SNR is the final
     realization of any variations made of a given (Class, Id) signal.
 
+    TODO: Generalize to any number of extra nested levels. For example the
+    injection method rn only works with 3 levels. I need an extra step to
+    iterate over any number of intermediate levels between ID and SNR. This
+    will be necessary at the very least for working with polarizations.
+
 
     Atributes
     ---------
@@ -347,9 +352,9 @@ class BaseInjected(Base):
         self.strains_clean = deepcopy(clean_dataset.strains)
         self.sample_rate = clean_dataset.sample_rate
         self.max_length = clean_dataset.max_length
-        # Train/Test distribution indices.
-        self.Itrain = np.asarray(clean_dataset.Xtrain.keys())
-        self.Itest = np.asarray(clean_dataset.Xtest.keys())
+        # # Train/Test distribution indices.
+        # self.Itrain = np.asarray(clean_dataset.Xtrain.keys())
+        # self.Itest = np.asarray(clean_dataset.Xtest.keys())
 
         # Noise instance and related attributes.
         #
@@ -478,10 +483,9 @@ class BaseInjected(Base):
         if self.strains is None:
             self.strains = self._init_strains_dict()
         
-        sr = self.sample_rate
         for clas, key in _unroll_nested_dictionary_keys(self.strains_clean):
             gw_clean = self.strains_clean[clas][key]
-            strain_clean_padded = np.pad(gw_clean[1], pad)
+            strain_clean_padded = np.pad(gw_clean, pad)
             
             for snr_ in snr_list:
                 # Highpass filter to the clean signal.
@@ -494,7 +498,8 @@ class BaseInjected(Base):
                 injected, _ = self.noise.inject(strain_clean_padded, snr=snr_)
                 self.strains[clas][key][snr_] = injected
         
-        self._update_train_test_subsets()
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
         
         # Record new SNR values and related padding.
         self.snr_list += snr_list
@@ -822,7 +827,23 @@ class InjectedSyntheticWaves(BaseInjected):
     """TODO
     
     """
-    pass
+    def __init__(self,
+                 clean_dataset: Base,
+                 *,
+                 psd: np.ndarray | Callable,
+                 detector: str,
+                 noise_length: int,
+                 freq_cutoff: int | float,
+                 freq_butter_order: int | float,
+                 random_seed: int):
+        super().__init__(clean_dataset, psd=psd, detector=detector, noise_length=noise_length, freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order, random_seed=random_seed)
+
+        # Initialize the Train/Test subsets inheriting the indices of the input
+        # clean dataset instance.
+        self.Xtrain = _replicate_structure_nested_dict(clean_dataset.Xtrain)
+        self.Xtest = _replicate_structure_nested_dict(clean_dataset.Xtest)
+        self.Ytrain = _replicate_structure_nested_dict(clean_dataset.Ytrain)
+        self.Ytest = _replicate_structure_nested_dict(clean_dataset.Ytest)
 
 
 class CoReWaves(Base):

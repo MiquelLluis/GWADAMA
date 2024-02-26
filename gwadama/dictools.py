@@ -78,7 +78,7 @@ def _set_value_to_nested_dict(dict_, keys, value):
             dict_[key] = value
 
 
-def _replicate_structure_nested_dict(input_dict):
+def _replicate_structure_nested_dict(input_dict: dict) -> dict:
     """Create a new nested dictionary with the same structure as the input.
 
     Values of the new dictionary are set to None.
