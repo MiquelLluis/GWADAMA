@@ -5,7 +5,7 @@ Collection of utility functions related to nested Python dictionaries.
 """
 
 
-def _unroll_nested_dictionary_keys(dictionary: dict) -> list:
+def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> list:
     """Returns a list of all combinations of keys inside a nested dictionary.
     
     Useful to iterate over all keys of a nested dictionary without having to
@@ -16,19 +16,28 @@ def _unroll_nested_dictionary_keys(dictionary: dict) -> list:
     dictionary: dict
         Nested dictionary.
     
+    max_depth: int, optional
+        If specified, it is the number of layers to dig in to at most in
+        the nested 'strains' dictionary.
+        If only the first layer is desired (no recursion at all), `max_depth=1`.
+    
     Returns
     -------
     : list
         Unrolled combinations of all keys of the nested dictionary.
     
     """
-    return __unroll_nested_dictionary_keys(dictionary)
+    return __unroll_nested_dictionary_keys(dictionary, max_depth=max_depth)
 
 
-def __unroll_nested_dictionary_keys(dictionary: dict, current_keys: list = None) -> list:
+def __unroll_nested_dictionary_keys(dictionary: dict,
+                                    *,
+                                    max_depth: int,
+                                    current_keys: list = None,
+                                    current_depth: int = 1) -> list:
     """Returns a list of all combinations of keys inside a nested dictionary.
     
-    This is the recurrent function. Use the main function.
+    This is the recursive function. Use the main function.
     
     """
     if current_keys is None:
@@ -39,8 +48,11 @@ def __unroll_nested_dictionary_keys(dictionary: dict, current_keys: list = None)
     for key, value in dictionary.items():
         new_keys = current_keys + [key]
 
-        if isinstance(value, dict):
-            unrolled_keys += __unroll_nested_dictionary_keys(value, current_keys=new_keys)
+        if isinstance(value, dict) and (max_depth is None or current_depth < max_depth):
+            # Go down next depth layer.
+            unrolled_keys += __unroll_nested_dictionary_keys(
+                value, max_depth=max_depth, current_keys=new_keys, current_depth=current_depth+1
+            )
         else:
             unrolled_keys.append(new_keys)
 
