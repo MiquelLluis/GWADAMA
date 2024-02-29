@@ -39,13 +39,17 @@ def resample(strain: np.ndarray,
         Target sample rate.
     
     full_output: bool, optional
-        If True, also returns the upscaled sampling rate and the factor down.
+        If True, also returns the new time points, the upscaled sampling rate,
+        and the factor down.
     
         
     RETURNS
     -------
     strain: 1d-array
         Strain at the new sampling rate.
+    
+    time: 1d-array, optional
+        New time points.
     
     sr_up: int, optional
         Upscaled sample rate.
@@ -65,8 +69,8 @@ def resample(strain: np.ndarray,
     #
     sr_up = int((sr_max // sample_rate + 1) * sample_rate)
     # Intentionally skipping last time point to avoid extrapolation by round-off errors.
-    time = np.arange(time[0], time[-1], 1/sr_up)
-    strain = sp_make_interp_spline(time, strain, k=2)(time)
+    time_up = np.arange(time[0], time[-1], 1/sr_up)
+    strain = sp_make_interp_spline(time, strain, k=2)(time_up)
 
     # Downsample:
     #
@@ -74,4 +78,37 @@ def resample(strain: np.ndarray,
     time = time[::factor_down]
     strain = sp.signal.decimate(strain, factor_down, ftype='fir')
     
-    return strain, sr_up, factor_down if full_output else strain
+    return strain, time, sr_up, factor_down if full_output else strain
+
+
+def gen_time_array(t0, t1, sr):
+    """Generate a time array with constant sampling rate.
+    
+    Extension of numpy.arange which takes care of those cases when round-off
+    errors produce unexpected results. When this happens, the extra sample is
+    cut off.
+
+    Parameters
+    ----------
+    t0, t1: float
+        Initial and final times of the array: [t0, t1).
+    
+    sr: int
+        Sample rate.
+    
+    length: int
+        Length of the final time array in samples.
+        If due to round-off errors the length of the array is longer, it will
+        be adjusted.
+    
+    Returns
+    -------
+    times: NDArray
+        Time array.
+    
+    """
+    times = np.arange(t0, t1, 1/sr)
+    if times[-1] >= t1:
+        times = times[:-1]
+    
+    return times
