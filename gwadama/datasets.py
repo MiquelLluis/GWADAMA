@@ -11,6 +11,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Callable
 
+from clawdia.estimators import find_merger
 from gwpy.timeseries import TimeSeries
 import numpy as np
 import pandas as pd
@@ -24,7 +25,7 @@ from .dictools import (_get_value_from_nested_dict, _replicate_structure_nested_
                        _set_value_to_nested_dict, _unroll_nested_dictionary_keys)
 from .synthetic import (NonwhiteGaussianNoise, sine_gaussian_waveform, gaussian_waveform,
                         ring_down_waveform)
-from .timat import resample
+from .timat import resample, gen_time_array
 from .units import *
 
 
@@ -47,20 +48,30 @@ class Base:
     Extra depths can be added, and will be thought of as modifications of the
     same original strains from the upper identifier level.
     
-    Atributes
+    Attributes
     ----------
     classes: dict[str]
         Ordered dict of labels, one per class (category).
+        The values of each class can be simply the complete name or a
+        description of each class; they have no effect on the data.
+
+    metadata: pandas.DataFrame
+        All parameters and data related to the strains.
+        The order is the same as inside 'strains' if unrolled to a flat list
+        of strains up to the second depth level (the id.).
+        The total number of -different- waves must be equal to `len(metadata)`;
+        this does not include possible variations such multiple scallings of
+        the same waveform when performing injections.
     
     strains: dict {class: {id: strain} }
         Strains stored as a nested dictionary, with each strain in an
         independent array to provide more flexibility with data of a wide
         range of lengths.
-        The class key is the name of the class, a string which must exist in
-        the 'classes' dictionary.
-        The 'id' is an unique identifier for each strain, and must exist in the
-        `self.metadata.index` column of the metadata DataFrame.
-        Extra depths can be added as variations of each strain.
+        - The class key is the name of the class, a string which must exist in
+          the 'classes' dictionary.
+        - The 'id' is a unique identifier for each strain, and must exist in
+          the `self.metadata.index` column of the metadata attribute.
+        - Extra depths can be added as variations of each strain.
     
     times: dict {class: {id: time_points} }, optional
         Time samples associated with the strains, following the same structure.
@@ -68,17 +79,11 @@ class Base:
         If None, all strains are assumed to be constantly sampled to the
         sampling rate indicated by the 'sample_rate' attribute.
     
-    labels: NDArray[int]
-        Indices of the classes, one per waveform.
-        Each one points its respective waveform inside 'strains' to its class
-        in 'classes'. The order is that of the index of 'self.metadata', and
-        coincides with the order of the strains inside 'self.strains' if
-        unrolled to a flat list of arrays.
-    
-    metadata: pandas.DataFrame
-        All parameters and data related to the strains.
-        The order is the same as inside 'strains' if unrolled to a flat list
-        of strains up to the second depth level (the id.).
+    labels: dict {id: class_index}
+        Indices of the class of each wave ID.
+        Each ID points to the ordinal index of its class in the 'classes'
+        attribute.
+        Can be automatically constructed by calling the '_gen_labels()' method.
     
     sample_rate: int, optional
         If the 'times' attribute is present, this value is ignored. Otherwise
@@ -109,8 +114,8 @@ class Base:
         # Must be defined:
         #
         self.classes: dict[str] = None
-        self.labels: np.ndarray[int] = None
         self.metadata: pd.DataFrame = None
+        self.labels: dict = self._gen_labels()
         self.strains: dict = None
         self.random_seed: int = None  # SKlearn train_test_split doesn't accept a Generator yet.
         self.rng: np.random.Generator = None
@@ -130,8 +135,29 @@ class Base:
         #   Labels:
         self.Ytrain = None
         self.Ytest = None
+    
+    def __len__(self):
+        return len(self.metadata)
+
+    def _gen_labels(self) -> dict:
+        """Constructs the labels' dictionary.
+        
+        Returns
+        -------
+        labels: dict
+            Shape {id: i_class} for each GW in the dataset.
+        
+        """
+        labels = {}
+        map_clas = {clas: i for i, clas in enumerate(self.classes)}
+        for clas, id_ in self.keys(max_depth=2):
+            labels[id_] = map_clas[clas]
+        
+        return labels
 
     def resample(self, sample_rate, verbose=False) -> None:
+        """Resample strain and time arrays to a constant rate."""
+
         # Set up the time points associated to each strain in case it is not
         # provided.
         #
@@ -147,8 +173,11 @@ class Base:
 
         for *keys, strain in self.items():
             time = _get_value_from_nested_dict(times, keys)
-            strain_resampled, sf_up, factor_down = resample(strain, time, sample_rate, full_output=True)
+            strain_resampled, time_resampled, sf_up, factor_down = resample(
+                strain, time, sample_rate, full_output=True
+            )
             _set_value_to_nested_dict(self.strains, keys, strain_resampled)
+            _set_value_to_nested_dict(self.times, keys, time_resampled)
             
             if verbose:
                 print(
@@ -162,11 +191,26 @@ class Base:
         
         This is just a shortcut to avoid having to write several squared
         brackets.
+
+        NOTE: The returned strain is not a copy; if its contents are modified,
+        the changes will be reflected inside the 'strains' attribute.
         
         """        
         return _get_value_from_nested_dict(self.strains, indices)
 
-    def keys(self) -> list:
+    def get_times(self, *indices) -> np.ndarray:
+        """Get a single time array from the complete index coordinates.
+        
+        This is just a shortcut to avoid having to write several squared
+        brackets.
+
+        NOTE: The returned strain is not a copy; if its contents are modified,
+        the changes will be reflected inside the 'times' attribute.
+        
+        """        
+        return _get_value_from_nested_dict(self.times, indices)
+
+    def keys(self, max_depth: int = None) -> list:
         """Return the unrolled combinations of all strain identifiers.
 
         Return the unrolled combinations of all keys  of the nested dictionary
@@ -174,6 +218,12 @@ class Base:
         
         It can be thought of as the extended version of Python's
         'dict().keys()', although this returns a plain list.
+
+        Parameters
+        ----------
+        max_depth: int, optional
+            If specified, it is the number of layers to iterate to at most in
+            the nested 'strains' dictionary.
         
         Returns
         -------
@@ -181,7 +231,7 @@ class Base:
             The unrolled combination in a Python list.
         
         """
-        keys = _unroll_nested_dictionary_keys(self.strains)
+        keys = _unroll_nested_dictionary_keys(self.strains, max_depth=max_depth)
 
         return keys
 
@@ -215,8 +265,8 @@ class Base:
         """Return the length of the longest signal present in strains."""
 
         max_length = 0
-        for clas, key in self.keys():
-            l = self.strains[clas][key].shape[-1]
+        for *_, strain in self.items():
+            l = len(strain)
             if l > max_length:
                 max_length = l
 
@@ -242,24 +292,49 @@ class Base:
         
         return times
     
-    def _build_train_test_subsets(self):
-        indices = np.arange(self.n_samples)  # keep track of samples after shuffle.
+    def build_train_test_subsets(self, train_size: int | float, random_seed: int = None):
+        """Generate a random Train and Test subsets.
+
+        Only the first 2 layers of keys in strains (class and ID) are
+        considered as single waveforms, any other underlying key is ignored
+        when computing the split.
         
+        These are just new views into the stored strains. The shuffling is
+        performed by Scikit-Learn's function 'train_test_split', with
+        stratification enabled.
+
+        Parameters
+        ----------
+        train_size: int | float
+            If float, should be between 0.0 and 1.0 and represent the proportion
+            of the dataset to include in the train subset.
+            If int, represents the absolute number of train waves.
+            Ref: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
+        
+        random_seed: int, optional
+            Passed directly to 'sklearn.model_selection.train_test_split'.
+            It is also saved in its homonymous attribute.
+            
+        """
+        indices = list(self.metadata.index)
         i_train, i_test = train_test_split(
             indices,
-            train_size=self.train_size,
+            train_size=train_size,
             random_state=self.random_seed,
             shuffle=True,
-            stratify=self.labels
+            stratify=list(self.labels.values())
         )
-
         self.Xtrain, self.Ytrain = self._build_subset_strains(i_train)
         self.Xtest, self.Ytest = self._build_subset_strains(i_test)
+        self.random_seed = random_seed
     
     def _build_subset_strains(self, indices):
-        """Return a subset of strains and their labels based on an index list.
+        """Return a subset of strains and their labels based on their ID.
         
-        The indices are w.r.t. the Pandas 'self.metadata' table.
+        Parameters
+        ----------
+        indices: array-like
+            The indices are w.r.t. the Pandas 'self.metadata.index'.
 
         Returns
         -------
@@ -267,25 +342,25 @@ class Base:
             The id key is the strain's index at 'self.metadata'.
         
         labels: NDArray
-            1D Array containing the labels in the same order as 'strains'.
+            1D Array containing the labels associated to 'strains'.
         
         """
         strains = {}
         labels = np.empty(len(indices), dtype=int)
         for i, id_ in enumerate(indices):
-            clas = self.metadata.at[id_, 'Class']
-            strains[id_] = self.strains[clas][id_]
             labels[i] = self.labels[id_]
+            clas = self.classes[labels[i]]
+            strains[id_] = self.strains[clas][id_]
         
         return strains, labels
 
     def _update_train_test_subsets(self):
         """Builds again the Train/Test subsets from the main strains attribute."""
 
-        i_train = list(self.Xtrain.keys())
-        i_test = list(self.Xtest.keys())
-        self.Xtrain, self.Ytrain = self._build_subset_strains(i_train)
-        self.Xtest, self.Ytest = self._build_subset_strains(i_test)
+        id_train = list(self.Xtrain.keys())
+        id_test = list(self.Xtest.keys())
+        self.Xtrain, self.Ytrain = self._build_subset_strains(id_train)
+        self.Xtest, self.Ytest = self._build_subset_strains(id_test)
         
 
 
@@ -315,23 +390,65 @@ class BaseInjected(Base):
     will be necessary at the very least for working with polarizations.
 
 
-    Atributes
-    ---------
-    TODO
+    Attributes
+    ----------
+    classes: dict[str]
+        Ordered dict of labels, one per class (category).
+    
+    strains_clean: dict {class: {id: strain} }
+        Strains inherited (copied) from a clean CoReWaves instance.
+        These copies are kept in order to perform new injections.
+    
+    strains: dict {class: {id: {snr: strain} } }
+        Injected strains.
+        The 'snr' key is an integer indicating the signal-to-noise ratio of
+        the injection.
+    
+    times: dict {class: {id: {snr: time_points} } }
+        Time samples associated with the strains, following the same structure
+        as 'strains'. Since time samples are the same between different SNR
+        injections, they all point to the same array in memory.
+    
+    metadata: pandas.DataFrame
+        All parameters and data related to the strains, inherited (copied) from
+        a clean CoReWave instance.
+        A new 'snr' column is added to keep track of the SNR of all injections
+        performed.
+        The order is the same as inside 'strains' if unrolled to a flat list
+        of strains up to the second depth level (the id.).
+    
+    units: str
+        Flag indicating whether the data is in 'geometrized' or 'IS' units.
+    
+    sample_rate: int, optional
+        Initially this attribute is None because the initial GW from CoRe are
+        sampled at different and non-constant sampling rates. After the
+        resampling, this attribute will be set to the new global sampling rate.
+
+        Caveat: If the 'times' attribute is present, this value is ignored.
+        Otherwise it is assumed all strains are constantly sampled to this.
 
     """
     def __init__(self,
-                 clean_dataset: Base, *,
+                 clean_dataset: Base,
+                 *,
                  psd: np.ndarray | Callable,
                  detector: str,
                  noise_length: int,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
                  random_seed: int):
-        """
-        Relevant attributes are inherited from a "clean" dataset instance,
+        """Base constructor for injected datasets.
+
+        When inheriting from this class, it is recommended to run this method
+        first in your __init__ function.
+
+        Relevant attributes are inherited from the 'clean_dataset' instance,
         which can be any inherited from BaseDataset whose strains have not
         been injected yet.
+
+        A new 'snr' column is added to the metadata DataFrame attribute, to
+        keep a record of the SNR values of the injections performed.
 
         If train/test subsets are present, they too are updated when performing
         injections or changing units, but only through re-building them from
@@ -544,7 +661,7 @@ class SyntheticWaves(Base):
         RD: Ring-Down.
 
 
-    Atributes
+    Attributes
     ----------
     classes: dict[str]
         Ordered dict of labels, one per class (category).
@@ -569,9 +686,6 @@ class SyntheticWaves(Base):
         All parameters and data related to the strains.
         The order is the same as inside 'strains' if unrolled to a flat list
         of strains.
-
-    n_samples: int
-        Total number of waveforms (samples).
     
     units: str
         Flag indicating whether the data is in 'geometrized' or 'IS' units.
@@ -591,7 +705,7 @@ class SyntheticWaves(Base):
 
     def __init__(self,
                  *,
-                 n_samples_per_class: int,
+                 n_waves_per_class: int,
                  wave_parameters_limits: dict,
                  max_length: int,
                  peak_time_max_length: float,
@@ -603,8 +717,8 @@ class SyntheticWaves(Base):
         """
         Parameters
         ----------
-        n_samples_per_class: int
-            Number of samples per class to produce.
+        n_waves_per_class: int
+            Number of waves per class to produce.
 
         wave_parameters_limits: dict
             Min/Max limits of the waveforms' parameters, 9 in total.
@@ -644,22 +758,20 @@ class SyntheticWaves(Base):
         random_seed: int, optional.
         
         """
-        self.n_samples_per_class = n_samples_per_class
-        self.n_samples = self.n_samples_per_class * self.n_classes
+        self.n_waves_per_class = n_waves_per_class
         self.sample_rate = sample_rate
         self.wave_parameters_limits = wave_parameters_limits
         self.max_length = max_length
         self.peak_time_max_length = peak_time_max_length
         self.tukey_alpha = tukey_alpha
         self.amp_threshold = amp_threshold
-        self.train_size = train_size
         self.random_seed = random_seed
         self.rng = np.random.default_rng(random_seed)
-        self.labels = np.repeat(np.arange(self.n_classes), self.n_samples_per_class)
 
         self._gen_metadata()
+        self.labels = self._gen_labels()
         self._gen_dataset()
-        self._build_train_test_subsets()
+        self.build_train_test_subsets(train_size)
 
     def _gen_metadata(self):
         """Generate random metadata associated with each waveform."""
@@ -671,7 +783,7 @@ class SyntheticWaves(Base):
         duration_list = []  # Will be modified afterwards to take into account
                             # the amplitude threshold.
         for clas in self.classes:
-            for _ in range(self.n_samples_per_class):
+            for _ in range(self.n_waves_per_class):
                 # Need to pass 'self' explicitely since I'm calling the methods
                 # inside a dictionary attribute. Python doesn't seem to
                 # recognise them as the same class methods this way.
@@ -698,7 +810,7 @@ class SyntheticWaves(Base):
         t_max = self.max_length/self.sample_rate - 1/self.sample_rate
         times = np.linspace(0, t_max, self.max_length)
         
-        for i in range(self.n_samples):
+        for i in range(len(self)):
             params = self.metadata.loc[i].to_dict()
             clas = params['Class']
             match clas:
@@ -792,7 +904,7 @@ class SyntheticWaves(Base):
         longer than the window.
 
         """
-        for i in range(self.n_samples):
+        for i in range(len(self)):
             clas = self.metadata.at[i,'Class']
             duration = self.metadata.at[i,'duration']
             ref_length = int(duration * self.sample_rate)
@@ -828,7 +940,7 @@ class InjectedSyntheticWaves(BaseInjected):
     
     """
     def __init__(self,
-                 clean_dataset: Base,
+                 clean_dataset: SyntheticWaves,
                  *,
                  psd: np.ndarray | Callable,
                  detector: str,
@@ -836,7 +948,10 @@ class InjectedSyntheticWaves(BaseInjected):
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
                  random_seed: int):
-        super().__init__(clean_dataset, psd=psd, detector=detector, noise_length=noise_length, freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order, random_seed=random_seed)
+        super().__init__(
+            clean_dataset, psd=psd, detector=detector, noise_length=noise_length,
+            freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order, random_seed=random_seed
+        )
 
         # Initialize the Train/Test subsets inheriting the indices of the input
         # clean dataset instance.
@@ -849,14 +964,10 @@ class InjectedSyntheticWaves(BaseInjected):
 class CoReWaves(Base):
     """Manage all operations needed to perform over a noiseless CoRe dataset.
 
-    TODO: Update this shit, it's been left outdated while the rework of the
-    base classes.
+    Initial strains and metadata are obtained from a CoReManager instance.
 
-    Initial strains and metadata are expected to be obtained from a CoReManager
-    instance.
-
-    NOTE: By default this class treats as different classes (categories) each
-    equation of state (EOS) present in the CoReManager instance.
+    NOTE: This class treats as different classes (categories) each equation of
+    state (EOS) present in the CoReManager instance.
 
     Workflow:
     - Load the strains from a CoreWaEasy instance, discarding or cropping those
@@ -867,13 +978,32 @@ class CoReWaves(Base):
     - Export the (latest version of) dataset to a HDF5.
     - Export the (latest version of) dataset to a GWF.
 
-    Atributes
+    Attributes
     ----------
-    strains: dict {'eos': {'key': gw_strains} }
-        Latest version of the strains.
+    classes: dict[str]
+        Ordered dict of labels, one per class (category).
     
-    metadata: dict {'eos': {'key': {...} } }
-        Metadata associated to each strain. Example:
+    strains: dict {class: {id: gw_strain} }
+        Strains stored as a nested dictionary, with each strain in an
+        independent array to provide more flexibility with data of a wide
+        range of lengths.
+        The class key is the name of the class, a string which must exist in
+        the 'classes' dictionary.
+        The 'id' is an unique identifier for each strain, and must exist in the
+        `self.metadata.index` column of the metadata DataFrame.
+        Initially, an extra depth layer is defined to store the polarizations
+        of the CoRe GW simulated data. After the projection this layer will be
+        collapsed to a single strain.
+    
+    times: dict {class: {id: gw_time_points} }, optional
+        Time samples associated with the strains, following the same structure.
+        Useful when the sampling rate is variable or different between strains.
+    
+    metadata: pandas.DataFrame
+        All parameters and data related to the strains.
+        The order is the same as inside 'strains' if unrolled to a flat list
+        of strains up to the second depth level (the id.).
+        Example:
         ```
         metadata[eos][key] = {
             'id': str,
@@ -889,16 +1019,31 @@ class CoReWaves(Base):
     
     units: str
         Flag indicating whether the data is in 'geometrized' or 'IS' units.
+    
+    sample_rate: int, optional
+        Initially this attribute is None because the initial GW from CoRe are
+        sampled at different and non-constant sampling rates. After the
+        resampling, this attribute will be set to the new global sampling rate.
+
+        Caveat: If the 'times' attribute is present, this value is ignored.
+        Otherwise it is assumed all strains are constantly sampled to this.
+    
+    TODO
+    ----
+    - Train/Test splits.
+    - Labels.
 
     """
     def __init__(self,
-                 cdb: ioo.CoReManager,
                  *,
-                 classes: list[str],
+                 coredb: ioo.CoReManager,
+                 classes: dict[str],
                  discarded: set,
                  cropped: dict,
                  # Source:
-                 distance: float, inclination: float, phi: float):
+                 distance: float,
+                 inclination: float,
+                 phi: float):
         """TODO"""
 
         self.classes = classes
@@ -909,60 +1054,120 @@ class CoReWaves(Base):
         self.inclination = inclination
         self.phi = phi
 
-        # Note: I'm passing 'self.units' as return value just for consistence;
-        # its initial value ('IS') could've been set here directly though.
-        self.strains, self.metadata, self.units = self._get_strain_and_metadata(cdb)
+        self.units = 'IS'
+        self.strains, self.times, self.metadata = self._get_strain_and_metadata(coredb)
+        self.labels = self._gen_labels()
         self.max_length = self._find_max_length()
 
         self.sample_rate = None  # Set up after resampling
+        self.random_seed = None  # Set if calling the 'build_train_test_subsets' method.
     
-    def _get_strain_and_metadata(self, cdb: ioo.CoReManager) -> dict[dict[np.ndarray]]:
+    def _get_strain_and_metadata(self, coredb: ioo.CoReManager) -> tuple[dict, dict, pd.DataFrame]:
+        """Obtain the strain and metadata from a CoReManager instance.
+
+        The strains are the Pluss and Cross polarizations obtained from the
+        direct output of numerical relativistic simulations. They are expected
+        to be projected at the detector afterwards, collapsing the polarization
+        layer to a single strain per GW.
+        
+        Returns
+        -------
+        strains: dict{eos: {id: {pol: strain} } }
+        
+        times: dict{'eos': {'id': {pol: time_samples}} }
+            Time samples associated to each GW.
+            Since it has to follow the same nested structure as 'strains', but
+            the time samples are the same among polarizations, for each GW both
+            polarizations point to the same array in memory.
+        
+        metadata: pandas.DataFrame
+            All parameters and data related to the strains.
+            The order is the same as inside 'strains' if unrolled to a flat list
+            of strains up to the second depth level (the id.).
+        
+        """
         strains = self._init_strains_dict()
-        metadata = self._init_strains_dict()
-        units = 'IS'  # CoReManager.gen_strain() method's output.
+        times = self._init_strains_dict()
+        # Metadata columns/keys:
+        index: list[str] = []
+        mass: list[float] = []
+        mass_ratio: list[float] = []
+        eccentricity: list[float] = []
+        mass_starA: list[float] = []
+        mass_starB: list[float] = []
+        spin_starA: list[float] = []
+        spin_starB: list[float] = []
+
         for eos in self.classes:
             # Get and filter out GW simulations.
-            keys = set(cdb.filter_by('id_eos', eos).index)
+            ids = set(coredb.filter_by('id_eos', eos).index)
             try:
-                keys -= self.discarded[eos]
+                ids -= self.discarded[eos]
             except KeyError:
                 pass  # No discards.
-            keys = sorted(keys)  # IMPORTANT!!! Keep order to be able to trace back simulations.
-            for key in keys:
+            ids = sorted(ids)  # IMPORTANT!!! Keep order to be able to trace back simulations.
+            
+            for id_ in ids:
                 # CoRe Rh data (in IS units):
-                times, h_plus, h_cros = cdb.gen_strain(
-                    key, self.distance, self.inclination, self.phi
+                times_, h_plus, h_cros = coredb.gen_strain(
+                    id_, self.distance, self.inclination, self.phi
                 )
-                # Crop those indicated at the parameter file:
+
+                # Crop those indicated at the parameter file, and leave whole
+                # the rest.
                 try:
-                    t0, t1 = self.cropped[eos][key]
+                    t0, t1 = self.cropped[eos][id_]
                 except KeyError:
-                    t0, t1 = times[[0,-1]]  # Don't crop.
-                i0 = np.argmin(np.abs(times-t0))
-                i1 = np.argmin(np.abs(times-t1))
-                strains[eos][key] = np.stack([times, h_plus, h_cros])[:,i0:i1]
-                # Associated metadata:
-                md = cdb.metadata.loc[key]
-                metadata[eos][key] = {
-                    'id': md['database_key'],
-                    'mass': md['id_mass'],
-                    'mass_ratio': md['id_mass_ratio'],
-                    'eccentricity': md['id_eccentricity'],
-                    'mass_starA': md['id_mass_starA'],
-                    'mass_starB': md['id_mass_starB'],
-                    'spin_starA': md['id_spin_starA'],
-                    'spin_starB': md['id_spin_starB'],
+                    crop = slice(None)
+                else:
+                    crop = slice(
+                        np.argmin(np.abs(times_-t0)),
+                        np.argmin(np.abs(times_-t1))
+                    )
+                strains[eos][id_] = {
+                    'plus': h_plus[crop],
+                    'cross': h_cros[crop]
                 }
+                # Both polarizations have the same sampling times, hence we
+                # point each time polarization to the same array in memory.
+                times[eos][id_] = {}
+                times[eos][id_]['plus'] = times[eos][id_]['cross'] = times_[crop]
+
+                # Associated metadata:
+                md = coredb.metadata.loc[id_]
+                index.append(md['database_key'])
+                mass.append(md['id_mass'])
+                mass_ratio.append(md['id_mass_ratio'])
+                eccentricity.append(md['id_eccentricity'])
+                mass_starA.append(md['id_mass_starA'])
+                mass_starB.append(md['id_mass_starB'])
+                spin_starA.append(md['id_spin_starA'])
+                spin_starB.append(md['id_spin_starB'])
         
-        return strains, metadata, units
+        metadata = pd.DataFrame(
+            data=dict(
+                mass=mass, mass_ratio=mass_ratio, eccentricity=eccentricity,
+                mass_starA=mass_starA, mass_starB=mass_starB,
+                spin_starA=spin_starA, spin_starB=spin_starB
+            ),
+            index=index
+        )
+        
+        return strains, times, metadata
+
     
-    def project(self, *, detector: str, ra, dec, geo_time, psi):
+    def project(self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float):
         """Project strains into the ET detector at specified coordinates.
+
+        This collapses the polarization layer in 'strains' to a single strain.
+        Only one arm of the detector can be chosen.
+        The times are rebuilt taking as a reference point the merger (t = 0).
         
         Parameters
         ----------
         detector: str
-            Possibilities are 'ET1', 'ET2', 'ET3' and 'all'.
+            Name of the ET arm in Bilby for InterferometerList().
+            Possibilities are 'ET1', 'ET2', and 'ET3'.
         
         ra, dec: float
             Sky position in equatorial coordinates.
@@ -975,108 +1180,101 @@ class CoReWaves(Base):
         
         """
         project_pars = dict(ra=ra, dec=dec, geocent_time=geo_time, psi=psi)
-        for clas, key in self.keys():
-            times, hp, hc = self.strains[clas][key]
-            projected = project_et(
+        for clas, id_ in self.keys(max_depth=2):
+            hp = self.strains[clas][id_]['plus']
+            hc = self.strains[clas][id_]['cross']
+            
+            # Drop the polarization layer.
+            strain = project_et(
                 hp, hc, parameters=project_pars, sf=self.sample_rate, 
                 nfft=2*self.sample_rate, detector=detector
             )
-            self.strains[clas][key] = np.stack([times, projected])
+            self.strains[clas][id_] = strain
+            
+            # Regenerate the time array with the merger located at the origin.
+            duration = len(strain) / self.sample_rate
+            t_merger = find_merger(strain) / self.sample_rate
+            t0 = -t_merger
+            t1 = duration - t_merger
+            self.times[clas][id_] = gen_time_array(t0, t1, self.sample_rate)
+            
+            assert len(self.times[clas][id_]) == len(self.strains[clas][id_])
     
     def convert_to_IS_units(self) -> None:
-        """Convert strains from geometrized to IS units."""
-        
-        if self.units == 'IS':
-            raise RuntimeError("data already in IS units")
+        """Convert data from scaled geometrized units to IS units.
 
-        for clas, key in self.keys():
-            mass = self.metadata[clas][key]['mass']
-            # Time
-            self.strains[clas][key][0] *= mass * MSUN_SEC
-            # Strain
-            self.strains[clas][key][1:] *=  mass * MSUN_MET / (self.distance * MPC_MET)
-
-        self.units = 'IS'
-    
-    def convert_to_scaled_geometrized_units(self) -> None:
-        """Convert strains from IS to geometrized units."""
+        Convert strains and times from geometrized units (scaled to the mass
+        of the system and the source distance) to IS units.
         
-        if self.units == 'geometrized':
-            raise RuntimeError("data already in geometrized units")
-
-        for clas, key in self.keys():
-            mass = self.metadata[clas][key]['mass']
-            # Time
-            self.strains[clas][key][0] /= mass * MSUN_SEC
-            # Strain
-            self.strains[clas][key][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
-
-        self.units = 'geometrized'
-
-    def export_strains_to_hdf5(self, file: str):
-        """Save strains and their metadata to a HDF5 file.
-        
-        CAUTION! THIS DOES NOT SAVE THE ENTIRE INSTANCE!
-        
-        """
-        ioo.save_to_hdf5(file=file, data=self.strains, metadata=self.metadata)
-    
-    def convert_to_IS_units(self) -> None:
-        """Convert clean and injected strains from geometrized to IS units.
-        
-        Will raise an error if no injections are yet generated.
+        Will raise an error if the data is already in IS units.
         
         """
         if self.units == 'IS':
             raise RuntimeError("data already in IS units")
 
-        self._convert_strain_clean_to_IS_units()
-        self._convert_to_IS_units()
-        self._update_train_test_subsets()
+        for keys in self.keys():
+            id_ = keys[1]
+            mass = self.metadata.at[id_,'mass']
+            strain = self.get_strain(*keys)
+            times = self.get_times(*keys)
+
+            strain *=  mass * MSUN_MET / (self.distance * MPC_MET)
+            times *= mass * MSUN_SEC
+        
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
 
         self.units = 'IS'
     
     def convert_to_scaled_geometrized_units(self) -> None:
-        """Convert clean and injected strains from IS to geometrized units.
+        """Convert data from IS to scaled geometrized units.
         
-        Will raise an error if no injections are yet generated.
+        Convert strains and times from IS to geometrized units, and scaled to the mass
+        of the system and the source distance.
+
+        Will raise an error if the data is already in geometrized units.
         
         """
         if self.units == 'geometrized':
             raise RuntimeError("data already in geometrized units")
         
-        self._convert_strain_clean_to_scaled_geometrized_units()
-        self._convert_to_scaled_geometrized_units()
-        self._update_train_test_subsets()
+        for keys in self.keys():
+            id_ = keys[1]
+            mass = self.metadata.at[id_,'mass']
+            strain = self.get_strain(*keys)
+            times = self.get_times(*keys)
+            
+            strain /=  mass * MSUN_MET / (self.distance * MPC_MET)
+            times /= mass * MSUN_SEC
+        
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
 
         self.units = 'geometrized'
-    
-    def _convert_to_IS_units(self) -> None:
-        for clas, key, snr in self.keys():
-            mass = self.metadata[clas][key]['mass']
-            self.strains[clas][key][snr] *=  mass * MSUN_MET / (self.distance * MPC_MET)
-            if self.times is not None:
-                self.times[clas][key][snr] *= mass * MSUN_SEC
-    
-    def _convert_to_scaled_geometrized_units(self) -> None:
-        for clas, key, snr in self.keys():
-            mass = self.metadata[clas][key]['mass']
-            self.strains[clas][key][snr] /=  mass * MSUN_MET / (self.distance * MPC_MET)
-            if self.times is not None:
-                self.times[clas][key][snr] /= mass * MSUN_SEC
-    
-    def _convert_strain_clean_to_IS_units(self) -> None:
-        for clas, key in self.keys():
-            mass = self.metadata[clas][key]['mass']
-            # Time
-            self.strains_clean[clas][key][0] *= mass * MSUN_SEC
-            # Strain
-            self.strains_clean[clas][key][1:] *=  mass * MSUN_MET / (self.distance * MPC_MET)
-    
-    def _convert_strain_clean_to_scaled_geometrized_units(self) -> None:
-        for clas, key in self.keys():
-            mass = self.metadata[clas][key]['mass']
-            # Time
-            self.strains_clean[clas][key][0] /= mass * MSUN_SEC
-            # Strain
-            self.strains_clean[clas][key][1:] /=  mass * MSUN_MET / (self.distance * MPC_MET)
+
+
+class InjectedCoReWaves(BaseInjected, CoReWaves):
+    """Manage injections of GW data from CoRe dataset.
+
+    TODO
+
+    """
+    def __init__(self,
+                 *,
+                 clean_dataset: CoReWaves,
+                 psd: np.ndarray | Callable,
+                 detector: str,
+                 noise_length: int,
+                 freq_cutoff: int | float,
+                 freq_butter_order: int | float,
+                 random_seed: int):
+        """TODO"""
+
+        super().__init__(
+            clean_dataset, psd=psd, detector=detector, noise_length=noise_length,
+            freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order, random_seed=random_seed
+        )
+
+
+
+        
