@@ -1,10 +1,12 @@
 """datasets.py
 
-TODO
+Main classes to manage GW datasets.
 
-There are two basic type of datasets, 'clean' and 'injected'. Clean datasets'
-classes inherit from the Base class, while Injected classes inherit from the
-BaseInjected class.
+There are two basic type of datasets, clean and injected:
+- Clean datasets' classes inherit from the Base class, extending their properties
+  as needed.
+- Injected datasets' classes inherit from the BaseInjected class, and
+  optionally from other UserDefined(Base) classes.
 
 """
 from copy import deepcopy
@@ -36,6 +38,7 @@ __all__ = ['Base', 'BaseInjected', 'SyntheticWaves', 'InjectedSyntheticWaves',
 class Base:
     """Base class for all datasets.
 
+    Any dataset made of 'clean' (noiseless) GW must inherit this class.
     It is designed to store strains as nested dictionaries, with each level's
     key identifying a class/property of the strain. Each individual strain is a
     1D NDArray containing the features.
@@ -46,55 +49,68 @@ class Base:
           metadata DataFrame as Index.
     
     Extra depths can be added, and will be thought of as modifications of the
-    same original strains from the upper identifier level.
+    same original strains from the upper identifier level. If splitting the
+    dataset into train and test susbsets, only combinations of (Class, Id) will
+    be considered.
     
     Attributes
     ----------
-    classes: dict[str]
-        Ordered dict of labels, one per class (category).
-        The values of each class can be simply the complete name or a
-        description of each class; they have no effect on the data.
+    classes : list[str]
+        List of labels, one per class (category).
 
-    metadata: pandas.DataFrame
+    metadata : pandas.DataFrame
         All parameters and data related to the strains.
         The order is the same as inside 'strains' if unrolled to a flat list
-        of strains up to the second depth level (the id.).
-        The total number of -different- waves must be equal to `len(metadata)`;
-        this does not include possible variations such multiple scallings of
-        the same waveform when performing injections.
+        of strains up to the second depth level (the ID).
+        The total number of different waves must be equal to `len(metadata)`;
+        this does not include possible variations such polarizations or
+        multiple scallings of the same waveform when performing injections.
     
-    strains: dict {class: {id: strain} }
+    strains : dict[dict]
         Strains stored as a nested dictionary, with each strain in an
         independent array to provide more flexibility with data of a wide
         range of lengths.
-        - The class key is the name of the class, a string which must exist in
-          the 'classes' dictionary.
+        - Shape: {class: {id: strain} }
+        - The 'class' key is the name of the class, a string which must exist
+          in the 'classes' list.
         - The 'id' is a unique identifier for each strain, and must exist in
-          the `self.metadata.index` column of the metadata attribute.
-        - Extra depths can be added as variations of each strain.
+          the index of the 'metadata' (DataFrame) attribute.
+        - Extra depths can be added as variations of each strain, such as
+          polarizations.
     
-    times: dict {class: {id: time_points} }, optional
-        Time samples associated with the strains, following the same structure.
+    labels : dict
+        Indices of the class of each wave ID, with shape {id: class_index}.
+        Each ID points to the index of its class in the 'classes' attribute.
+        Can be automatically constructed by calling the '_gen_labels()' method.
+    
+    max_length : int
+        Length of the longest strain in the dataset.
+        Remember to update it if modifying the strains length.
+    
+    times : dict, optional
+        Time samples associated with the strains, following the same structure
+        up to the second depth level: {class: {id: time_points} }
         Useful when the sampling rate is variable or different between strains.
         If None, all strains are assumed to be constantly sampled to the
         sampling rate indicated by the 'sample_rate' attribute.
     
-    labels: dict {id: class_index}
-        Indices of the class of each wave ID.
-        Each ID points to the ordinal index of its class in the 'classes'
-        attribute.
-        Can be automatically constructed by calling the '_gen_labels()' method.
-    
-    sample_rate: int, optional
+    sample_rate : int, optional
         If the 'times' attribute is present, this value is ignored. Otherwise
         it is assumed all strains are constantly sampled to this value.
+        NOTE: If dealing with variable sampling rates, avoid setting this
+        attribute to anything other than None.
     
-    Xtrain, Xtest: dict {id: strain}
+    random_seed : int, optional
+        Value passed to 'sklearn.model_selection.train_test_split' to generate
+        the Train and Test subsets. Saved for reproducibility purposes.
+    
+    Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using SKLearn train_test_split
         function with stratified labels.
-        The key corresponds to the strain's index at 'self.metadata'.
+        Shape: {id: strain}.
+        The 'id' corresponds to the strain's index at 'self.metadata'.
     
-    Ytrain, Ytest: NDArray[int]
+    Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as 'Xtrain' and
         'Xtest' respectively.
     
@@ -112,39 +128,38 @@ class Base:
         raise NotImplementedError
 
         # Must be defined:
-        #
-        self.classes: dict[str] = None
+        #----------------------------------------------------------------------
+    
+        self.classes: list[str] = None
         self.metadata: pd.DataFrame = None
-        self.labels: dict = self._gen_labels()
+        self.labels: dict[int] = self._gen_labels()
         self.strains: dict = None
+        self.max_length = self._find_max_length()
         self.random_seed: int = None  # SKlearn train_test_split doesn't accept a Generator yet.
-        self.rng: np.random.Generator = None
 
-        # Optional
-        #
+        # Optional:
+        #----------------------------------------------------------------------
+
         self.sample_rate: int = None
         self.times: dict = None
-
-        # Additional attributes used/set by the methods of this class:
-        #
-        self.max_length = self._find_max_length()
-        # Train/Test subset views.
+        
+        # Train/Test subset splits (views into the same 'self.strains').
         #   Timeseries:
-        self.Xtrain = None
-        self.Xtest = None
+        self.Xtrain: np.ndarray = None
+        self.Xtest: np.ndarray = None
         #   Labels:
-        self.Ytrain = None
-        self.Ytest = None
+        self.Ytrain: np.ndarray = None
+        self.Ytest: np.ndarray = None
     
     def __len__(self):
         return len(self.metadata)
 
     def _gen_labels(self) -> dict:
-        """Constructs the labels' dictionary.
+        """Constructs the labels' dictionary.TODO
         
         Returns
         -------
-        labels: dict
+        labels : dict
             Shape {id: i_class} for each GW in the dataset.
         
         """
@@ -185,6 +200,7 @@ class Base:
                 )
 
         self.sample_rate = sample_rate
+        self.max_length = self._find_max_length()
     
     def get_strain(self, *indices) -> np.ndarray:
         """Get a single strain from the complete index coordinates.
@@ -221,13 +237,13 @@ class Base:
 
         Parameters
         ----------
-        max_depth: int, optional
+        max_depth : int, optional
             If specified, it is the number of layers to iterate to at most in
             the nested 'strains' dictionary.
         
         Returns
         -------
-        keys: list
+        keys : list
             The unrolled combination in a Python list.
         
         """
@@ -279,7 +295,7 @@ class Base:
         
         Returns
         -------
-        times: dict
+        times : dict
             Nested dictionary with the same shape as 'self.strains'.
         
         """
@@ -305,13 +321,13 @@ class Base:
 
         Parameters
         ----------
-        train_size: int | float
+        train_size : int | float
             If float, should be between 0.0 and 1.0 and represent the proportion
             of the dataset to include in the train subset.
             If int, represents the absolute number of train waves.
             Ref: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
         
-        random_seed: int, optional
+        random_seed : int, optional
             Passed directly to 'sklearn.model_selection.train_test_split'.
             It is also saved in its homonymous attribute.
             
@@ -333,15 +349,15 @@ class Base:
         
         Parameters
         ----------
-        indices: array-like
+        indices : array-like
             The indices are w.r.t. the Pandas 'self.metadata.index'.
 
         Returns
         -------
-        strains: dict {id: strain}
+        strains : dict {id: strain}
             The id key is the strain's index at 'self.metadata'.
         
-        labels: NDArray
+        labels : NDArray
             1D Array containing the labels associated to 'strains'.
         
         """
@@ -370,6 +386,9 @@ class BaseInjected(Base):
     It is designed to store strains as nested dictionaries, with each level's
     key identifying a class/property of the strain. Each individual strain is a
     1D NDArray containing the features.
+
+    NOTE: Instances of this class or any other Class(BaseInjected) are
+    initialized from an instance of any Class(Base) instance (clean dataset).
     
     By default there are THREE basic levels:
         - Class; to group up strains in categories.
@@ -384,49 +403,121 @@ class BaseInjected(Base):
     be added between the 'Id' and 'SNR' layer, since the SNR is the final
     realization of any variations made of a given (Class, Id) signal.
 
-    TODO: Generalize to any number of extra nested levels. For example the
-    injection method rn only works with 3 levels. I need an extra step to
-    iterate over any number of intermediate levels between ID and SNR. This
-    will be necessary at the very least for working with polarizations.
+    This class does not store time arrays; it is assumed all are sampled at
+    a constant rate, and their time reference are expected to be tracked by
+    the parent Class(Base) instance.
+
+    TODO:
+    - Generalize to any number of extra nested levels. For example the
+      injection method rn only works with 3 levels. I need an extra step to
+      iterate over any number of intermediate levels between ID and SNR. This
+      will be necessary at the very least for working with polarizations.
+    - Track the injection GPS times? To be able to reconstruct the associated
+      times of each GW.
 
 
     Attributes
     ----------
-    classes: dict[str]
-        Ordered dict of labels, one per class (category).
+    classes : list[str]
+        List of labels, one per class (category).
     
-    strains_clean: dict {class: {id: strain} }
-        Strains inherited (copied) from a clean CoReWaves instance.
-        These copies are kept in order to perform new injections.
-    
-    strains: dict {class: {id: {snr: strain} } }
-        Injected strains.
-        The 'snr' key is an integer indicating the signal-to-noise ratio of
-        the injection.
-    
-    times: dict {class: {id: {snr: time_points} } }
-        Time samples associated with the strains, following the same structure
-        as 'strains'. Since time samples are the same between different SNR
-        injections, they all point to the same array in memory.
-    
-    metadata: pandas.DataFrame
-        All parameters and data related to the strains, inherited (copied) from
-        a clean CoReWave instance.
-        A new 'snr' column is added to keep track of the SNR of all injections
-        performed.
+    metadata : pandas.DataFrame
+        All parameters and data related to the original strains, inherited
+        (copied) from a clean Class(Base) instance.
         The order is the same as inside 'strains' if unrolled to a flat list
-        of strains up to the second depth level (the id.).
+        of strains up to the second depth level (the ID).
+        The total number of different waves must be equal to `len(metadata)`;
+        this does not include possible variations such polarizations or
+        multiple scallings of the same waveform when performing injections.
     
-    units: str
+    strains_clean : dict[dict]
+        Strains inherited (copied) from a clean Class(Base) instance.
+        This copy is kept in order to perform new injections.
+        - Shape: {class: {id: strain} }
+        - The 'class' key is the name of the class, a string which must exist
+          in the 'classes' list.
+        - The 'id' is a unique identifier for each strain, and must exist in
+          the index of the 'metadata' (DataFrame) attribute.
+        
+        NOTE: These strains should be not modified. If new clean strains are
+        needed, create a new clean dataset instance first, and then initialise
+        this class with it.
+    
+    strains : dict[dict]
+        Injected trains stored as a nested dictionary, with each strain in an
+        independent array to provide more flexibility with data of a wide
+        range of lengths.
+        - Shape: {class: {id: {snr: strain} } }
+        - The 'class' key is the name of the class, a string which must exist
+          in the 'classes' list.
+        - The 'id' is a unique identifier for each strain, and must exist in
+          the index of the 'metadata' (DataFrame) attribute.
+        - Extra depths can be added as variations of each strain, such as
+          polarizations. However they should be added between the 'id' and
+          the 'snr' layer!
+        - The 'snr' key is an integer indicating the signal-to-noise ratio of
+          the injection.
+        
+    labels : dict
+        Indices of the class of each wave ID, inherited from a clean
+        Class(Base) instance, with shape {id: class_index}.
+        Each ID points to the index of its class in the 'classes' attribute.
+    
+    units : str
         Flag indicating whether the data is in 'geometrized' or 'IS' units.
     
-    sample_rate: int, optional
-        Initially this attribute is None because the initial GW from CoRe are
-        sampled at different and non-constant sampling rates. After the
-        resampling, this attribute will be set to the new global sampling rate.
+    sample_rate : int
+        Inherited from the parent Class(Base) instance.
+    
+    max_length : int
+        Length of the longest strain in the dataset.
+        Remember to update it if manually changing strains' length.
+    
+    random_seed : int
+        Value passed to 'sklearn.model_selection.train_test_split' to generate
+        the Train and Test subsets. Saved for reproducibility purposes.
+        Also used to initialize Numpy's default RandomGenerator.
 
-        Caveat: If the 'times' attribute is present, this value is ignored.
-        Otherwise it is assumed all strains are constantly sampled to this.
+    rng : np.random.Generator
+        Random number generator used for sampling the background noise.
+        Initialized with `np.random.default_rng(random_seed)`.
+
+    detector : str
+        GW detector name.
+
+    freq_cutoff : int | float
+        Frequency cutoff below which no noise bins will be generated in the
+        frequency space, and also used for the high-pass filter applied to
+        clean signals before injection.
+
+    freq_butter_order : int
+        Butterworth filter order.
+        See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+        for more information.
+
+    psd : callable
+        Function that takes frequency values and returns the Power Spectral
+        Density of the detector's sensitivity at those frequencies.
+
+    noise : gwadama.ioo.NonwhiteGaussianNoise
+        Background noise instance from NonwhiteGaussianNoise.
+
+    snr_list : list
+
+    pad : dict
+        Padding introduced at each SNR injection.
+        It is associated to SNR values because the only implemented way to
+        pad the signals is during the signal linjection.
+
+    Xtrain, Xtest : dict, optional
+        Train and test subsets randomly split using SKLearn train_test_split
+        function with stratified labels.
+        Shape: {id: strain}.
+        The 'id' corresponds to the strain's index at 'self.metadata'.
+    
+    Ytrain, Ytest : NDArray[int], optional
+        1D Array containing the labels in the same order as 'Xtrain' and
+        'Xtest' respectively.
 
     """
     def __init__(self,
@@ -447,9 +538,6 @@ class BaseInjected(Base):
         which can be any inherited from BaseDataset whose strains have not
         been injected yet.
 
-        A new 'snr' column is added to the metadata DataFrame attribute, to
-        keep a record of the SNR values of the injections performed.
-
         If train/test subsets are present, they too are updated when performing
         injections or changing units, but only through re-building them from
         the main 'strains' attribute using the already generated indices.
@@ -458,23 +546,59 @@ class BaseInjected(Base):
         WARNING: Initializing this class does not perform the injections! For
         that use the method 'gen_injections'.
 
-        TODO: Parameters
+        Parameters
+        ----------
+        clean_dataset : Base
+            Instance of a Class(Base) with noiseless signals.
+
+        psd : np.ndarray | Callable
+            Power Spectral Density of the detector's sensitivity in the range
+            of frequencies of interest. Can be given as a callable function
+            whose argument is expected to be an array of frequencies, or as a
+            2d-array with shape (2, psd_length) so that
+            ```
+            psd[0] = frequency_samples
+            psd[1] = psd_samples
+            ```
+
+        detector : str
+            GW detector name.
+
+        noise_length : int
+            Length of the background noise array to be generated for later use.
+            It should be at least longer than the longest signal expected to be
+            injected.
+
+        freq_cutoff : int | float
+            Frequency cutoff below which no noise bins will be generated in the
+            frequency space, and also used for the high-pass filter applied to
+            clean signals before injection.
+
+        freq_butter_order : int | float
+            Butterworth filter order.
+            See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+            for more information.
+
+        random_seed : int
+            Value passed to 'sklearn.model_selection.train_test_split' to
+            generate the Train and Test subsets.
+            Saved for reproducibility purposes, and also used to initialize
+            Numpy's default RandomGenerator.
         
         """
         # Inherit clean strain instance attributes.
-        #
+        #----------------------------------------------------------------------
+
         self.classes = clean_dataset.classes.copy()
         self.labels = clean_dataset.labels.copy()
         self.metadata = deepcopy(clean_dataset.metadata)
         self.strains_clean = deepcopy(clean_dataset.strains)
         self.sample_rate = clean_dataset.sample_rate
         self.max_length = clean_dataset.max_length
-        # # Train/Test distribution indices.
-        # self.Itrain = np.asarray(clean_dataset.Xtrain.keys())
-        # self.Itest = np.asarray(clean_dataset.Xtest.keys())
 
         # Noise instance and related attributes.
-        #
+        #----------------------------------------------------------------------
+
         self.random_seed = random_seed
         self.rng = np.random.default_rng(random_seed)
         self.detector = detector
@@ -483,17 +607,16 @@ class BaseInjected(Base):
         self.psd, self._psd = self._setup_psd(psd)
         self.noise = self._generate_background_noise(noise_length)
 
-        # Injection related.
-        #
+        # Injection related:
+        #----------------------------------------------------------------------
+
         self.strains = None
         self.snr_list = []
         self.pad = {}  # {snr: pad}
 
         # Train/Test subset views.
-        #   Timeseries:
         self.Xtrain = None
         self.Xtest = None
-        #   Labels:
         self.Ytrain = None
         self.Ytest = None
     
@@ -584,9 +707,27 @@ class BaseInjected(Base):
         
         Parameters
         ----------
-        snr: int | float | list
+        snr : int | float | list
         
-        TODO
+        pad : int
+            Number of zeros to pad the signal at both ends before the
+            injection.
+        
+        Notes
+        -----
+        - If whitening is intended to be applyed afterwards it is useful to
+          pad the signal in order to avoid the window vignetting produced by
+          the whitening itself.
+        
+        - New injections are stored at strains atrribute, with the pad value
+          associated to all the injections performed at once.
+        
+        Raises
+        ------
+        ValueError
+            Once injections have been performed at a certain SNR value, there
+            cannot be injected again at the same value. Trying it will trigger
+            this exception.
         
         """
         if isinstance(snr, (int, float)):
@@ -596,7 +737,10 @@ class BaseInjected(Base):
         else:
             raise TypeError(f"'{type(snr)}' is not a valid 'snr' type")
         
-        # In case is the 1st time making injections.
+        if set(snr_list) & set(self.snr_list):
+            raise ValueError("one or more SNR values are already present in the dataset")
+        
+        # In case it's the 1st time making injections.
         if self.strains is None:
             self.strains = self._init_strains_dict()
         
@@ -615,13 +759,15 @@ class BaseInjected(Base):
                 injected, _ = self.noise.inject(strain_clean_padded, snr=snr_)
                 self.strains[clas][key][snr_] = injected
         
-        if self.Xtrain is not None:
-            self._update_train_test_subsets()
-        
         # Record new SNR values and related padding.
         self.snr_list += snr_list
         for snr_ in snr_list:
             self.pad[snr_] = pad
+        
+        # Side-effect attributes updated.
+        self.max_length = self._find_max_length()
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
     
     def export_strains_to_gwf(self,
                               path: str,
@@ -663,10 +809,10 @@ class SyntheticWaves(Base):
 
     Attributes
     ----------
-    classes: dict[str]
-        Ordered dict of labels, one per class (category).
+    classes : list[str]
+        List of labels, one per class (category).
     
-    strains: dict {class: {key: gw_strains} }
+    strains : dict {class: {key: gw_strains} }
         Strains stored as a nested dictionary, with each strain in an
         independent array to provide more flexibility with data of a wide
         range of lengths.
@@ -675,32 +821,32 @@ class SyntheticWaves(Base):
         The 'key' is an identifier of each strain.
         In this case it's just the global index ranging from 0 to 'self.n_samples'.
     
-    labels: NDArray[int]
+    labels : NDArray[int]
         Indices of the classes, one per waveform.
         Each one points its respective waveform inside 'strains' to its class
         in 'classes'. The order is that of the index of 'self.metadata', and
         coincides with the order of the strains inside 'self.strains' if
         unrolled to a flat list of arrays.
     
-    metadata: pandas.DataFrame
+    metadata : pandas.DataFrame
         All parameters and data related to the strains.
         The order is the same as inside 'strains' if unrolled to a flat list
         of strains.
     
-    units: str
+    units : str
         Flag indicating whether the data is in 'geometrized' or 'IS' units.
     
-    Xtrain, Xtest: dict {key: strain}
+    Xtrain, Xtest : dict {key: strain}
         Train and test subsets randomly split using SKLearn train_test_split
         function with stratified labels.
         The key corresponds to the strain's index at 'self.metadata'.
     
-    Ytrain, Ytest: NDArray[int]
+    Ytrain, Ytest : NDArray[int]
         1D Array containing the labels in the same order as 'Xtrain' and
         'Xtest' respectively.
 
     """
-    classes = {'SG': 'Sine Gaussian', 'G': 'Gaussian', 'RD': 'Ring-Down'}
+    classes = ['SG', 'G', 'RD']
     n_classes = 3
 
     def __init__(self,
@@ -717,10 +863,10 @@ class SyntheticWaves(Base):
         """
         Parameters
         ----------
-        n_waves_per_class: int
+        n_waves_per_class : int
             Number of waves per class to produce.
 
-        wave_parameters_limits: dict
+        wave_parameters_limits : dict
             Min/Max limits of the waveforms' parameters, 9 in total.
             Keys:
             - mf0,   Mf0:   min/Max central frequency (SG and RD).
@@ -728,34 +874,34 @@ class SyntheticWaves(Base):
             - mhrss, Mhrss: min/Max sum squared amplitude of the wave.
             - mT,    MT:    min/Max duration (only G).
         
-        max_length: int
+        max_length : int
             Maximum length of the waves. This parameter is used to generate the
             initial time array with which the waveforms are computed.
         
-        peak_time_max_length: float
+        peak_time_max_length : float
             Time of the peak of the envelope of the waves in the initial time
             array (built with 'max_length').
         
-        amp_threshold: float
+        amp_threshold : float
             Fraction w.r.t. the maximum absolute amplitude of the wave envelope
             below which to end the wave by shrinking the array and applying a
             windowing to the edges.
         
-        tukey_alpha: float
+        tukey_alpha : float
             Alpha parameter (width) of the Tukey window applied to each wave to
             make sure their values end at the exact duration determined by either
             the duration parameter or the amplitude threshold.
         
-        train_size: int | float
+        train_size : int | float
             If int, total number of samples to include in the train dataset.
             If float, fraction of the total samples to include in the train
             dataset.
             For more details see 'sklearn.model_selection.train_test_split'
             with the flag `stratified=True`.
         
-        sample_rate: int
+        sample_rate : int
         
-        random_seed: int, optional.
+        random_seed : int, optional.
         
         """
         self.n_waves_per_class = n_waves_per_class
@@ -807,7 +953,7 @@ class SyntheticWaves(Base):
             raise AttributeError("'metadata' needs to be generated first!")
 
         self.strains = self._init_strains_dict()
-        t_max = self.max_length/self.sample_rate - 1/self.sample_rate
+        t_max = (self.max_length - 1) / self.sample_rate
         times = np.linspace(0, t_max, self.max_length)
         
         for i in range(len(self)):
@@ -980,26 +1126,26 @@ class CoReWaves(Base):
 
     Attributes
     ----------
-    classes: dict[str]
-        Ordered dict of labels, one per class (category).
+    classes : list[str]
+        List of labels, one per class (category).
     
-    strains: dict {class: {id: gw_strain} }
+    strains : dict {class: {id: gw_strain} }
         Strains stored as a nested dictionary, with each strain in an
         independent array to provide more flexibility with data of a wide
         range of lengths.
         The class key is the name of the class, a string which must exist in
-        the 'classes' dictionary.
+        the 'classes' list.
         The 'id' is an unique identifier for each strain, and must exist in the
         `self.metadata.index` column of the metadata DataFrame.
         Initially, an extra depth layer is defined to store the polarizations
         of the CoRe GW simulated data. After the projection this layer will be
         collapsed to a single strain.
     
-    times: dict {class: {id: gw_time_points} }, optional
+    times : dict {class: {id: gw_time_points} }, optional
         Time samples associated with the strains, following the same structure.
         Useful when the sampling rate is variable or different between strains.
     
-    metadata: pandas.DataFrame
+    metadata : pandas.DataFrame
         All parameters and data related to the strains.
         The order is the same as inside 'strains' if unrolled to a flat list
         of strains up to the second depth level (the id.).
@@ -1017,10 +1163,10 @@ class CoReWaves(Base):
         }
         ```
     
-    units: str
+    units : str
         Flag indicating whether the data is in 'geometrized' or 'IS' units.
     
-    sample_rate: int, optional
+    sample_rate : int, optional
         Initially this attribute is None because the initial GW from CoRe are
         sampled at different and non-constant sampling rates. After the
         resampling, this attribute will be set to the new global sampling rate.
@@ -1072,15 +1218,15 @@ class CoReWaves(Base):
         
         Returns
         -------
-        strains: dict{eos: {id: {pol: strain} } }
+        strains : dict{eos: {id: {pol: strain} } }
         
-        times: dict{'eos': {'id': {pol: time_samples}} }
+        times : dict{'eos': {'id': {pol: time_samples}} }
             Time samples associated to each GW.
             Since it has to follow the same nested structure as 'strains', but
             the time samples are the same among polarizations, for each GW both
             polarizations point to the same array in memory.
         
-        metadata: pandas.DataFrame
+        metadata : pandas.DataFrame
             All parameters and data related to the strains.
             The order is the same as inside 'strains' if unrolled to a flat list
             of strains up to the second depth level (the id.).
@@ -1165,17 +1311,17 @@ class CoReWaves(Base):
         
         Parameters
         ----------
-        detector: str
+        detector : str
             Name of the ET arm in Bilby for InterferometerList().
             Possibilities are 'ET1', 'ET2', and 'ET3'.
         
-        ra, dec: float
+        ra, dec : float
             Sky position in equatorial coordinates.
         
-        geo_time: int | float
+        geo_time : int | float
             Time of injection in GPS.
         
-        psi: float
+        psi : float
             Polarization angle.
         
         """
