@@ -23,8 +23,7 @@ from sklearn.model_selection import train_test_split
 
 from . import ioo
 from .detectors import project_et
-from .dictools import (_get_value_from_nested_dict, _replicate_structure_nested_dict,
-                       _set_value_to_nested_dict, _unroll_nested_dictionary_keys)
+from . import dictools
 from .synthetic import (NonwhiteGaussianNoise, sine_gaussian_waveform, gaussian_waveform,
                         ring_down_waveform)
 from .timat import resample, gen_time_array
@@ -32,7 +31,7 @@ from .units import *
 
 
 __all__ = ['Base', 'BaseInjected', 'SyntheticWaves', 'InjectedSyntheticWaves',
-           'CoReWaves']
+           'CoReWaves', 'InjectedCoReWaves']
 
 
 class Base:
@@ -134,6 +133,8 @@ class Base:
         self.metadata: pd.DataFrame = None
         self.labels: dict[int] = self._gen_labels()
         self.strains: dict = None
+        # Number of nested layers in strains' dictionary. Keep updated always.
+        self._dict_depth = dictools._get_depth(self.strains)
         self.max_length = self._find_max_length()
         self.random_seed: int = None  # SKlearn train_test_split doesn't accept a Generator yet.
 
@@ -187,12 +188,12 @@ class Base:
             times = self.times
 
         for *keys, strain in self.items():
-            time = _get_value_from_nested_dict(times, keys)
+            time = dictools._get_value_from_nested_dict(times, keys)
             strain_resampled, time_resampled, sf_up, factor_down = resample(
                 strain, time, sample_rate, full_output=True
             )
-            _set_value_to_nested_dict(self.strains, keys, strain_resampled)
-            _set_value_to_nested_dict(self.times, keys, time_resampled)
+            dictools._set_value_to_nested_dict(self.strains, keys, strain_resampled)
+            dictools._set_value_to_nested_dict(self.times, keys, time_resampled)
             
             if verbose:
                 print(
@@ -212,7 +213,7 @@ class Base:
         the changes will be reflected inside the 'strains' attribute.
         
         """        
-        return _get_value_from_nested_dict(self.strains, indices)
+        return dictools._get_value_from_nested_dict(self.strains, indices)
 
     def get_times(self, *indices) -> np.ndarray:
         """Get a single time array from the complete index coordinates.
@@ -224,7 +225,7 @@ class Base:
         the changes will be reflected inside the 'times' attribute.
         
         """        
-        return _get_value_from_nested_dict(self.times, indices)
+        return dictools._get_value_from_nested_dict(self.times, indices)
 
     def keys(self, max_depth: int = None) -> list:
         """Return the unrolled combinations of all strain identifiers.
@@ -247,7 +248,7 @@ class Base:
             The unrolled combination in a Python list.
         
         """
-        keys = _unroll_nested_dictionary_keys(self.strains, max_depth=max_depth)
+        keys = dictools._unroll_nested_dictionary_keys(self.strains, max_depth=max_depth)
 
         return keys
 
@@ -304,7 +305,7 @@ class Base:
             length = len(strain)
             t_end = (length - 1) / self.sample_rate
             time = np.linspace(0, t_end, length)
-            _set_value_to_nested_dict(times, keys, time)
+            dictools._set_value_to_nested_dict(times, keys, time)
         
         return times
     
@@ -611,6 +612,7 @@ class BaseInjected(Base):
         #----------------------------------------------------------------------
 
         self.strains = None
+        self._dict_depth = clean_dataset._dict_depth + 1
         self.snr_list = []
         self.pad = {}  # {snr: pad}
 
@@ -689,11 +691,32 @@ class BaseInjected(Base):
         in the clean strains attribute, and adding the (lowest) SNR layer.
         
         """
-        strains_dict = _replicate_structure_nested_dict(self.strains_clean)
-        for indices in _unroll_nested_dictionary_keys(strains_dict):
-            _set_value_to_nested_dict(strains_dict, indices, {})
+        strains_dict = dictools._replicate_structure_nested_dict(self.strains_clean)
+        for indices in dictools._unroll_nested_dictionary_keys(strains_dict):
+            dictools._set_value_to_nested_dict(strains_dict, indices, {})
 
         return strains_dict
+
+    def get_times(self, *indices) -> np.ndarray:
+        """Get a single time array from the complete index coordinates.
+        
+        This is just a shortcut to avoid having to write several squared
+        brackets.
+        Ignores the SNR coordinate if given.
+
+        NOTE: The returned strain is not a copy; if its contents are modified,
+        the changes will be reflected inside the 'times' attribute.
+        
+        """
+        if len(indices) == self._dict_depth:
+            indices = indices[:-1]
+        elif len(indices) != self._dict_depth - 1:
+            raise ValueError(
+                "the number of indices does not match with the layout (the depth)"
+                " of the strains' nested dictionary."
+            )
+
+        return dictools._get_value_from_nested_dict(self.times, indices)
     
     def gen_injections(self, snr: int | float | list, pad: int = 0) -> None:
         """Inject all strains in simulated noise with the given SNR values.
@@ -744,7 +767,7 @@ class BaseInjected(Base):
         if self.strains is None:
             self.strains = self._init_strains_dict()
         
-        for clas, key in _unroll_nested_dictionary_keys(self.strains_clean):
+        for clas, key in dictools._unroll_nested_dictionary_keys(self.strains_clean):
             gw_clean = self.strains_clean[clas][key]
             strain_clean_padded = np.pad(gw_clean, pad)
             
@@ -777,7 +800,8 @@ class BaseInjected(Base):
         """Export all strains to GWF format, one file per strain."""
 
         for indices in self.keys():
-            times, strain = self.get_strain(*indices)
+            strain = self.get_strain(*indices)
+            times = self.get_times(*indices)
             ts = TimeSeries(
                 data=strain,
                 times=t0_gps + times,
@@ -953,6 +977,8 @@ class SyntheticWaves(Base):
             raise AttributeError("'metadata' needs to be generated first!")
 
         self.strains = self._init_strains_dict()
+        self._dict_depth = dictools._get_depth(self.strains)
+
         t_max = (self.max_length - 1) / self.sample_rate
         times = np.linspace(0, t_max, self.max_length)
         
@@ -1101,10 +1127,10 @@ class InjectedSyntheticWaves(BaseInjected):
 
         # Initialize the Train/Test subsets inheriting the indices of the input
         # clean dataset instance.
-        self.Xtrain = _replicate_structure_nested_dict(clean_dataset.Xtrain)
-        self.Xtest = _replicate_structure_nested_dict(clean_dataset.Xtest)
-        self.Ytrain = _replicate_structure_nested_dict(clean_dataset.Ytrain)
-        self.Ytest = _replicate_structure_nested_dict(clean_dataset.Ytest)
+        self.Xtrain = dictools._replicate_structure_nested_dict(clean_dataset.Xtrain)
+        self.Xtest = dictools._replicate_structure_nested_dict(clean_dataset.Xtest)
+        self.Ytrain = dictools._replicate_structure_nested_dict(clean_dataset.Ytrain)
+        self.Ytest = dictools._replicate_structure_nested_dict(clean_dataset.Ytest)
 
 
 class CoReWaves(Base):
@@ -1202,6 +1228,7 @@ class CoReWaves(Base):
 
         self.units = 'IS'
         self.strains, self.times, self.metadata = self._get_strain_and_metadata(coredb)
+        self._dict_depth = dictools._get_depth(self.strains)
         self.labels = self._gen_labels()
         self.max_length = self._find_max_length()
 
@@ -1345,6 +1372,8 @@ class CoReWaves(Base):
             self.times[clas][id_] = gen_time_array(t0, t1, self.sample_rate)
             
             assert len(self.times[clas][id_]) == len(self.strains[clas][id_])
+        
+        self._dict_depth = dictools._get_depth(self.strains)
     
     def convert_to_IS_units(self) -> None:
         """Convert data from scaled geometrized units to IS units.
@@ -1399,7 +1428,7 @@ class CoReWaves(Base):
         self.units = 'geometrized'
 
 
-class InjectedCoReWaves(BaseInjected, CoReWaves):
+class InjectedCoReWaves(BaseInjected):
     """Manage injections of GW data from CoRe dataset.
 
     TODO
@@ -1420,6 +1449,7 @@ class InjectedCoReWaves(BaseInjected, CoReWaves):
             clean_dataset, psd=psd, detector=detector, noise_length=noise_length,
             freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order, random_seed=random_seed
         )
+        self.times = deepcopy(clean_dataset.times)
 
 
 

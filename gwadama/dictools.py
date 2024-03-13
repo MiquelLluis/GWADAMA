@@ -62,7 +62,8 @@ def __unroll_nested_dictionary_keys(dictionary: dict,
 def _get_value_from_nested_dict(dict_, keys: list):
     value = dict_
     for key in keys:
-        value = value[key]
+        if not isinstance((value:=value[key]), dict) and not hasattr(value, '__iter__'):
+            raise ValueError("the nested dictionary shape does not match with the input key sequence")
 
     return value
 
@@ -107,3 +108,20 @@ def _replicate_structure_nested_dict(input_dict: dict) -> dict:
             replicated_dict[key] = None
 
     return replicated_dict
+
+
+def _get_depth(dict_: dict) -> int:
+    """Return the depth of the input nested dictionary.
+    
+    A simple (non-nested) dictionary has a depth of 1.
+    Assumes a homogeneous nested dictionary, and only looks for the first
+    element at each layer.
+    
+    """
+    depth = 0
+    while isinstance(dict_, dict):
+        key = next(iter(dict_.keys()))
+        dict_ = dict_[key]
+        depth += 1
+    
+    return depth
