@@ -84,8 +84,8 @@ def resample(strain: np.ndarray,
 def gen_time_array(t0, t1, sr):
     """Generate a time array with constant sampling rate.
     
-    Extension of numpy.arange which takes care of those cases when round-off
-    errors produce unexpected results. When this happens, the extra sample is
+    Extension of numpy.arange which takes care of the case when an extra sample
+    is produced due to round-off errors. When this happens, the extra sample is
     cut off.
 
     Parameters
@@ -112,3 +112,21 @@ def gen_time_array(t0, t1, sr):
         times = times[:-1]
     
     return times
+
+
+def pad_time_array(times: np.ndarray, pad: int) -> np.ndarray:
+    """Extend a time array on both sides by 'pad' number of samples.
+    
+    NOTES
+    -----
+    - Computes again the entire time array.
+    - Due to round-off errors some intermediate time values might be slightly
+      different.
+    
+    """
+    l = 2*pad + len(times)
+    dt = times[1] - times[0]
+    t0 = times[0] - pad*dt
+    t1 = t0 + (l-1)*dt
+
+    return np.linspace(t0, t1, l)
