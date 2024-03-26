@@ -3,6 +3,7 @@
 Collection of utility functions related to nested Python dictionaries.
 
 """
+import numpy as np
 
 
 def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> list:
@@ -125,3 +126,53 @@ def _get_depth(dict_: dict) -> int:
         depth += 1
     
     return depth
+
+
+def _dict_to_stacked_array(dict_: dict, target_length: int = None) -> tuple[np.ndarray, list]:
+    """Stack the arrays inside a dict() to a 2d-array.
+    
+    Given a dict whose values are flat numpy arrays, with potentially different
+    lengths, stacks them in a homogeneous 2d-array aligned to the left,
+    zero-padding the remaining space.
+
+    Parameters
+    ----------
+    dict_ : dict[str: np.ndarray]
+        Non-nested Python dictionary containing numpy 1d-arrays.
+    
+    target_length : int, optional
+        If given, defines the size of the second axis of the returned 2d-array.
+        If omitted, the size will be equal to the longest array inside 'dict_'.
+    
+    Returns
+    -------
+    stacked_arrays : 2d-array
+        Stacked arrays, with right zero-padding those original strains whose
+        length were shorter.
+    
+    lengths : list
+        Original length of each input array, following the same order as the
+        first axis of 'stacked_arrays'.
+    
+    """
+    if target_length is None:
+        target_length = 0
+        for array in dict_.values():
+            l = len(array)
+            if l > target_length:
+                target_length = l
+        if target_length == 0:
+            raise ValueError(
+                "no arrays with nonzero length were found inside 'dict_'"
+            )
+
+    stacked_arrays = np.zeros((len(dict_), target_length), dtype=float)
+    lengths = []
+
+    for i, array in enumerate(dict_.values()):
+        l = len(array)
+        pad = target_length - l
+        stacked_arrays[i] = np.pad(array, (0, pad))
+        lengths.append(l)
+    
+    return stacked_arrays, lengths
