@@ -64,7 +64,7 @@ class Base:
         this does not include possible variations such polarizations or
         multiple scallings of the same waveform when performing injections.
     
-    strains : dict[dict]
+    strains : dict[dict [...]]
         Strains stored as a nested dictionary, with each strain in an
         independent array to provide more flexibility with data of a wide
         range of lengths.
@@ -119,6 +119,11 @@ class Base:
     - If working with two polarizations, they can be stored with just an
       extra depth layer.
     
+    TODO:
+    - Any subset (like train/test) should not be stored in the same instance;
+      instead it should be passed as a new instance and let the user store and
+      manage them as needed.
+    
     """
     def __init__(self):
         """Overwrite when inheriting!"""
@@ -133,7 +138,7 @@ class Base:
         self.labels: dict[int] = self._gen_labels()
         self.strains: dict = None
         # Number of nested layers in strains' dictionary. Keep updated always.
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth: int = dictools._get_depth(self.strains)
         self.max_length = self._find_max_length()
         self.random_seed: int = None  # SKlearn train_test_split doesn't accept a Generator yet.
         self._track_times = False  # If True, self.times must be not None.
@@ -156,7 +161,10 @@ class Base:
         return len(self.metadata)
 
     def _gen_labels(self) -> dict:
-        """Constructs the labels' dictionary.TODO
+        """Constructs the labels' dictionary.
+
+        The labels attribute maps each class label to its indexed position in
+        the class list atribute.
         
         Returns
         -------
@@ -227,6 +235,52 @@ class Base:
         
         """        
         return dictools._get_value_from_nested_dict(self.times, indices)
+
+    def get_xtrain_array(self, length=None):
+        """Get the train subset stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals in the train subset into an homogeneous numpy array
+        whose length (axis=1) is determined by either 'length' or, if None, by
+        the longest strain in the subset. The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+
+        Returns
+        -------
+        train_array : np.ndarray
+            train subset.
+        
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of 'train_array'.
+
+        """
+        return dictools._dict_to_stacked_array(self.Xtrain, target_length=length)
+    
+    def get_xtest_array(self, length=None):
+        """Get the test subset stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals in the test subset into an homogeneous numpy array
+        whose length (axis=1) is determined by either 'length' or, if None, by
+        the longest strain in the subset. The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+
+        Returns
+        -------
+        test_array : np.ndarray
+            test subset.
+        
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of 'test_array'.
+
+        """
+        return dictools._dict_to_stacked_array(self.Xtest, target_length=length)
 
     def keys(self, max_depth: int = None) -> list:
         """Return the unrolled combinations of all strain identifiers.
@@ -602,7 +656,8 @@ class BaseInjected(Base):
         self.metadata = deepcopy(clean_dataset.metadata)
         self.strains_clean = deepcopy(clean_dataset.strains)
         self._track_times = clean_dataset._track_times
-        self.times = deepcopy(clean_dataset.times)
+        if self._track_times:
+            self.times = deepcopy(clean_dataset.times)
         self.sample_rate = clean_dataset.sample_rate
         self.max_length = clean_dataset.max_length
 
@@ -763,7 +818,8 @@ class BaseInjected(Base):
         if set(snr_list) & set(self.snr_list):
             raise ValueError("one or more SNR values are already present in the dataset")
 
-        times_new = self.times
+        if self._track_times:
+            times_new = self.times
 
         # 1st time making injections.
         if self.strains is None:
@@ -890,11 +946,10 @@ class SyntheticWaves(Base):
         'Xtest' respectively.
 
     """
-    classes = ['SG', 'G', 'RD']
-    n_classes = 3
 
     def __init__(self,
                  *,
+                 classes: list[str],
                  n_waves_per_class: int,
                  wave_parameters_limits: dict,
                  max_length: int,
@@ -948,6 +1003,7 @@ class SyntheticWaves(Base):
         random_seed : int, optional.
         
         """
+        self.classes = classes
         self.n_waves_per_class = n_waves_per_class
         self.sample_rate = sample_rate
         self.wave_parameters_limits = wave_parameters_limits
@@ -959,8 +1015,9 @@ class SyntheticWaves(Base):
         self.rng = np.random.default_rng(random_seed)
 
         self._gen_metadata()
-        self.labels = self._gen_labels()
+        self._track_times = False
         self._gen_dataset()
+        self.labels = self._gen_labels()
         self.build_train_test_subsets(train_size)
 
     def _gen_metadata(self):
@@ -993,11 +1050,33 @@ class SyntheticWaves(Base):
         })
 
     def _gen_dataset(self):
+        """Generate the dataset from the previously generated metadata.
+
+        After generating the waveforms with the analytical expressions it
+        shrinks them to the specified duration in the metadata. This is
+        necessary because the analytical expressions are infinite, so we apply
+        a window to get perfect edges. However this does not necessary align
+        with the exact duration provided by the metadata due to the signals
+        being sampled at discrete values. Therefore after the windowing the
+        final duration is computed again and updated in the metadata attribute.
+        
+        Attributes
+        ----------
+        strains : dict[dict]
+            Creates the strains attribute with the properties stated at the
+            class' docstring.
+        
+        _dict_depth : int
+            Number of nested layers in strains' dictionary.
+        
+        metadata : pd.DataFrame
+            Updates the duration of the waveforms after shrinking them.
+
+        """
         if self.metadata is None:
             raise AttributeError("'metadata' needs to be generated first!")
 
         self.strains = self._init_strains_dict()
-        self._dict_depth = dictools._get_depth(self.strains)
 
         t_max = (self.max_length - 1) / self.sample_rate
         times = np.linspace(0, t_max, self.max_length)
@@ -1030,6 +1109,8 @@ class SyntheticWaves(Base):
                         Q=self.metadata.at[i,'Q'],
                         hrss=self.metadata.at[i,'hrss']
                     )
+        
+        self._dict_depth = dictools._get_depth(self.strains)
 
         self._apply_threshold_windowing()
     
