@@ -435,7 +435,6 @@ class Base:
         self.Xtest, self.Ytest = self._build_subset_strains(id_test)
         
 
-
 class BaseInjected(Base):
     """Manage an injected dataset with multiple SNR values.
 
@@ -1433,7 +1432,6 @@ class CoReWaves(Base):
         
         return strains, times, metadata
 
-    
     def project(self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float):
         """Project strains into the ET detector at specified coordinates.
 
