@@ -556,13 +556,13 @@ class BaseInjected(Base):
         See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
         for more information.
 
-    psd : callable
-        Function that takes frequency values and returns the Power Spectral
-        Density (PSD) of the detector's sensitivity at those frequencies.
+    psd_ : NDArray
+        Numerical representation of the Power Spectral Density (PSD) of the
+        detector's sensitivity.
     
-    asd : callable
-        Function that takes frequency values and returns the Amplitude Spectral
-        Density (ASD) of the detector's sensitivity at those frequencies.
+    asd_ : NDArray
+        Numerical representation of the Amplitude Spectral Density (ASD) of the
+        detector's sensitivity.
 
     noise : gwadama.ioo.NonwhiteGaussianNoise
         Background noise instance from NonwhiteGaussianNoise.
@@ -680,8 +680,8 @@ class BaseInjected(Base):
         self.detector = detector
         self.freq_cutoff = freq_cutoff
         self.freq_butter_order = freq_butter_order
-        self.psd, self._psd = self._setup_psd(psd)
-        self.asd, self._asd = self._setup_asd_from_psd()
+        self._psd, self.psd_array = self._setup_psd(psd)
+        self._asd, self.asd_array = self._setup_asd_from_psd(psd)
         self.noise = self._generate_background_noise(noise_length)
 
         # Injection related:
@@ -714,7 +714,8 @@ class BaseInjected(Base):
         
         """
         state = self.__dict__.copy()
-        del state['psd'], state['asd']
+        del state['_psd']
+        del state['_asd']
         
         return state
     
@@ -730,10 +731,10 @@ class BaseInjected(Base):
         method has not been studied, use at your own discretion.
         
         """
-        psd, _ = self._setup_psd(state['_psd'])
-        asd, _ = self._setup_asd_from_psd()
-        state['psd'] = psd
-        state['asd'] = asd
+        _psd, _ = self._setup_psd(state['psd_array'])
+        _asd, _ = self._setup_asd_from_psd(state['psd_array'])
+        state['_psd'] = _psd
+        state['_asd'] = _asd
         self.__dict__.update(state)
     
     def _setup_psd(self, psd: np.ndarray | Callable) -> tuple[Callable, np.ndarray]:
@@ -744,9 +745,10 @@ class BaseInjected(Base):
         """
         if callable(psd):
             psd_fun = psd
-            # Compute a realization of the PSD function with 1 bin per
-            # integer frequency.
-            freqs = np.linspace(0, self.sample_rate//2, self.sample_rate//2)
+            # Compute a realization of the PSD function with 16 bins per
+            # integer frequency to ensure the numerical representation has
+            # enough precision.
+            freqs = np.linspace(0, self.sample_rate//2, self.sample_rate*8)
             psd_array = np.stack([freqs, psd(freqs)])
             i_cut = np.argmin((freqs - self.freq_cutoff) < 0)
             psd_array[1,:i_cut] = 0
@@ -767,17 +769,61 @@ class BaseInjected(Base):
             
         return psd_fun, psd_array
 
-    def _setup_asd_from_psd(self):
-        """Setup the ASD function and array.
+    def _setup_asd_from_psd(self, psd):
+        """Setup the ASD function or array depending on the input.
         
-        Setup the amplitude spectral density function and array from their PSD
-        counterparts.
+        Setup the amplitude spectral density function and array from any of
+        those.
         
         """
-        asd = lambda f: np.sqrt(self.psd(f))
-        _asd = np.sqrt(self._psd)
+        if callable(psd):
+            asd_fun = lambda f: np.sqrt(psd)
+            # Compute a realization of the ASD function with 16 bins per
+            # integer frequency to ensure the numerical representation has
+            # enough precision.
+            freqs = np.linspace(0, self.sample_rate//2, self.sample_rate*8)
+            asd_array = np.stack([freqs, asd_fun(freqs)])
+            i_cut = np.argmin((freqs - self.freq_cutoff) < 0)
+            asd_array[1,:i_cut] = 0
+        
+        elif isinstance(psd, np.ndarray):
+            # Build a spline quadratic interpolant for the input ASD array
+            # which ensures to be 0 below the cutoff frequency.
+            asd_array = psd.copy()
+            asd_array[1] = np.sqrt(psd[1])
+            _asd_interp = sp_make_interp_spline(asd_array[0], asd_array[1], k=2)
+            def asd_fun(freqs):
+                asd = _asd_interp(freqs)
+                i_cut = np.argmin((freqs - self.freq_cutoff) < 0)
+                asd[:i_cut] = 0
+                return asd
+        
+        else:
+            raise TypeError("'psd' type not recognized")
+            
+        return asd_fun, asd_array
 
-        return asd, _asd
+    def psd(frequencies: float | np.ndarray[float]) -> np.ndarray[float]:
+        """Power spectral density (PSD) of the detector at given frequencies.
+
+        Interpolates the PSD at the given frequencies from their array
+        representation. If during initialization the PSD was given as its
+        array representation, the interpolant is computed using SciPy's
+        quadratic spline interpolant function.
+
+        """
+        return self._psd(frequencies)
+
+    def asd(frequencies: float | np.ndarray[float]) -> np.ndarray[float]:
+        """Amplitude spectral density (ASD) of the detector at given frequencies.
+
+        Interpolates the ASD at the given frequencies from their array
+        representation. If during initialization the ASD was given as its
+        array representation, the interpolant is computed using SciPy's
+        quadratic spline interpolant function.
+
+        """
+        return self._asd(frequencies)
     
     def _generate_background_noise(self, noise_length: int) -> 'NonwhiteGaussianNoise':
         """The noise realization is generated by NonwhiteGaussianNoise."""
