@@ -320,7 +320,7 @@ class Base:
         Example of usage with an arbitrary number of keys in the nested
         dictionary of strains:
         ```
-        for *keys, strain in dataset.items():
+        for *keys, strain in self.items():
             print(f"Number of identifiers: {len(keys)}")
             print(f"Length of the strain: {len(strain)}")
             do_something(strain)
@@ -558,7 +558,11 @@ class BaseInjected(Base):
 
     psd : callable
         Function that takes frequency values and returns the Power Spectral
-        Density of the detector's sensitivity at those frequencies.
+        Density (PSD) of the detector's sensitivity at those frequencies.
+    
+    asd : callable
+        Function that takes frequency values and returns the Amplitude Spectral
+        Density (ASD) of the detector's sensitivity at those frequencies.
 
     noise : gwadama.ioo.NonwhiteGaussianNoise
         Background noise instance from NonwhiteGaussianNoise.
@@ -566,9 +570,16 @@ class BaseInjected(Base):
     snr_list : list
 
     pad : dict
-        Padding introduced at each SNR injection.
+        Padding introduced at each SNR injection, used in case the strains will
+        be whitened after, to remove the vigneting at edges.
         It is associated to SNR values because the only implemented way to
-        pad the signals is during the signal linjection.
+        pad the signals is during the signal injection.
+    
+    whitened : bool
+        Flat indicating whether the dataset has been whitened. Initially will
+        be set to False, and changed to True after calling the 'whiten' method.
+        Once whitened, this flag will remain True, since the whitening is
+        implemented to be irreversible instance-wise.
 
     Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using SKLearn train_test_split
@@ -620,7 +631,8 @@ class BaseInjected(Base):
             ```
             psd[0] = frequency_samples
             psd[1] = psd_samples
-            ```
+            ```.
+            NOTE: It is also used to compute the 'asd' attribute (ASD).
 
         detector : str
             GW detector name.
@@ -669,6 +681,7 @@ class BaseInjected(Base):
         self.freq_cutoff = freq_cutoff
         self.freq_butter_order = freq_butter_order
         self.psd, self._psd = self._setup_psd(psd)
+        self.asd, self._asd = self._setup_asd_from_psd()
         self.noise = self._generate_background_noise(noise_length)
 
         # Injection related:
@@ -678,39 +691,57 @@ class BaseInjected(Base):
         self._dict_depth = clean_dataset._dict_depth + 1
         self.snr_list = []
         self.pad = {}  # {snr: pad}
+        self.whitened = False  # Switched to True after calling self.whiten().
 
-        # Train/Test subset views.
+        # Train/Test subset views:
+        #----------------------------------------------------------------------
+
         self.Xtrain = None
         self.Xtest = None
         self.Ytrain = None
         self.Ytest = None
     
     def __getstate__(self):
-        """Avoid error when trying to pickle PSD interpolator.
+        """Avoid error when trying to pickle PSD and ASD interpolants.
         
-        Turns out Pickle tries to serialize the PSD interpolant, however
-        Pickle is not able to serialize encapsulated functions.
+        Turns out Pickle tries to serialize the PSD and ASD interpolants,
+        however Pickle is not able to serialize encapsulated functions.
+        This is solved by removing said functions and computing the
+        interpolants from their array representations when unpickling.
+
+        NOTE: The loss of accuracy over repeated (de)serialization using this
+        method has not been studied, use at your own discretion.
         
         """
         state = self.__dict__.copy()
-        del state['psd']
+        del state['psd'], state['asd']
         
         return state
     
     def __setstate__(self, state):
-        """Avoid error when trying to pickle PSD interpolator.
+        """Avoid error when trying to unpickle PSD and ASD interpolants.
         
-        Turns out pickle tries to serialize the PSD interpolant, however
-        Pickle is not able to serialize encapsulated functions.
+        Turns out Pickle tries to serialize the PSD and ASD interpolants,
+        however Pickle is not able to serialize encapsulated functions.
+        This is solved by removing said functions and computing the
+        interpolants from their array representations when unpickling.
+        
+        NOTE: The loss of accuracy over repeated (de)serialization using this
+        method has not been studied, use at your own discretion.
         
         """
         psd, _ = self._setup_psd(state['_psd'])
+        asd, _ = self._setup_asd_from_psd()
         state['psd'] = psd
+        state['asd'] = asd
         self.__dict__.update(state)
     
     def _setup_psd(self, psd: np.ndarray | Callable) -> tuple[Callable, np.ndarray]:
-        """Setup the PSD function or array depending on the input."""
-
+        """Setup the PSD function or array depending on the input.
+        
+        Setup the power spectral density function and array from any of those.
+        
+        """
         if callable(psd):
             psd_fun = psd
             # Compute a realization of the PSD function with 1 bin per
@@ -735,6 +766,18 @@ class BaseInjected(Base):
             raise TypeError("'psd' type not recognized")
             
         return psd_fun, psd_array
+
+    def _setup_asd_from_psd(self):
+        """Setup the ASD function and array.
+        
+        Setup the amplitude spectral density function and array from their PSD
+        counterparts.
+        
+        """
+        asd = lambda f: np.sqrt(self.psd(f))
+        _asd = np.sqrt(self._psd)
+
+        return asd, _asd
     
     def _generate_background_noise(self, noise_length: int) -> 'NonwhiteGaussianNoise':
         """The noise realization is generated by NonwhiteGaussianNoise."""
