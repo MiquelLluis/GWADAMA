@@ -601,6 +601,7 @@ class BaseInjected(Base):
                  noise_length: int,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
+                 fduration: int,
                  random_seed: int):
         """Base constructor for injected datasets.
 
@@ -652,6 +653,9 @@ class BaseInjected(Base):
             Butterworth filter order.
             See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
             for more information.
+        
+        fduration : int
+            Length (in samples) of the time-domain FIR whitening filter.
 
         random_seed : int
             Value passed to 'sklearn.model_selection.train_test_split' to
@@ -693,6 +697,7 @@ class BaseInjected(Base):
         self.snr_list = []
         self.pad = {}  # {snr: pad}
         self.whitened = False  # Switched to True after calling self.whiten().
+        self.fduration = fduration
 
         # Train/Test subset views:
         #----------------------------------------------------------------------
@@ -940,7 +945,7 @@ class BaseInjected(Base):
                     injected = fat.whiten(
                         injected, asd=self.asd_array, margin=pad, sample_rate=self.sample_rate,
                         # Parameters for GWpy's whiten() function:
-                        highpass=self.freq_cutoff
+                        highpass=self.freq_cutoff, fduration=self.fduration
                     )
                 self.strains[clas][key][snr_] = injected
             
@@ -1020,7 +1025,7 @@ class BaseInjected(Base):
             strain_w = fat.whiten(
                 strain, asd=self.asd_array, margin=self.pad[snr], sample_rate=self.sample_rate,
                 # Parameters for GWpy's whiten() function:
-                highpass=self.freq_cutoff
+                highpass=self.freq_cutoff, fduration=self.fduration
             )
             # Update strains attribute.
             dictools._set_value_to_nested_dict(self.strains, keys, strain_w)

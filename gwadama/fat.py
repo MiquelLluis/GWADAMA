@@ -10,7 +10,7 @@ from gwpy.timeseries import TimeSeries
 import numpy as np
 
 
-def whiten(strain, *, asd, margin, sample_rate, normed=True, **kwargs):
+def whiten(strain, *, asd, margin, sample_rate, fduration, highpass, normed=True, **kwargs):
     """Whiten a single strain signal.
 
     Whiten a strain using the input amplitude spectral density 'asd',
@@ -32,8 +32,16 @@ def whiten(strain, *, asd, margin, sample_rate, normed=True, **kwargs):
     margin : int
         Marging at each side of the strain to crop in order to avoid vigneting
         due to the windowing during the whitening.
+        The corrupted area at each side is `0.5*fduration` in GWpy's whiten(),
+        which by default is 2 s, thus 1 s at each side.
     
     sample_rate : int
+
+    fduration : int
+        Length (in samples) of the time-domain FIR whitening filter.
+    
+    highpass : int
+        Highpass corner frequency (in Hz) of the FIR whitening filter.
     
     normed : bool
         If True, normalizes the strains to their maximum absolute amplitude.
@@ -51,7 +59,12 @@ def whiten(strain, *, asd, margin, sample_rate, normed=True, **kwargs):
         asd = FrequencySeries(asd[1], frequencies=asd[0])
  
     frame = TimeSeries(strain, sample_rate=sample_rate)
-    strain_w = frame.whiten(asd=asd, **kwargs).value
+    strain_w = frame.whiten(
+        asd=asd,
+        fduration=fduration/sample_rate,  # to seconds
+        highpass=highpass,
+        **kwargs
+    ).value
     strain_w = strain_w[margin:-margin]
 
     if normed:
