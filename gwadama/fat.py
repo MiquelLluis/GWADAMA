@@ -17,7 +17,7 @@ def whiten(strain, *, asd, margin, sample_rate, normed=True, **kwargs):
     and shrinking signals afterwarwds to 'l_window' to account for the vignet
     effect introduced by the windowing.
 
-    PARAMETERS
+    Parameters
     ----------
     strain : NDArray
         Strain data points in time domain.
@@ -40,13 +40,18 @@ def whiten(strain, *, asd, margin, sample_rate, normed=True, **kwargs):
 
     **kwargs:
         Extra arguments passed to gwpy.timeseries.Timeseries.whiten().
+    
+    Returns
+    -------
+    strain_w : NDArray
+        Whitened strain (in time domain).
 
     """
     if not isinstance(asd, FrequencySeries):
         asd = FrequencySeries(asd[1], frequencies=asd[0])
  
     frame = TimeSeries(strain, sample_rate=sample_rate)
-    strain_w = frame.whiten(asd=asd, sample_rate=sample_rate, **kwargs).value
+    strain_w = frame.whiten(asd=asd, **kwargs).value
     strain_w = strain_w[margin:-margin]
 
     if normed:

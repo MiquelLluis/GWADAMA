@@ -871,6 +871,8 @@ class BaseInjected(Base):
           IS, injected, and converted back to geometrized.
         - After each injection, applies a highpass filter at the low-cut
           frequency specified at __init__.
+        - If the method 'whiten' has been already called, all further
+          injections will automatically be whitened and their pad removed.
         
         Parameters
         ----------
@@ -882,12 +884,13 @@ class BaseInjected(Base):
         
         Notes
         -----
-        - If whitening is intended to be applyed afterwards it is useful to
+        - If whitening is intended to be applied afterwards it is useful to
           pad the signal in order to avoid the window vignetting produced by
-          the whitening itself.
+          the whitening itself. This pad will be cropped afterwards.
         
         - New injections are stored at the 'strains' atrribute, with the pad
-          associated to all the injections performed at once.
+          associated to all the injections performed at once. Even when
+          whitening is also performed right after the injections.
         
         Raises
         ------
@@ -931,6 +934,8 @@ class BaseInjected(Base):
                     strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order
                 )
                 injected, _ = self.noise.inject(strain_clean_padded, snr=snr_)
+                if self.whitened:
+                    raise NotImplementedError  # TODO
                 self.strains[clas][key][snr_] = injected
             
             # Time arrays:
@@ -984,6 +989,36 @@ class BaseInjected(Base):
 
             if verbose:
                 print("Strain exported to", file)
+    
+    def whiten(self):
+        """Whiten injected strains.
+        
+        Calling this method performs the whitening of all injected strains.
+        Strains are later cut to their original size before adding the pad,
+        to remove the vigneting.
+        
+        NOTE: This is an irreversible action; if the original injections need
+        to be preserved it is advised to make a copy of the instance before
+        performing the whitening.
+        
+        """
+        if self.strains is None:
+            raise RuntimeError("no injections have been performed yet")
+        if self.whitened:
+            raise RuntimeError("dataset already whitened")
+        
+        for *keys, strain in self.items():
+            snr = keys[-1]  # Shape of self.strains dict-> {class: {id: {snr: strain}}}
+            strain_w = fat.whiten(
+                strain, asd=self.asd_array, margin=self.pad[snr],
+                # Parameters for GWpy's whiten() function:
+                highpass=self.freq_cutoff
+            )
+            # Update strains attribute.
+            dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
+        
+        self._update_train_test_subsets()
+        self.whitened = True
 
 
 class SyntheticWaves(Base):
