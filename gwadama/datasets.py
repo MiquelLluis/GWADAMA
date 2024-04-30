@@ -911,6 +911,8 @@ class BaseInjected(Base):
             raise ValueError("one or more SNR values are already present in the dataset")
 
         if self._track_times:
+            # Replaced temporarily because when injecting for the first time
+            # we need to keep the originalk time arrays.
             times_new = self.times
 
         # 1st time making injections.
@@ -935,15 +937,19 @@ class BaseInjected(Base):
                 )
                 injected, _ = self.noise.inject(strain_clean_padded, snr=snr_)
                 if self.whitened:
-                    raise NotImplementedError  # TODO
+                    injected = fat.whiten(
+                        injected, asd=self.asd_array, margin=pad, sample_rate=self.sample_rate,
+                        # Parameters for GWpy's whiten() function:
+                        highpass=self.freq_cutoff
+                    )
                 self.strains[clas][key][snr_] = injected
             
             # Time arrays:
-            # - SNR layer pointing to the same array between the same GW.
-            # - Enlarge if the strains were padded.
+            # - All SNR entries pointing to the SAME time array.
+            # - Enlarge if the strains were padded and no whitening followed.
             if self._track_times:
                 times_i = self.get_times(clas, key)
-                if pad > 0:
+                if pad > 0 and not self.whitened:
                     times_i = tat.pad_time_array(times_i, pad)
                 for snr_ in snr_list:
                     times_new[clas][key][snr_] = times_i
@@ -952,6 +958,8 @@ class BaseInjected(Base):
             self.times = times_new
         
         # Record new SNR values and related padding.
+        # NOTE: Even if whitening is applied (and hence the length unaltered)
+        # pad values are still registered, just in case.
         self.snr_list += snr_list
         for snr_ in snr_list:
             self.pad[snr_] = pad
@@ -1010,15 +1018,36 @@ class BaseInjected(Base):
         for *keys, strain in self.items():
             snr = keys[-1]  # Shape of self.strains dict-> {class: {id: {snr: strain}}}
             strain_w = fat.whiten(
-                strain, asd=self.asd_array, margin=self.pad[snr],
+                strain, asd=self.asd_array, margin=self.pad[snr], sample_rate=self.sample_rate,
                 # Parameters for GWpy's whiten() function:
                 highpass=self.freq_cutoff
             )
             # Update strains attribute.
             dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
         
-        self._update_train_test_subsets()
+        # Shrink time arrays accordingly.
+        if self._track_times:
+            key_layers = dictools._unroll_nested_dictionary_keys(
+                self.strains,
+                max_depth=self._dict_depth-1  # same signal at different SNR has same time points.
+            )
+            for keys in key_layers:
+                # Since all time arrays below SNR layer are the same, get the first one:
+                times_i = dictools._get_value_from_nested_dict(self.times, keys)
+                snr0 = next(iter(times_i.keys()))
+                times_i = times_i[snr0]
+                times_i = tat.shrink_time_array(times_i, self.pad[snr0])
+                for snr in self.snr_list:
+                    keys_all = keys + [snr]
+                    dictools._set_value_to_nested_dict(self.times, keys_all, times_i)
+        
         self.whitened = True
+        
+        # Side-effect attributes updated.
+        #
+        self.max_length = self._find_max_length()
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
 
 
 class SyntheticWaves(Base):

@@ -55,6 +55,6 @@ def whiten(strain, *, asd, margin, sample_rate, normed=True, **kwargs):
     strain_w = strain_w[margin:-margin]
 
     if normed:
-        strain_w /= np.max(np.abs(strain_w), axis=1, keepdims=True)
+        strain_w /= np.max(np.abs(strain_w))
 
     return strain_w
