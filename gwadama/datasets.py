@@ -756,18 +756,10 @@ class BaseInjected(Base):
             # enough precision.
             freqs = np.linspace(0, self.sample_rate//2, self.sample_rate*8)
             psd_array = np.stack([freqs, psd(freqs)])
-            i_cut = np.argmin((freqs - self.freq_cutoff) < 0)
-            psd_array[1,:i_cut] = 0
         
         elif isinstance(psd, np.ndarray):
-            # Build a spline quadratic interpolant for the input PSD array
-            # which ensures to be 0 below the cutoff frequency.
-            _psd_interp = sp_make_interp_spline(psd[0], psd[1], k=2)
-            def psd_fun(freqs):
-                psd = _psd_interp(freqs)
-                i_cut = np.argmin((freqs - self.freq_cutoff) < 0)
-                psd[:i_cut] = 0
-                return psd
+            # Build a spline quadratic interpolant for the input PSD array.
+            psd_fun = sp_make_interp_spline(psd[0], psd[1], k=2)
             psd_array = np.asarray(psd)
         
         else:
@@ -789,20 +781,12 @@ class BaseInjected(Base):
             # enough precision.
             freqs = np.linspace(0, self.sample_rate//2, self.sample_rate*8)
             asd_array = np.stack([freqs, asd_fun(freqs)])
-            i_cut = np.argmin((freqs - self.freq_cutoff) < 0)
-            asd_array[1,:i_cut] = 0
         
         elif isinstance(psd, np.ndarray):
-            # Build a spline quadratic interpolant for the input ASD array
-            # which ensures to be 0 below the cutoff frequency.
+            # Build a spline quadratic interpolant for the input ASD array.
             asd_array = psd.copy()
             asd_array[1] = np.sqrt(psd[1])
-            _asd_interp = sp_make_interp_spline(asd_array[0], asd_array[1], k=2)
-            def asd_fun(freqs):
-                asd = _asd_interp(freqs)
-                i_cut = np.argmin((freqs - self.freq_cutoff) < 0)
-                asd[:i_cut] = 0
-                return asd
+            asd_fun = sp_make_interp_spline(asd_array[0], asd_array[1], k=2)
         
         else:
             raise TypeError("'psd' type not recognized")
