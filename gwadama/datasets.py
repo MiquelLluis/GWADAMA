@@ -24,8 +24,9 @@ from sklearn.model_selection import train_test_split
 from . import ioo
 from .detectors import project_et
 from . import dictools
+from . import fat
 from . import synthetic
-from . import timat
+from . import tat
 from .units import *
 
 
@@ -198,7 +199,7 @@ class Base:
 
         for *keys, strain in self.items():
             time = dictools._get_value_from_nested_dict(times, keys)
-            strain_resampled, time_resampled, sf_up, factor_down = timat.resample(
+            strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
             dictools._set_value_to_nested_dict(self.strains, keys, strain_resampled)
@@ -938,7 +939,7 @@ class BaseInjected(Base):
             if self._track_times:
                 times_i = self.get_times(clas, key)
                 if pad > 0:
-                    times_i = timat.pad_time_array(times_i, pad)
+                    times_i = tat.pad_time_array(times_i, pad)
                 for snr_ in snr_list:
                     times_new[clas][key][snr_] = times_i
         
@@ -1562,7 +1563,7 @@ class CoReWaves(Base):
             t_merger = find_merger(strain) / self.sample_rate
             t0 = -t_merger
             t1 = duration - t_merger
-            self.times[clas][id_] = timat.gen_time_array(t0, t1, self.sample_rate)
+            self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
             
             assert len(self.times[clas][id_]) == len(self.strains[clas][id_])
         

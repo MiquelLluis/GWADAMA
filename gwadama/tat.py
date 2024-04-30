@@ -1,4 +1,4 @@
-"""timat.py
+"""tat.py
 
 Time analysis toolkit.
 
