@@ -368,13 +368,14 @@ class Base:
     def build_train_test_subsets(self, train_size: int | float, random_seed: int = None):
         """Generate a random Train and Test subsets.
 
-        Only the first 2 layers of keys in strains (class and ID) are
-        considered as single waveforms, any other underlying key is ignored
-        when computing the split.
+        Only entries in the index of 'metadata' DataFrame are considered
+        independent waveforms, any extra key (layer) in the 'strains' dict
+        is ignored during the shuffle. Hence, train and teset subsets are plain
+        1D dictionaries: {index: strain}
         
-        These are just new views into the stored strains. The shuffling is
-        performed by Scikit-Learn's function 'train_test_split', with
-        stratification enabled.
+        The strain values are just new views into the 'strains' attribute.
+        The shuffling is performed by Scikit-Learn's function
+        'train_test_split', with stratification enabled.
 
         Parameters
         ----------
@@ -702,10 +703,16 @@ class BaseInjected(Base):
         # Train/Test subset views:
         #----------------------------------------------------------------------
 
-        self.Xtrain = None
-        self.Xtest = None
-        self.Ytrain = None
-        self.Ytest = None
+        if clean_dataset.Xtrain is not None:
+            self.Xtrain = {k: None for k in clean_dataset.Xtrain.keys()}
+            self.Xtest = {k: None for k in clean_dataset.Xtest.keys()}
+            self.Ytrain = clean_dataset.Ytrain
+            self.Ytest = clean_dataset.Ytest
+        else:
+            self.Xtrain = None
+            self.Xtest = None
+            self.Ytrain = None
+            self.Ytest = None
     
     def __getstate__(self):
         """Avoid error when trying to pickle PSD and ASD interpolants.
