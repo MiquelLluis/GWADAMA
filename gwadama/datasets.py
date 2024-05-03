@@ -941,16 +941,17 @@ class BaseInjected(Base):
         for clas, key in dictools._unroll_nested_dictionary_keys(self.strains_clean):
             gw_clean = self.strains_clean[clas][key]
             strain_clean_padded = np.pad(gw_clean, pad)
+
+            # Highpass filter to the clean signal.
+            # NOTE: The noise realization is already generated without
+            # frequency components lower than the cutoff (they are set to
+            # 0 during the random sampling).
+            strain_clean_padded = self.noise.highpass_filter(
+                strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order
+            )
             
             # Strain injections
             for snr_ in snr_list:
-                # Highpass filter to the clean signal.
-                # NOTE: The noise realization is already generated without
-                # frequency components lower than the cutoff (they are set to
-                # 0 during the random sampling).
-                strain_clean_padded = self.noise.highpass_filter(
-                    strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order
-                )
                 injected, _ = self.noise.inject(strain_clean_padded, snr=snr_)
                 if self.whitened:
                     injected = fat.whiten(
