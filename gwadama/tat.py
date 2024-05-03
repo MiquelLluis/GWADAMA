@@ -148,3 +148,22 @@ def shrink_time_array(times: np.ndarray, unpad: int) -> np.ndarray:
     t1 = t0 + (l-1)*dt
 
     return np.linspace(t0, t1, l)
+
+
+def find_time_origin(times: np.ndarray) -> int:
+    """Find the index position of the origin of a time array.
+    
+    It is just a shortcut for `np.argmin(np.abs(times))`.
+    
+    Parameters
+    ----------
+    times : NDArray
+        Time array.
+    
+    Returns
+    -------
+    _ : int
+        Index position of the time origin (0).
+    
+    """
+    return np.argmin(np.abs(times))

@@ -384,7 +384,7 @@ class Base:
             dictools._set_value_to_nested_dict(times, keys, time)
         
         return times
-    
+
     def build_train_test_subsets(self, train_size: int | float, random_seed: int = None):
         """Generate a random Train and Test subsets.
 
@@ -878,7 +878,7 @@ class BaseInjected(Base):
         """
         return dictools._get_value_from_nested_dict(self.times, indices)
     
-    def gen_injections(self, snr: int | float | list, pad: int = 0) -> None:
+    def gen_injections(self, snr: int | float | list, pad: int = 0):
         """Inject all strains in simulated noise with the given SNR values.
 
         - The SNR is computed using a matched filter against the noise PSD.
@@ -1544,6 +1544,7 @@ class CoReWaves(Base):
         mass_starB: list[float] = []
         spin_starA: list[float] = []
         spin_starB: list[float] = []
+        merger_pos: list[int] = []  # Index position of the merger inside the array.
 
         for eos in self.classes:
             # Get and filter out GW simulations.
@@ -1579,6 +1580,9 @@ class CoReWaves(Base):
                 # point each time polarization to the same array in memory.
                 times[eos][id_] = {}
                 times[eos][id_]['plus'] = times[eos][id_]['cross'] = times_[crop]
+                
+                # The time is centered at the merger.
+                i_merger = tat.find_time_origin(times_[crop])
 
                 # Associated metadata:
                 md = coredb.metadata.loc[id_]
@@ -1590,12 +1594,14 @@ class CoReWaves(Base):
                 mass_starB.append(md['id_mass_starB'])
                 spin_starA.append(md['id_spin_starA'])
                 spin_starB.append(md['id_spin_starB'])
+                merger_pos.append(i_merger)
         
         metadata = pd.DataFrame(
             data=dict(
                 mass=mass, mass_ratio=mass_ratio, eccentricity=eccentricity,
                 mass_starA=mass_starA, mass_starB=mass_starB,
-                spin_starA=spin_starA, spin_starB=spin_starB
+                spin_starA=spin_starA, spin_starB=spin_starB,
+                merger_pos=merger_pos
             ),
             index=index
         )
@@ -1644,10 +1650,9 @@ class CoReWaves(Base):
             t0 = -t_merger
             t1 = duration - t_merger
             self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
-            
-            assert len(self.times[clas][id_]) == len(self.strains[clas][id_])
         
         self._dict_depth = dictools._get_depth(self.strains)
+        self._update_merger_positions()
     
     def convert_to_IS_units(self) -> None:
         """Convert data from scaled geometrized units to IS units.
@@ -1701,11 +1706,47 @@ class CoReWaves(Base):
 
         self.units = 'geometrized'
 
+    def _update_merger_positions(self):
+        """Update all 'merger_pos' tags inside the metadata attribute.
+        
+        Time arrays are defined with the origin at the merger. When the length
+        of the strain arrays is modified, the index position of the merger
+        must be updated.
+
+        NOTE: This method updates ALL the merger positions.
+        
+        """
+        for clas, id_ in self.keys(max_depth=2):
+            self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(self.times[clas][id_])
+
 
 class InjectedCoReWaves(BaseInjected):
     """Manage injections of GW data from CoRe dataset.
 
-    TODO: De moment tot generalitzat a BaseInjected.
+    TODO
 
     """
-    pass
+    def _update_merger_positions(self):
+        """Update all 'merger_pos' tags inside the metadata attribute.
+        
+        Time arrays are defined with the origin at the merger. When the length
+        of the strain arrays is modified, the index position of the merger
+        must be updated.
+
+        NOTE: This method updates ALL the merger positions.
+        
+        """
+        for clas, id_ in self.keys(max_depth=2):
+            # Same time array for all SNR variations.
+            times = next(iter(self.times[clas][id_].values()))
+            self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
+    
+    def gen_injections(self, snr: int | float | list, pad: int = 0):
+        super().gen_injections(snr, pad)
+
+        self._update_merger_positions()
+    
+    def whiten(self):
+        super().whiten()
+
+        self._update_merger_positions()
