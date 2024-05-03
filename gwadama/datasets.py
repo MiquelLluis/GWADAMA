@@ -313,7 +313,7 @@ class Base:
 
         Each iteration consists on a tuple containing all the nested keys in
         'self.strains' along with the corresponding strain,
-        (clas, key, *, strain).
+        (clas, id, *, strain).
         
         It can be thought of as an extension of Python's `dict.items()`.
         Useful to quickly iterate over all items in the dataset.
@@ -330,6 +330,26 @@ class Base:
         """
         for indices in self.keys():
             yield (*indices, self.get_strain(*indices))
+
+    def find_class(self, id):
+        """Find which 'class' corresponds the strain 'id'.
+
+        Finds the 'class' of the strain represented by the unique identifier
+        'id'.
+
+        Parameters
+        ----------
+        id : str
+            Unique identifier of the string, that which also appears in the
+            `metadata.index` DataFrame.
+        
+        Returns
+        -------
+        clas : int | str
+            Class key associated to the strain 'id'.
+        
+        """
+        return dictools._find_level0_of_level1(self.strains, id)
 
     def _init_strains_dict(self) -> dict:
         return {clas: {} for clas in self.classes}

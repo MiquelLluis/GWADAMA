@@ -176,3 +176,35 @@ def _dict_to_stacked_array(dict_: dict, target_length: int = None) -> tuple[np.n
         lengths.append(l)
     
     return stacked_arrays, lengths
+
+
+def _find_level0_of_level1(dict_, key: int|str) -> int | str:
+    """Finds the top level key containing the second level 'key'.
+
+    Finds the key of the uppermost level of the nested 'dict_' which contains
+    the second level entry with key 'key'.
+
+    Parameters
+    ----------
+    dict_ : dict
+        Nested dictionary.
+
+    key : int | str
+        Key of the second level of 'dict_'.
+    
+    Returns
+    -------
+    key_top : int | str
+        Key of the uppermost level of 'dict_'.
+    
+    Raises
+    ------
+    ValueError
+        If 'key' is not found in the second level of 'dict_'.
+    
+    """
+    for key_top, level1 in dict_.items():
+        if key in level1:
+            return key_top
+    else:
+        raise ValueError(f"key '{key}' was not found inside the second level of the dictionary")
