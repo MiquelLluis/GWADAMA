@@ -878,7 +878,7 @@ class BaseInjected(Base):
         """
         return dictools._get_value_from_nested_dict(self.times, indices)
     
-    def gen_injections(self, snr: int | float | list, pad: int = 0):
+    def gen_injections(self, snr: int|float|list, pad: int = 0):
         """Inject all strains in simulated noise with the given SNR values.
 
         - The SNR is computed using a matched filter against the noise PSD.
@@ -928,7 +928,7 @@ class BaseInjected(Base):
 
         if self._track_times:
             # Replaced temporarily because when injecting for the first time
-            # we need to keep the originalk time arrays.
+            # we need to keep the original time arrays.
             times_new = self.times
 
         # 1st time making injections.
@@ -938,8 +938,8 @@ class BaseInjected(Base):
                 # Redo the dictionary structure to include the SNR layer.
                 times_new = self._init_strains_dict()
         
-        for clas, key in dictools._unroll_nested_dictionary_keys(self.strains_clean):
-            gw_clean = self.strains_clean[clas][key]
+        for clas, id_ in dictools._unroll_nested_dictionary_keys(self.strains_clean):
+            gw_clean = self.strains_clean[clas][id_]
             strain_clean_padded = np.pad(gw_clean, pad)
 
             # Highpass filter to the clean signal.
@@ -949,27 +949,28 @@ class BaseInjected(Base):
             strain_clean_padded = self.noise.highpass_filter(
                 strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order
             )
+
             
             # Strain injections
             for snr_ in snr_list:
-                injected, _ = self.noise.inject(strain_clean_padded, snr=snr_)
+                injected = self._inject(strain_clean_padded, snr_, id_=id_, pad=pad)
                 if self.whitened:
                     injected = fat.whiten(
                         injected, asd=self.asd_array, margin=pad, sample_rate=self.sample_rate,
                         # Parameters for GWpy's whiten() function:
                         highpass=self.freq_cutoff, fduration=self.fduration
                     )
-                self.strains[clas][key][snr_] = injected
+                self.strains[clas][id_][snr_] = injected
             
             # Time arrays:
             # - All SNR entries pointing to the SAME time array.
             # - Enlarge if the strains were padded and no whitening followed.
             if self._track_times:
-                times_i = self.get_times(clas, key)
+                times_i = self.get_times(clas, id_)
                 if pad > 0 and not self.whitened:
                     times_i = tat.pad_time_array(times_i, pad)
                 for snr_ in snr_list:
-                    times_new[clas][key][snr_] = times_i
+                    times_new[clas][id_][snr_] = times_i
         
         if self._track_times:
             self.times = times_new
@@ -986,6 +987,31 @@ class BaseInjected(Base):
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
+    
+    def _inject(self, strain: np.ndarray, snr: int|float, **_) -> np.ndarray:
+        """Inject 'strain' at 'snr' into noise using the 'self.noise' instance.
+
+        NOTE: This is writen as an independent method to allow for other
+        classes inheriting this to modify its behaviour without having to
+        rewrite the entire 'gen_injections' method.
+
+        Parameters
+        ----------
+        strain : NDArray
+            Signal to be injected into noise.
+        
+        snr : int | float
+            Signal to noise ratio.
+        
+        Returns
+        -------
+        injected : NDArray
+            Injected signal.
+        
+        """
+        injected, _ = self.noise.inject(strain, snr=snr)
+
+        return injected
     
     def export_strains_to_gwf(self,
                               path: str,
@@ -1724,9 +1750,45 @@ class CoReWaves(Base):
 class InjectedCoReWaves(BaseInjected):
     """Manage injections of GW data from CoRe dataset.
 
+    - Tracks index position of the merger.
+    - Computes the SNR only at the ring-down starting from the merger.
+    - Computes also the usual SNR over the whole signal and stores it for
+      later reference (attr. 'whole_snr_list').
+
+    Attributes
+    ----------
+    snr_list : list
+        Partial SNR values at which each signal is injected.
+        This SNR is computed ONLY over the Ring-Down section of the waveform
+        starting from the merger, hence the name 'partial SNR'.
+
+    whole_snr : dict
+        Nested dictionary storing for each injection the equivalent SNR value
+        computed over the whole signal, hence the name 'whole SNR'.
+        Structure: {id_: {partial_snr: whole_snr}}
+
     TODO
 
     """
+    def __init__(self,
+                 clean_dataset: Base,
+                 *,
+                 psd: np.ndarray | Callable,
+                 detector: str,
+                 noise_length: int,
+                 freq_cutoff: int | float,
+                 freq_butter_order: int | float,
+                 fduration: int,
+                 random_seed: int):
+        
+        super().__init__(
+            clean_dataset, psd=psd, detector=detector, noise_length=noise_length, 
+            freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order,
+            fduration=fduration, random_seed=random_seed
+        )
+
+        self.whole_snr = {id_: {} for id_ in self.metadata.index}
+
     def _update_merger_positions(self):
         """Update all 'merger_pos' tags inside the metadata attribute.
         
@@ -1746,6 +1808,48 @@ class InjectedCoReWaves(BaseInjected):
         super().gen_injections(snr, pad)
 
         self._update_merger_positions()
+    
+    def _inject(self,
+                strain: np.ndarray,
+                snr: int | float,
+                *,
+                id_: str,
+                pad: int) -> np.ndarray:
+        """Inject a strain at 'snr' into noise using 'self.noise' instance.
+
+        NOTE: The SNR is computed over the Ring-Down only, starting from the
+        position of the merger.
+
+        Parameters
+        ----------
+        strain : NDArray
+            Signal to be injected into noise.
+        
+        snr : int | float
+            Signal to noise ratio.
+        
+        id_ : str
+            Signal identifier (2nd layer of 'strains' dict).
+        
+        pad : int
+            Padding added to the 'strain' right before the injection, but not
+            registered yet at the metadata.
+        
+        Returns
+        -------
+        injected : NDArray
+            Injected signal.
+        
+        """
+        merger_pos = self.metadata.at[id_,'merger_pos']
+        i0 = merger_pos + pad
+        i1 = len(strain) - pad
+        injected, scale = self.noise.inject(strain, snr=snr, snr_lim=(i0, i1))
+
+        # Compute the equivalent SNR over the entire waveform.
+        self.whole_snr[id_][snr] = self.noise.snr(strain*scale)
+
+        return injected
     
     def whiten(self):
         super().whiten()
