@@ -131,18 +131,19 @@ def _get_depth(dict_: dict) -> int:
 def _dict_to_stacked_array(dict_: dict, target_length: int = None) -> tuple[np.ndarray, list]:
     """Stack the arrays inside a dict() to a 2d-array.
     
-    Given a dict whose values are flat numpy arrays, with potentially different
+    Given a NON-nested dict whose values are flat numpy arrays, with potentially different
     lengths, stacks them in a homogeneous 2d-array aligned to the left,
     zero-padding the remaining space.
 
     Parameters
     ----------
     dict_ : dict[str: np.ndarray]
-        Non-nested Python dictionary containing numpy 1d-arrays.
+        NON-nested Python dictionary containing numpy 1d-arrays.
     
     target_length : int, optional
         If given, defines the size of the second axis of the returned 2d-array.
         If omitted, the size will be equal to the longest array inside 'dict_'.
+        Must be larger or equal than the longest array inside 'dict_'.
     
     Returns
     -------
@@ -208,3 +209,70 @@ def _find_level0_of_level1(dict_, key: int|str) -> int | str:
             return key_top
     else:
         raise ValueError(f"key '{key}' was not found inside the second level of the dictionary")
+
+
+def _flatten_nested_dict(dict_: dict) -> dict:
+    """Turn any nested dictionary into a shallow (single level) one.
+    
+    Flatten a nested dictionary into a single level dictionary, keeping their
+    keys as tuples.
+    
+    """
+    return __flatten_nested_dict(dict_)
+
+
+def __flatten_nested_dict(dict_in, parent_keys=()):
+    """Flatten recursively 'dict_in'.
+    
+    Here is where the actual flattening happens, using recursion.
+    
+    """
+    flattened_dict = {}
+    for k, v in dict_in.items():
+        key = parent_keys + (k,)
+        if isinstance(v, dict):
+            flattened_dict.update(__flatten_nested_dict(v, parent_keys=key))
+        else:
+            flattened_dict[key] = v
+    
+    return flattened_dict
+    
+
+def _filter_nested_dict(dict_, condition, layer) -> dict:
+    """Filter a layer of a nested dictionary.
+
+    Filter a nested dictionary based on a condition applied to the keys of the
+    specified layer.
+
+    NOTE: Layer numbering begins with 0, as array-likes do; as God commands.
+
+    Parameters
+    ----------
+    dict_ : dict
+        The nested dictionary to be filtered.
+    
+    condition : callable
+        The condition function to apply.
+        Should take a single argument, the key, and return a boolean indicating
+        wether to include its related value.
+    
+    layer : int
+        The layer at which to apply the condition.
+        1 corresponds to the top level, 2 to the second level, and so on.
+        Default is 1.
+
+    Returns
+    -------
+    : dict
+        Filtered version of the nested dictionary.
+
+    """
+    def filter_layer(dictionary, current_layer):
+        if current_layer == layer:
+            return {k: v for k, v in dictionary.items() if condition(k)}
+
+        return {k: filter_layer(v, current_layer + 1) if isinstance(v, dict) else v
+                for k, v in dictionary.items()}
+
+    return filter_layer(dict_, 0)
+

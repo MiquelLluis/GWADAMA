@@ -210,7 +210,7 @@ class Base:
         self.sample_rate = sample_rate
         self.max_length = self._find_max_length()
     
-    def get_strain(self, *indices) -> np.ndarray:
+    def get_strain(self, *indices, normalize=False) -> np.ndarray:
         """Get a single strain from the complete index coordinates.
         
         This is just a shortcut to avoid having to write several squared
@@ -218,9 +218,30 @@ class Base:
 
         NOTE: The returned strain is not a copy; if its contents are modified,
         the changes will be reflected inside the 'strains' attribute.
+
+        Parameters
+        ----------
+        *indices : str | int
+            The indices of the strain to retrieve.
         
-        """        
-        return dictools._get_value_from_nested_dict(self.strains, indices)
+        normalize : bool
+            If True, the returned strain will be normalized to its maximum
+            amplitude.
+        
+        Returns
+        -------
+        strain : np.ndarray
+            The requested strain.
+        
+        """
+        if len(indices) != self._dict_depth:
+            raise ValueError("indices must match the depth of 'self.strains'")
+
+        strain = dictools._get_value_from_nested_dict(self.strains, indices)
+        if normalize:
+            strain /= np.max(np.abs(strain))
+
+        return strain
 
     def get_times(self, *indices) -> np.ndarray:
         """Get a single time array from the complete index coordinates.
@@ -232,6 +253,9 @@ class Base:
         the changes will be reflected inside the 'times' attribute.
         
         """        
+        if len(indices) != self._dict_depth:
+            raise ValueError("indices must match the depth of 'self.strains'")
+        
         return dictools._get_value_from_nested_dict(self.times, indices)
 
     def get_xtrain_array(self, length=None):
@@ -719,7 +743,7 @@ class BaseInjected(Base):
         #----------------------------------------------------------------------
 
         self.strains = None
-        self._dict_depth = clean_dataset._dict_depth + 1
+        self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
         self.pad = {}  # {snr: pad}
         self.whitened = False  # Switched to True after calling self.whiten().
@@ -1096,6 +1120,178 @@ class BaseInjected(Base):
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
+
+    def get_xtrain_array(self, length=None, snr: int | list | str = 'all', with_metadata=False):
+        """Get the train subset stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals in the train subset into an homogeneous numpy array
+        whose length (axis=1) is determined by either 'length' or, if None, by
+        the longest strain in the subset. The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+            Target length of the 'train_array'. If None, the longest signal
+            determines the length.
+
+        snr : int | list[int] | str
+            SNR injections which to include in the stack. If more than one are
+            selected, they are stacked zipped as follows:
+            ```monospace
+            eos0 id0 snr0
+            eos0 id0 snr1
+                 ...
+            ```
+            All injections are included by default.
+        
+        with_metadata : bool
+            If True, the associated metadata is returned in addition to the
+            train array in a Pandas DataFrame instance.
+            This metadata is obtained from the original 'metadata' attribute,
+            with the former index inserted as the first column, 'id', and with an
+            additional column for the SNR values.
+            False by default.
+
+        Returns
+        -------
+        train_array : np.ndarray
+            Train subset.
+        
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of 'train_array'.
+        
+        metadata : pd.DataFrame, optional
+            If 'with_metadata' is True, the associated metadata is returned
+            with its entries in the same order as the 'train_array'.
+
+        """
+        return self._stack_subset(self.Xtrain, length, snr, with_metadata)
+    
+    def get_xtest_array(self, length=None, snr: int | list | str = 'all', with_metadata=False):
+        """Get the test subset stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals in the test subset into an homogeneous numpy array
+        whose length (axis=1) is determined by either 'length' or, if None, by
+        the longest strain in the subset. The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+            Target length of the 'test_array'. If None, the longest signal
+            determines the length.
+
+        snr : int | list[int] | str
+            SNR injections which to include in the stack. If more than one are
+            selected, they are stacked zipped as follows:
+            ```monospace
+            eos0 id0 snr0
+            eos0 id0 snr1
+                 ...
+            ```
+            All injections are included by default.
+
+        with_metadata : bool
+            If True, the associated metadata is returned in addition to the
+            test array in a Pandas DataFrame instance.
+            This metadata is obtained from the original 'metadata' attribute,
+            with the former index inserted as the first column, 'id', and with an
+            additional column for the SNR values.
+            False by default.
+
+        Returns
+        -------
+        test_array : np.ndarray
+            Test subset.
+
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of 'test_array'.
+
+        metadata : pd.DataFrame, optional
+            If 'with_metadata' is True, the associated metadata is returned
+            with its entries in the same order as the 'test_array'.
+        
+        """
+        return self._stack_subset(self.Xtest, length, snr, with_metadata)
+
+    def _stack_subset(self, strains, length, snr, with_metadata):
+        """Stack a subset of strains into a zero-padded 2d-array.
+
+        This is a helper function for 'get_xtrain_array' and 'get_xtest_array'.
+
+        Parameters
+        ----------
+        strains : dict
+            A dictionary containing the strains to be stacked.
+            The keys are the IDs of the strains.
+
+        length : int, optional
+            The target length of the stacked array. If None, the longest signal
+            determines the length.
+
+        snr : int | list[int] | str
+            The SNR injections to include in the stack. If more than one are
+            selected, they are stacked zipped as follows:
+            ```monospace
+            eos0 id0 snr0
+            eos0 id0 snr1
+                ...
+            ```
+            All injections are included by default.
+
+        with_metadata : bool
+            If True, the associated metadata is returned in addition to the
+            stacked array in a Pandas DataFrame instance.
+            This metadata is obtained from the original 'metadata' attribute,
+            with the former index inserted as the first column, 'id', and with
+            an additional column for the SNR values.
+            False by default.
+
+        Returns
+        -------
+        stacked_signals : np.ndarray
+            The array containing the stacked strains.
+
+        lengths : list
+            The original lengths of each strain, following the same order as
+            the first axis of 'stacked_signals'.
+
+        metadata : pd.DataFrame, optional
+            If 'with_metadata' is True, the associated metadata is returned
+            with its entries in the same order as the 'stacked_signals'.
+            This metadata is obtained from the original 'metadata' attribute,
+            with the former index inserted as the first column, 'id', and with
+            an additional column for the SNR values.
+
+        Raises
+        ------
+        ValueError
+            If the value of 'snr' is not valid.
+
+        """
+        if isinstance(snr, (int, list)):
+            if isinstance(snr, int):
+                snr = [snr]
+
+            strains = dictools._filter_nested_dict(strains, lambda k: k in snr, layer=2)
+
+        elif snr != 'all':
+            raise ValueError("the value of 'snr' is not valid")
+        
+        strains = dictools._flatten_nested_dict(strains)
+
+        stacked_signals, lengths = dictools._dict_to_stacked_array(strains, target_length=length)
+        
+        if with_metadata:
+            id_list = [k[0] for k in strains]
+            snr_list = [k[1] for k in strains]
+            metadata = self.metadata.loc[id_list]
+            metadata.reset_index(inplace=True, names='id')
+            metadata.insert(1, 'snr', snr_list)  # after 'id'.
+            
+            return stacked_signals, lengths, metadata        
+        return stacked_signals, lengths
 
 
 class SyntheticWaves(Base):
