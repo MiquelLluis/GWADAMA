@@ -1785,7 +1785,46 @@ class InjectedCoReWaves(BaseInjected):
                  freq_butter_order: int | float,
                  fduration: int,
                  random_seed: int):
+        """
+                Initializes an instance of the InjectedCoReWaves class.
         
+                Parameters
+                ----------
+                clean_dataset : Base
+                    An instance of a BaseDataset class with noiseless signals.
+                
+                psd : np.ndarray | Callable
+                    Power Spectral Density of the detector's sensitivity in the
+                    range of frequencies of interest.
+                    Can be given as a callable function whose argument is
+                    expected to be an array of frequencies, or as a 2d-array
+                    with shape (2, psd_length) so that
+                        psd[0] = frequency_samples
+                        psd[1] = psd_samples.
+                    NOTE: It is also used to compute the 'asd' attribute (ASD).
+                
+                detector : str
+                    GW detector name.
+                
+                noise_length : int
+                    Length of the background noise array to be generated for
+                    later use.
+                    It should be at least longer than the longest signal
+                    expected to be injected.
+                
+                freq_cutoff : int | float
+                    Frequency cutoff for the filter applied to the signal.
+                
+                freq_butter_order : int | float
+                    Order of the Butterworth filter applied to the signal.
+                
+                fduration : int
+                    Duration of the filter applied to the signal.
+                
+                random_seed : int
+                    Random seed for generating random numbers.
+        
+        """
         super().__init__(
             clean_dataset, psd=psd, detector=detector, noise_length=noise_length, 
             freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order,
