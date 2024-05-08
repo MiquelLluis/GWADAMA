@@ -108,6 +108,8 @@ class Base:
         function with stratified labels.
         Shape: {id: strain}.
         The 'id' corresponds to the strain's index at 'self.metadata'.
+        They are just another views into the same data stored at 'self.strains',
+        so no copies are performed.
     
     Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as 'Xtrain' and
@@ -119,11 +121,6 @@ class Base:
       tracked by the metadata Dataframe.
     - If working with two polarizations, they can be stored with just an
       extra depth layer.
-    
-    TODO:
-    - Any subset (like train/test) should not be stored in the same instance;
-      instead it should be passed as a new instance and let the user store and
-      manage them as needed.
     
     """
     def __init__(self):
@@ -247,6 +244,8 @@ class Base:
         Parameters
         ----------
         length : int, optional
+            Target length of the 'train_array'. If None, the longest signal
+            determines the length.
 
         Returns
         -------
@@ -390,8 +389,7 @@ class Base:
 
         Only entries in the index of 'metadata' DataFrame are considered
         independent waveforms, any extra key (layer) in the 'strains' dict
-        is ignored during the shuffle. Hence, train and teset subsets are plain
-        1D dictionaries: {index: strain}
+        is treated monolithically during the shuffle.
         
         The strain values are just new views into the 'strains' attribute.
         The shuffling is performed by Scikit-Learn's function
@@ -424,6 +422,13 @@ class Base:
     
     def _build_subset_strains(self, indices):
         """Return a subset of strains and their labels based on their ID.
+
+        Return a new view into 'self.strains' using the input indices (ID) as
+        the first layer of the nested dictionary.
+
+        This collapses the first layer, the class, leaving the unique
+        identifier ID as first layer. Nevertheless, the rest of possible layers
+        beneath 'ID' are monolithically preserved.
         
         Parameters
         ----------
