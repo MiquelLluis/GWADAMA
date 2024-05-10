@@ -10,10 +10,9 @@ There are two basic type of datasets, clean and injected:
 
 """
 from copy import deepcopy
-from pathlib import Path
 from typing import Callable
 
-from clawdia.estimators import find_merger
+# from clawdia.estimators import find_merger  # Imported only when instancing CoReWaves.
 from gwpy.timeseries import TimeSeries
 import numpy as np
 import pandas as pd
@@ -37,6 +36,8 @@ __all__ = ['Base', 'BaseInjected', 'SyntheticWaves', 'InjectedSyntheticWaves',
 class Base:
     """Base class for all datasets.
 
+    TODO: Update docstring.
+
     Any dataset made of 'clean' (noiseless) GW must inherit this class.
     It is designed to store strains as nested dictionaries, with each level's
     key identifying a class/property of the strain. Each individual strain is a
@@ -51,6 +52,8 @@ class Base:
     same original strains from the upper identifier level. If splitting the
     dataset into train and test susbsets, only combinations of (Class, Id) will
     be considered.
+
+    NOTE: This class shall not be called directly. Use one of its subclasses.
     
     Attributes
     ----------
@@ -126,24 +129,34 @@ class Base:
     def __init__(self):
         """Overwrite when inheriting!"""
 
-        raise NotImplementedError
+        raise NotImplementedError("Base class should not be called directly.")
 
-        # Must be defined:
+        #----------------------------------------------------------------------
+        # Attributes whose values must be set up during initialization.
         #----------------------------------------------------------------------
     
         self.classes: list[str] = None
         self.metadata: pd.DataFrame = None
         self.labels: dict[int] = self._gen_labels()
         self.strains: dict = None
-        # Number of nested layers in strains' dictionary. Keep updated always.
+        
+        # Number of nested layers in strains' dictionary. Keep updated always:
         self._dict_depth: int = dictools._get_depth(self.strains)
+
         self.max_length = self._find_max_length()
         self.random_seed: int = None  # SKlearn train_test_split doesn't accept a Generator yet.
         self._track_times = False  # If True, self.times must be not None.
 
-        # Optional:
+        #----------------------------------------------------------------------
+        # Attributes whose values can be set up or otherwise left as follows.
         #----------------------------------------------------------------------
 
+        # Whitening related attributes.
+        self.whitened = False
+        self.whiten_params = {}
+        self.nonwhiten_strains = None
+
+        # Time tracking related attributes.
         self.sample_rate: int = None
         self.times: dict = None
         
@@ -408,6 +421,51 @@ class Base:
         
         return times
 
+    def whiten(self,
+               asd_array: np.ndarray = None,
+               pad: int = 0,
+               highpass: int = None,
+               flength: float = None,
+               normed: bool = False) -> None:
+        """Whiten the strains.
+        
+        Calling this method performs the whitening of all strains.
+        Optionally, strains are first zero-padded, whitened and then shrunk to
+        their initial size. This is useful to remove the vignetting effect.
+        
+        NOTE: Original (non-whitened) strains will be stored in the
+        'nonwhiten_strains' attribute.
+        
+        """
+        if self.whitened:
+            raise RuntimeError("dataset already whitened")
+
+        if self.strains is None:
+            raise RuntimeError("no strains have been given or generated yet")
+        
+        self.nonwhiten_strains = deepcopy(self.strains)
+        
+        for *keys, strain in self.items():
+            strain_w = fat.whiten(
+                strain, asd=asd_array, sample_rate=self.sample_rate, flength=flength,
+                highpass=highpass, pad=pad, normed=normed
+            )
+            # Update strains attribute.
+            dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
+        
+        self.whitened = True
+        self.whiten_params = {
+            "asd_array": asd_array,
+            "pad": pad,
+            "highpass": highpass,
+            "flength": flength,
+            "normed": normed
+        }
+        
+        # Update side-effect attributes.
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
+
     def build_train_test_subsets(self, train_size: int | float, random_seed: int = None):
         """Generate a random Train and Test subsets.
 
@@ -597,16 +655,6 @@ class BaseInjected(Base):
     detector : str
         GW detector name.
 
-    freq_cutoff : int | float
-        Frequency cutoff below which no noise bins will be generated in the
-        frequency space, and also used for the high-pass filter applied to
-        clean signals before injection.
-
-    freq_butter_order : int
-        Butterworth filter order.
-        See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
-        for more information.
-
     psd_ : NDArray
         Numerical representation of the Power Spectral Density (PSD) of the
         detector's sensitivity.
@@ -631,6 +679,19 @@ class BaseInjected(Base):
         be set to False, and changed to True after calling the 'whiten' method.
         Once whitened, this flag will remain True, since the whitening is
         implemented to be irreversible instance-wise.
+    
+    whiten_params : dict
+        TODO
+
+        freq_cutoff : int | float
+            Frequency cutoff below which no noise bins will be generated in the
+            frequency space, and also used for the high-pass filter applied to
+            clean signals before injection.
+
+        freq_butter_order : int
+            Butterworth filter order.
+            See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+            for more information.
 
     Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using SKLearn train_test_split
@@ -649,11 +710,13 @@ class BaseInjected(Base):
                  psd: np.ndarray | Callable,
                  detector: str,
                  noise_length: int,
+                 whiten_params: dict,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
-                 fduration: int,
                  random_seed: int):
         """Base constructor for injected datasets.
+
+        TODO: Update docstring.
 
         When inheriting from this class, it is recommended to run this method
         first in your __init__ function.
@@ -693,6 +756,15 @@ class BaseInjected(Base):
             Length of the background noise array to be generated for later use.
             It should be at least longer than the longest signal expected to be
             injected.
+        
+        whiten_params : dict
+            Parameters of the whitening filter, with the following entries:
+            - 'flength' : int
+                Length (in samples) of the time-domain FIR whitening.
+            - 'highpass' : float
+                Frequency cutoff.
+            - 'normed' : bool
+                Normalization applied after the whitening filter.
 
         freq_cutoff : int | float
             Frequency cutoff below which no noise bins will be generated in the
@@ -704,7 +776,7 @@ class BaseInjected(Base):
             See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
             for more information.
         
-        fduration : int
+        flength : int
             Length (in samples) of the time-domain FIR whitening filter.
 
         random_seed : int
@@ -733,8 +805,10 @@ class BaseInjected(Base):
         self.random_seed = random_seed
         self.rng = np.random.default_rng(random_seed)
         self.detector = detector
+        # Highpass parameters applied when generating the noise array.
         self.freq_cutoff = freq_cutoff
         self.freq_butter_order = freq_butter_order
+    
         self._psd, self.psd_array = self._setup_psd(psd)
         self._asd, self.asd_array = self._setup_asd_from_psd(psd)
         self.noise = self._generate_background_noise(noise_length)
@@ -742,12 +816,23 @@ class BaseInjected(Base):
         # Injection related:
         #----------------------------------------------------------------------
 
+        # TODO: ¿Implement the case when clean_dataset is already whitened?
+        # It should mark it and use the clean copy of nonwhitened data instead.
+
         self.strains = None
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
         self.pad = {}  # {snr: pad}
         self.whitened = False  # Switched to True after calling self.whiten().
-        self.fduration = fduration
+        self.whiten_params = whiten_params
+        # NOTE: I designed this while building the InjectedCoReWaves class, so
+        # chances are this is not general enough.
+        self.whiten_params.update({
+            'asd_array': self.asd_array,  # Referenced here again for consistency.
+            'pad': 0,  # Signals are expected to be already padded.
+            'unpad': self.pad,  # Referenced here again for consistency.
+            'highpass': self.freq_cutoff  # Referenced here again for consistency.
+        })
 
         # Train/Test subset views:
         #----------------------------------------------------------------------
@@ -985,9 +1070,9 @@ class BaseInjected(Base):
                 injected = self._inject(strain_clean_padded, snr_, id_=id_, pad=pad)
                 if self.whitened:
                     injected = fat.whiten(
-                        injected, asd=self.asd_array, margin=pad, sample_rate=self.sample_rate,
+                        injected, asd=self.asd_array, unpad=pad, sample_rate=self.sample_rate,
                         # Parameters for GWpy's whiten() function:
-                        highpass=self.freq_cutoff, fduration=self.fduration
+                        highpass=self.freq_cutoff, flength=self.flength
                     )
                 self.strains[clas][id_][snr_] = injected
             
@@ -1049,6 +1134,8 @@ class BaseInjected(Base):
                               verbose=False) -> None:
         """Export all strains to GWF format, one file per strain."""
 
+        from pathlib import Path
+
         for indices in self.keys():
             strain = self.get_strain(*indices)
             times = self.get_times(*indices)
@@ -1082,17 +1169,27 @@ class BaseInjected(Base):
         performing the whitening.
         
         """
-        if self.strains is None:
-            raise RuntimeError("no injections have been performed yet")
         if self.whitened:
             raise RuntimeError("dataset already whitened")
+
+        if self.strains is None:
+            raise RuntimeError("no injections have been performed yet")
+
+        flength = self.whiten_params['flength']
+        asd_array = self.whiten_params['asd_array']
+        pad = self.whiten_params['pad']
+        unpad = self.whiten_params['unpad']
+        highpass = self.whiten_params['highpass']
         
         for *keys, strain in self.items():
             snr = keys[-1]  # Shape of self.strains dict-> {class: {id: {snr: strain}}}
+
+            # NOTE: I designed this while building the InjectedCoReWaves class,
+            # so chances are the parameters here are not passed in the most
+            # generalized way.
             strain_w = fat.whiten(
-                strain, asd=self.asd_array, margin=self.pad[snr], sample_rate=self.sample_rate,
-                # Parameters for GWpy's whiten() function:
-                highpass=self.freq_cutoff, fduration=self.fduration
+                strain, asd=asd_array, pad=pad, unpad=unpad[snr], sample_rate=self.sample_rate,
+                highpass=highpass, flength=flength
             )
             # Update strains attribute.
             dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
@@ -1108,7 +1205,7 @@ class BaseInjected(Base):
                 times_i = dictools._get_value_from_nested_dict(self.times, keys)
                 snr0 = next(iter(times_i.keys()))
                 times_i = times_i[snr0]
-                times_i = tat.shrink_time_array(times_i, self.pad[snr0])
+                times_i = tat.shrink_time_array(times_i, unpad[snr0])
                 for snr in self.snr_list:
                     keys_all = keys + [snr]
                     dictools._set_value_to_nested_dict(self.times, keys_all, times_i)
@@ -1700,11 +1797,6 @@ class CoReWaves(Base):
 
         Caveat: If the 'times' attribute is present, this value is ignored.
         Otherwise it is assumed all strains are constantly sampled to this.
-    
-    TODO
-    ----
-    - Train/Test splits.
-    - Labels.
 
     """
     def __init__(self,
@@ -1717,7 +1809,39 @@ class CoReWaves(Base):
                  distance: float,
                  inclination: float,
                  phi: float):
-        """TODO"""
+        """Initialize a CoReWaves dataset.
+
+        TODO
+
+        Parameters
+        ----------
+        coredb : ioo.CoReManager
+            Instance of CoReManager with the actual data.
+        
+        classes : dict[str]
+            Dictionary with the class name as key and the corresponding label
+            index as value.
+        
+        discarded : set[str]
+            Set of GW IDs to discard from the dataset.
+        
+        cropped : dict[str]
+            Dictionary with the class name as key and the corresponding
+            cropping range as value. The range is given as a tuple of the form
+            (start_index, stop_index).
+        
+        distance : float
+            Distance to the source in Mpc.
+        
+        inclination : float
+            Inclination of the source in radians.
+        
+        phi : float
+            Azimuthal angle of the source in radians.
+
+        """
+        from clawdia.estimators import find_merger
+        self.find_merger = find_merger
 
         self.classes = classes
         self.discarded = discarded
@@ -1736,6 +1860,18 @@ class CoReWaves(Base):
 
         self.sample_rate = None  # Set up after resampling
         self.random_seed = None  # Set if calling the 'build_train_test_subsets' method.
+
+        self.whitened = False
+        self.whiten_params = {}
+        self.nonwhiten_strains = None
+
+        # Train/Test subset splits (views into the same 'self.strains').
+        #   Timeseries:
+        self.Xtrain: np.ndarray = None
+        self.Xtest: np.ndarray = None
+        #   Labels:
+        self.Ytrain: np.ndarray = None
+        self.Ytest: np.ndarray = None
     
     def _get_strain_and_metadata(self, coredb: ioo.CoReManager) -> tuple[dict, dict, pd.DataFrame]:
         """Obtain the strain and metadata from a CoReManager instance.
@@ -1874,7 +2010,7 @@ class CoReWaves(Base):
             
             # Regenerate the time array with the merger located at the origin.
             duration = len(strain) / self.sample_rate
-            t_merger = find_merger(strain) / self.sample_rate
+            t_merger = self.find_merger(strain) / self.sample_rate
             t0 = -t_merger
             t1 = duration - t_merger
             self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
@@ -1977,54 +2113,55 @@ class InjectedCoReWaves(BaseInjected):
                  psd: np.ndarray | Callable,
                  detector: str,
                  noise_length: int,
+                 whiten_params: dict,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
-                 fduration: int,
                  random_seed: int):
         """
-                Initializes an instance of the InjectedCoReWaves class.
+        Initializes an instance of the InjectedCoReWaves class.
+
+        Parameters
+        ----------
+        clean_dataset : Base
+            An instance of a BaseDataset class with noiseless signals.
         
-                Parameters
-                ----------
-                clean_dataset : Base
-                    An instance of a BaseDataset class with noiseless signals.
-                
-                psd : np.ndarray | Callable
-                    Power Spectral Density of the detector's sensitivity in the
-                    range of frequencies of interest.
-                    Can be given as a callable function whose argument is
-                    expected to be an array of frequencies, or as a 2d-array
-                    with shape (2, psd_length) so that
-                        psd[0] = frequency_samples
-                        psd[1] = psd_samples.
-                    NOTE: It is also used to compute the 'asd' attribute (ASD).
-                
-                detector : str
-                    GW detector name.
-                
-                noise_length : int
-                    Length of the background noise array to be generated for
-                    later use.
-                    It should be at least longer than the longest signal
-                    expected to be injected.
-                
-                freq_cutoff : int | float
-                    Frequency cutoff for the filter applied to the signal.
-                
-                freq_butter_order : int | float
-                    Order of the Butterworth filter applied to the signal.
-                
-                fduration : int
-                    Duration of the filter applied to the signal.
-                
-                random_seed : int
-                    Random seed for generating random numbers.
+        psd : np.ndarray | Callable
+            Power Spectral Density of the detector's sensitivity in the
+            range of frequencies of interest.
+            Can be given as a callable function whose argument is
+            expected to be an array of frequencies, or as a 2d-array
+            with shape (2, psd_length) so that
+                psd[0] = frequency_samples
+                psd[1] = psd_samples.
+            NOTE: It is also used to compute the 'asd' attribute (ASD).
+        
+        detector : str
+            GW detector name.
+        
+        noise_length : int
+            Length of the background noise array to be generated for
+            later use.
+            It should be at least longer than the longest signal
+            expected to be injected.
+        
+        whiten_params : dict
+            Parameters to be passed to the 'whiten' method of the
+            'BaseInjected' class.
+        
+        freq_cutoff : int | float
+            Frequency cutoff for the filter applied to the signal.
+        
+        freq_butter_order : int | float
+            Order of the Butterworth filter applied to the signal.
+        
+        random_seed : int
+            Random seed for generating random numbers.
         
         """
         super().__init__(
-            clean_dataset, psd=psd, detector=detector, noise_length=noise_length, 
-            freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order,
-            fduration=fduration, random_seed=random_seed
+            clean_dataset, psd=psd, detector=detector, noise_length=noise_length,
+            whiten_params=whiten_params, freq_cutoff=freq_cutoff,
+            freq_butter_order=freq_butter_order, random_seed=random_seed
         )
 
         self.whole_snr = {id_: {} for id_ in self.metadata.index}
