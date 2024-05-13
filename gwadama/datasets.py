@@ -22,7 +22,7 @@ from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 from sklearn.model_selection import train_test_split
 
 from . import ioo
-from .detectors import project_et
+from . import detectors
 from . import dictools
 from . import fat
 from . import synthetic
@@ -381,8 +381,23 @@ class Base:
         self.max_length = self._find_max_length()
 
     def resample(self, sample_rate, verbose=False) -> None:
-        """Resample strain and time arrays to a constant rate."""
+        """Resample strain and time arrays to a constant rate.
 
+        This assumes time tracking either with time arrays or with the
+        sampling rate provided during initialization, which will be used to
+        generate the time arrays previous to the resampling.
+
+        This method updates the sample_rate and the max_length.
+
+        Parameters
+        ----------
+        sample_rate : int
+            The new sampling rate in Hz.
+
+        verbose : bool
+            If True, print information about the resampling.
+        
+        """
         # Set up the time points associated to each strain in case it is not
         # provided.
         #
@@ -1095,6 +1110,8 @@ class BaseInjected(Base):
         for clas, id_ in dictools._unroll_nested_dictionary_keys(self.strains_clean):
             gw_clean = self.strains_clean[clas][id_]
             strain_clean_padded = np.pad(gw_clean, pad)
+            # NOTE: Do not update the metadata nor times with this pad in case
+            # the whitening is applied immediately after the injections.
 
             # Highpass filter to the clean signal.
             # NOTE: The noise realization is already generated without
@@ -1107,7 +1124,11 @@ class BaseInjected(Base):
             
             # Strain injections
             for snr_ in snr_list:
-                injected = self._inject(strain_clean_padded, snr_, id_=id_, pad=pad)
+                # 'pad' is added to 'snr_offset' to compensate for the padding
+                # which has not been updated in the 'metadata' yet.
+                injected = self._inject(
+                    strain_clean_padded, snr_, id=id_, snr_offset=pad
+                )
                 if self.whitened:
                     injected = fat.whiten(
                         injected, asd=self.asd_array, unpad=pad, sample_rate=self.sample_rate,
@@ -1137,7 +1158,6 @@ class BaseInjected(Base):
             self.pad[snr_] = pad
         
         # Side-effect attributes updated.
-        #
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
@@ -1253,7 +1273,6 @@ class BaseInjected(Base):
         self.whitened = True
         
         # Side-effect attributes updated.
-        #
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
@@ -1880,9 +1899,6 @@ class CoReWaves(Base):
             Azimuthal angle of the source in radians.
 
         """
-        from clawdia.estimators import find_merger
-        self.find_merger = find_merger
-
         self.classes = classes
         self.discarded = discarded
         self.cropped = cropped
@@ -2011,6 +2027,52 @@ class CoReWaves(Base):
         )
         
         return strains, times, metadata
+    
+    def find_merger(self, strain: np.ndarray) -> int:
+        from clawdia.estimators import find_merger
+        return find_merger(strain)
+
+    def _update_merger_positions(self):
+        """Update all 'merger_pos' tags inside the metadata attribute.
+        
+        Time arrays are defined with the origin at the merger. When the length
+        of the strain arrays is modified, the index position of the merger
+        must be updated.
+
+        NOTE: This method updates ALL the merger positions.
+        
+        """
+        for clas, id_ in self.keys(max_depth=2):
+            times = self.times[clas][id_]
+            # If more layers are present, only get the first instance of times
+            # since all will be the same.
+            if isinstance(times, dict):
+                times = dictools._get_next_item(times)
+            self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
+    
+    def resample(self, sample_rate, verbose=False) -> None:
+        """Resample strain and time arrays to a constant rate.
+
+        Resample CoRe strains (from NR simulations) to a constant rate.
+
+        This method updates the sample_rate, the max_length and the merger_pos
+        inside the metadata attribute.
+
+        Parameters
+        ----------
+        sample_rate : int
+            The new sampling rate in Hz.
+
+        verbose : bool
+            If True, print information about the resampling.
+        
+        """
+        super().resample(sample_rate, verbose)
+
+        # Update side-effect attributes.
+        self._update_merger_positions()
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
 
     def project(self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float):
         """Project strains into the ET detector at specified coordinates.
@@ -2042,7 +2104,7 @@ class CoReWaves(Base):
             hc = self.strains[clas][id_]['cross']
             
             # Drop the polarization layer.
-            strain = project_et(
+            strain = detectors.project_et(
                 hp, hc, parameters=project_pars, sf=self.sample_rate, 
                 nfft=2*self.sample_rate, detector=detector
             )
@@ -2055,14 +2117,20 @@ class CoReWaves(Base):
             t1 = duration - t_merger
             self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
         
+        # Update side-effect attributes
         self._dict_depth = dictools._get_depth(self.strains)
         self._update_merger_positions()
+        self.max_length = self._find_max_length()
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
     
     def shrink_to_merger(self, offset: int = 0) -> None:
         """Shrink strains and time arrays w.r.t. the merger.
 
         Shrink strains (and their associated time arrays) discarding the left
         side of the merger (inspiral), with a given offset in samples.
+
+        This also updates the metadata column 'merger_pos'.
 
         NOTE: This is an irreversible action.
 
@@ -2079,6 +2147,11 @@ class CoReWaves(Base):
             limits[id] = (i_merger+offset, -1)
         
         self.shrink_strains(limits)
+
+        # Update side-effect attributes.
+        self._update_merger_positions()
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
 
     def convert_to_IS_units(self) -> None:
         """Convert data from scaled geometrized units to IS units.
@@ -2100,11 +2173,12 @@ class CoReWaves(Base):
 
             strain *=  mass * MSUN_MET / (self.distance * MPC_MET)
             times *= mass * MSUN_SEC
-        
-        if self.Xtrain is not None:
-            self._update_train_test_subsets()
 
         self.units = 'IS'
+
+        # Update side-effect attributes.
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
     
     def convert_to_scaled_geometrized_units(self) -> None:
         """Convert data from IS to scaled geometrized units.
@@ -2126,24 +2200,12 @@ class CoReWaves(Base):
             
             strain /=  mass * MSUN_MET / (self.distance * MPC_MET)
             times /= mass * MSUN_SEC
-        
-        if self.Xtrain is not None:
-            self._update_train_test_subsets()
 
         self.units = 'geometrized'
 
-    def _update_merger_positions(self):
-        """Update all 'merger_pos' tags inside the metadata attribute.
-        
-        Time arrays are defined with the origin at the merger. When the length
-        of the strain arrays is modified, the index position of the merger
-        must be updated.
-
-        NOTE: This method updates ALL the merger positions.
-        
-        """
-        for clas, id_ in self.keys(max_depth=2):
-            self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(self.times[clas][id_])
+        # Update side-effect attributes.
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
 
 
 class InjectedCoReWaves(BaseInjected):
@@ -2252,12 +2314,9 @@ class InjectedCoReWaves(BaseInjected):
                 strain: np.ndarray,
                 snr: int | float,
                 *,
-                id_: str,
-                pad: int) -> np.ndarray:
+                id: str,
+                snr_offset: int) -> np.ndarray:
         """Inject a strain at 'snr' into noise using 'self.noise' instance.
-
-        NOTE: The SNR is computed over the Ring-Down only, starting from the
-        position of the merger.
 
         Parameters
         ----------
@@ -2265,28 +2324,39 @@ class InjectedCoReWaves(BaseInjected):
             Signal to be injected into noise.
         
         snr : int | float
-            Signal to noise ratio.
+            Targeted signal-to-noise ratio.
         
-        id_ : str
+        id : str
             Signal identifier (2nd layer of 'strains' dict).
         
-        pad : int
-            Padding added to the 'strain' right before the injection, but not
-            registered yet at the metadata.
+        snr_offset : int
+            Offset (w.r.t. the merger) added to the start of the range for
+            computing the SNR.
         
         Returns
         -------
         injected : NDArray
             Injected signal.
         
+        NOTES
+        -----
+        - The SNR is computed over the Ring-Down only, starting from the
+          position of the merger.
+        - The metadata is expected to reflect the original state of the strains
+          previous to any padding performed right before calling this function,
+          which may be done to avoid the vignette effect.
+        
         """
-        merger_pos = self.metadata.at[id_,'merger_pos']
-        i0 = merger_pos + pad
-        i1 = len(strain) - pad
+        clas = self.find_class(id)
+        merger_pos = self.metadata.at[id,'merger_pos']
+        original_length = len(self.strains_clean[clas][id])
+
+        i0 = merger_pos + snr_offset
+        i1 = (original_length - merger_pos) + snr_offset
         injected, scale = self.noise.inject(strain, snr=snr, snr_lim=(i0, i1))
 
         # Compute the equivalent SNR over the entire waveform.
-        self.whole_snr[id_][snr] = self.noise.snr(strain*scale)
+        self.whole_snr[id][snr] = self.noise.snr(strain*scale)
 
         return injected
     
