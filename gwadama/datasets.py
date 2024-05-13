@@ -10,6 +10,7 @@ There are two basic type of datasets, clean and injected:
 
 """
 from copy import deepcopy
+import itertools
 from typing import Callable
 
 # from clawdia.estimators import find_merger  # Imported only when instancing CoReWaves.
@@ -190,134 +191,39 @@ class Base:
         
         return labels
 
-    def resample(self, sample_rate, verbose=False) -> None:
-        """Resample strain and time arrays to a constant rate."""
+    def _init_strains_dict(self) -> dict:
+        return {clas: {} for clas in self.classes}
 
-        # Set up the time points associated to each strain in case it is not
-        # provided.
-        #
-        if self._track_times:
-            times = self.times
-        else:
-            if sample_rate == self.sample_rate:
-                raise ValueError("trying to resample to the same sampling rate")
-            if self.sample_rate is None:
-                raise ValueError("neither time samples nor a global sampling rate were defined")
-            
-            times = self._gen_times()
-            self._track_times = True
+    def _find_max_length(self) -> int:
+        """Return the length of the longest signal present in strains."""
 
+        max_length = 0
+        for *_, strain in self.items():
+            l = len(strain)
+            if l > max_length:
+                max_length = l
+
+        return max_length
+
+    def _gen_times(self) -> dict:
+        """Generate the time arrays associated to the strains.
+
+        Assumes a constant sampling rate.
+        
+        Returns
+        -------
+        times : dict
+            Nested dictionary with the same shape as 'self.strains'.
+        
+        """
+        times = self._init_strains_dict()  # might change this method's name
         for *keys, strain in self.items():
-            time = dictools._get_value_from_nested_dict(times, keys)
-            strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
-                strain, time, sample_rate, full_output=True
-            )
-            dictools._set_value_to_nested_dict(self.strains, keys, strain_resampled)
-            dictools._set_value_to_nested_dict(self.times, keys, time_resampled)
-            
-            if verbose:
-                print(
-                    f"Strain {keys[0]}::{keys[1]} up. to {sf_up} Hz, down by factor {factor_down}"
-                )
-
-        self.sample_rate = sample_rate
-        self.max_length = self._find_max_length()
-    
-    def get_strain(self, *indices, normalize=False) -> np.ndarray:
-        """Get a single strain from the complete index coordinates.
+            length = len(strain)
+            t_end = (length - 1) / self.sample_rate
+            time = np.linspace(0, t_end, length)
+            dictools._set_value_to_nested_dict(times, keys, time)
         
-        This is just a shortcut to avoid having to write several squared
-        brackets.
-
-        NOTE: The returned strain is not a copy; if its contents are modified,
-        the changes will be reflected inside the 'strains' attribute.
-
-        Parameters
-        ----------
-        *indices : str | int
-            The indices of the strain to retrieve.
-        
-        normalize : bool
-            If True, the returned strain will be normalized to its maximum
-            amplitude.
-        
-        Returns
-        -------
-        strain : np.ndarray
-            The requested strain.
-        
-        """
-        if len(indices) != self._dict_depth:
-            raise ValueError("indices must match the depth of 'self.strains'")
-
-        strain = dictools._get_value_from_nested_dict(self.strains, indices)
-        if normalize:
-            strain /= np.max(np.abs(strain))
-
-        return strain
-
-    def get_times(self, *indices) -> np.ndarray:
-        """Get a single time array from the complete index coordinates.
-        
-        This is just a shortcut to avoid having to write several squared
-        brackets.
-
-        NOTE: The returned strain is not a copy; if its contents are modified,
-        the changes will be reflected inside the 'times' attribute.
-        
-        """        
-        if len(indices) != self._dict_depth:
-            raise ValueError("indices must match the depth of 'self.strains'")
-        
-        return dictools._get_value_from_nested_dict(self.times, indices)
-
-    def get_xtrain_array(self, length=None):
-        """Get the train subset stacked in a zero-padded Numpy 2d-array.
-
-        Stacks all signals in the train subset into an homogeneous numpy array
-        whose length (axis=1) is determined by either 'length' or, if None, by
-        the longest strain in the subset. The remaining space is zeroed.
-
-        Parameters
-        ----------
-        length : int, optional
-            Target length of the 'train_array'. If None, the longest signal
-            determines the length.
-
-        Returns
-        -------
-        train_array : np.ndarray
-            train subset.
-        
-        lengths : list
-            Original length of each strain, following the same order as the
-            first axis of 'train_array'.
-
-        """
-        return dictools._dict_to_stacked_array(self.Xtrain, target_length=length)
-    
-    def get_xtest_array(self, length=None):
-        """Get the test subset stacked in a zero-padded Numpy 2d-array.
-
-        Stacks all signals in the test subset into an homogeneous numpy array
-        whose length (axis=1) is determined by either 'length' or, if None, by
-        the longest strain in the subset. The remaining space is zeroed.
-
-        Parameters
-        ----------
-        length : int, optional
-
-        Returns
-        -------
-        test_array : np.ndarray
-            test subset.
-        
-        lengths : list
-            Original length of each strain, following the same order as the
-            first axis of 'test_array'.
-
-        """
-        return dictools._dict_to_stacked_array(self.Xtest, target_length=length)
+        return times
 
     def keys(self, max_depth: int = None) -> list:
         """Return the unrolled combinations of all strain identifiers.
@@ -387,40 +293,126 @@ class Base:
         """
         return dictools._find_level0_of_level1(self.strains, id)
 
-    def _init_strains_dict(self) -> dict:
-        return {clas: {} for clas in self.classes}
+    def get_strain(self, *indices, normalize=False) -> np.ndarray:
+        """Get a single strain from the complete index coordinates.
+        
+        This is just a shortcut to avoid having to write several squared
+        brackets.
 
-    def _find_max_length(self) -> int:
-        """Return the length of the longest signal present in strains."""
+        NOTE: The returned strain is not a copy; if its contents are modified,
+        the changes will be reflected inside the 'strains' attribute.
 
-        max_length = 0
-        for *_, strain in self.items():
-            l = len(strain)
-            if l > max_length:
-                max_length = l
-
-        return max_length
-
-    def _gen_times(self) -> dict:
-        """Generate the time arrays associated to the strains.
-
-        Assumes a constant sampling rate.
+        Parameters
+        ----------
+        *indices : str | int
+            The indices of the strain to retrieve.
+        
+        normalize : bool
+            If True, the returned strain will be normalized to its maximum
+            amplitude.
         
         Returns
         -------
-        times : dict
-            Nested dictionary with the same shape as 'self.strains'.
+        strain : np.ndarray
+            The requested strain.
         
         """
-        times = self._init_strains_dict()  # might change this method's name
-        for *keys, strain in self.items():
-            length = len(strain)
-            t_end = (length - 1) / self.sample_rate
-            time = np.linspace(0, t_end, length)
-            dictools._set_value_to_nested_dict(times, keys, time)
-        
-        return times
+        if len(indices) != self._dict_depth:
+            raise ValueError("indices must match the depth of 'self.strains'")
 
+        strain = dictools._get_value_from_nested_dict(self.strains, indices)
+        if normalize:
+            strain /= np.max(np.abs(strain))
+
+        return strain
+
+    def get_times(self, *indices) -> np.ndarray:
+        """Get a single time array from the complete index coordinates.
+        
+        This is just a shortcut to avoid having to write several squared
+        brackets.
+
+        NOTE: The returned strain is not a copy; if its contents are modified,
+        the changes will be reflected inside the 'times' attribute.
+        
+        """        
+        if len(indices) != self._dict_depth:
+            raise ValueError("indices must match the depth of 'self.strains'")
+        
+        return dictools._get_value_from_nested_dict(self.times, indices)
+
+    def shrink_strains(self, limits: tuple | dict) -> None:
+        """Shrink strains to a specific interval.
+
+        Shrink strains (and their associated time arrays if present) to the
+        interval given by 'limits'.
+        
+        It also updates the 'max_length' attribute.
+
+        Parameters
+        ----------
+        limits : tuple | dict
+            The limits of the interval to shrink to.
+            If limits is a tuple, it must be of the form (start, end) in
+            samples.
+            If limits is a dictionary, it must be of the form {id: (start, end)},
+            where id is the identifier of each strain.
+            NOTE: If extra layers below ID are present, they will be shrunk
+            accordingly.
+
+        """
+        if isinstance(limits, tuple):
+            limits_d = {id: limits for id in self.metadata.index}
+        else:
+            limits_d = limits
+
+        for clas, id, *keys in self.keys():
+            strain = self.get_strain(clas, id, *keys)
+            # Same shrinking limits for all possible strains below ID layer.
+            start, end = limits_d[id]
+            strain = strain[start:end]
+            dictools._set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
+
+            if self._track_times:
+                times = self.get_times(clas, id, *keys)
+                times = times[start:end]
+                dictools._set_value_to_nested_dict(self.times, [clas,id,*keys], times)
+
+        self.max_length = self._find_max_length()
+
+    def resample(self, sample_rate, verbose=False) -> None:
+        """Resample strain and time arrays to a constant rate."""
+
+        # Set up the time points associated to each strain in case it is not
+        # provided.
+        #
+        if self._track_times:
+            times = self.times
+        else:
+            if sample_rate == self.sample_rate:
+                raise ValueError("trying to resample to the same sampling rate")
+            if self.sample_rate is None:
+                raise ValueError("neither time samples nor a global sampling rate were defined")
+            
+            times = self._gen_times()
+            self._track_times = True
+
+        for *keys, strain in self.items():
+            time = dictools._get_value_from_nested_dict(times, keys)
+            strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
+                strain, time, sample_rate, full_output=True
+            )
+            dictools._set_value_to_nested_dict(self.strains, keys, strain_resampled)
+            dictools._set_value_to_nested_dict(self.times, keys, time_resampled)
+            
+            if verbose:
+                print(
+                    f"Strain {keys[0]}::{keys[1]} up. to {sf_up} Hz, down by factor {factor_down}"
+                )
+
+        self.sample_rate = sample_rate
+        self.max_length = self._find_max_length()
+    
     def whiten(self,
                asd_array: np.ndarray = None,
                pad: int = 0,
@@ -542,7 +534,55 @@ class Base:
         id_test = list(self.Xtest.keys())
         self.Xtrain, self.Ytrain = self._build_subset_strains(id_train)
         self.Xtest, self.Ytest = self._build_subset_strains(id_test)
+    
+    def get_xtrain_array(self, length=None):
+        """Get the train subset stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals in the train subset into an homogeneous numpy array
+        whose length (axis=1) is determined by either 'length' or, if None, by
+        the longest strain in the subset. The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+            Target length of the 'train_array'. If None, the longest signal
+            determines the length.
+
+        Returns
+        -------
+        train_array : np.ndarray
+            train subset.
         
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of 'train_array'.
+
+        """
+        return dictools._dict_to_stacked_array(self.Xtrain, target_length=length)
+    
+    def get_xtest_array(self, length=None):
+        """Get the test subset stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals in the test subset into an homogeneous numpy array
+        whose length (axis=1) is determined by either 'length' or, if None, by
+        the longest strain in the subset. The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+
+        Returns
+        -------
+        test_array : np.ndarray
+            test subset.
+        
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of 'test_array'.
+
+        """
+        return dictools._dict_to_stacked_array(self.Xtest, target_length=length)
+
 
 class BaseInjected(Base):
     """Manage an injected dataset with multiple SNR values.
@@ -2018,6 +2058,28 @@ class CoReWaves(Base):
         self._dict_depth = dictools._get_depth(self.strains)
         self._update_merger_positions()
     
+    def shrink_to_merger(self, offset: int = 0) -> None:
+        """Shrink strains and time arrays w.r.t. the merger.
+
+        Shrink strains (and their associated time arrays) discarding the left
+        side of the merger (inspiral), with a given offset in samples.
+
+        NOTE: This is an irreversible action.
+
+        Parameters
+        ----------
+        offset : int
+            Offset in samples relative to the merger position.
+
+        """
+        limits = {}
+        for clas, id, *keys in self.keys():
+            i_merger = self.metadata.at[id, 'merger_pos']
+            # Same shrinking limits for all possible strains below ID layer.
+            limits[id] = (i_merger+offset, -1)
+        
+        self.shrink_strains(limits)
+
     def convert_to_IS_units(self) -> None:
         """Convert data from scaled geometrized units to IS units.
 
