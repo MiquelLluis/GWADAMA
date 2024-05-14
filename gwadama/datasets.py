@@ -1324,7 +1324,10 @@ class BaseInjected(Base):
         """
         return self._stack_subset(self.Xtrain, length, snr, with_metadata)
     
-    def get_xtest_array(self, length=None, snr: int | list | str = 'all', with_metadata=False):
+    def get_xtest_array(self,
+                        length: int = None,
+                        snr: int | list | str = 'all',
+                        with_metadata=False):
         """Get the test subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the test subset into an homogeneous numpy array
@@ -1435,7 +1438,7 @@ class BaseInjected(Base):
         elif snr != 'all':
             raise ValueError("the value of 'snr' is not valid")
         
-        strains = dictools._flatten_nested_dict(strains)
+        strains = dictools.flatten_nested_dict(strains)
 
         stacked_signals, lengths = dictools._dict_to_stacked_array(strains, target_length=length)
         

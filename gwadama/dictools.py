@@ -211,7 +211,7 @@ def _find_level0_of_level1(dict_, key: int|str) -> int | str:
         raise ValueError(f"key '{key}' was not found inside the second level of the dictionary")
 
 
-def _flatten_nested_dict(dict_: dict) -> dict:
+def flatten_nested_dict(dict_: dict) -> dict:
     """Turn any nested dictionary into a shallow (single level) one.
     
     Flatten a nested dictionary into a single level dictionary, keeping their
