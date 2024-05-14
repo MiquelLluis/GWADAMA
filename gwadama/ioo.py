@@ -419,9 +419,6 @@ class CoReManager:
         return ecc
 
 
-
-
-
 def save_to_hdf5(file: str, *, data: dict, metadata: dict) -> None:
     """Save nested dictionary of NumPy arrays to HDF5 file with metadata.
 
@@ -470,7 +467,6 @@ def save_to_hdf5(file: str, *, data: dict, metadata: dict) -> None:
         )
     
 
-
 def _save_to_hdf5_recursive(*,
                             h5_group: h5py.Group,
                             data: dict,
@@ -503,3 +499,89 @@ def _save_to_hdf5_recursive(*,
             dataset = h5_group.create_dataset(key, data=value)
             for metadata_key, metadata_value in metadata[key].items():
                 dataset.attrs[metadata_key] = metadata_value
+
+
+def save_experiment_results(file: str,
+                            *,
+                            parameters: dict,
+                            results: dict,
+                            sep=';',
+                            return_dataframe=False):
+    """Save (update) experiment results to a CSV using pandas.DataFrame.
+
+    Parameters and results are saved as columns in a Pandas DataFrame, in a
+    new row of an existing CSV file, or as the first row if the file does not
+    exists. Each row represents an experiment.
+    Parameters' keys may change depending on the experiment; when adding a new
+    key or omitting one, the corresponding place in the CSV file will be filled
+    with NaN.
+
+    Results are inserted at the beginning of the DataFrame's columns, and their
+    keys must not change between experiments.
+
+    If there is a complex parameter structure, it is recommended to provide
+    a flattened version with new and simpler keys.
+
+    Parameters
+    ----------
+    file : str
+        Path to the CSV file.
+        If the file already exists, loads it and appends the experiment data
+        to the end of the DataFrame, and updates the file.
+        If the file does not exist, creates it.
+    
+    parameters : dict
+        Experiment settings and hyper-parameters.
+        They must be registered in a flat dictionary.
+    
+    results : dict
+        Experiment results, tipically the LOSS overall statistics.
+        For example:
+        ```
+        results = {
+            'loss max': 0.3,
+            'loss_mean': 0.1,
+            'loss_median': 0.08,
+            'loss_min': 0.001
+        }
+        They will be inserted at the beginning of the DataFrame's columns.
+    
+    sep : str
+        Column separator in the CSV file. ';' by default.
+    
+    return_dataframe : bool
+        If True, return the DataFrame instance. False by default.
+    
+    Returns
+    -------
+    df : pandas.DataFrame, optional
+        The pandas DataFrame instance, only returned if 'return_dataframe'
+        is True.
+    
+    """
+    data = {**results, **parameters}
+
+    try:
+        df = pd.read_csv(file, sep=sep, index_col=0)
+    except FileNotFoundError:
+        df = pd.DataFrame([], columns=data.keys())
+        df.index.name = 'Experiment'
+        i_exp = 0
+    else:
+        # Make sure input results keys are the same as the ones in the file.
+        columns_old = list(df.columns)
+        results_keys = list(results.keys())
+        i_sep = columns_old.index(results_keys[-1]) + 1
+        if set(results_keys) != set(columns_old[:i_sep]):
+            raise ValueError('Experiment results keys must not change between experiments.')
+
+        i_exp = df.index[-1] + 1
+
+
+    for k, v in data.items():
+        df.at[i_exp, k] = v
+    
+    df.to_csv(file, sep=sep)
+
+    if return_dataframe:
+        return df
