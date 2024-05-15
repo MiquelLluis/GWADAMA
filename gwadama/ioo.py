@@ -506,6 +506,7 @@ def save_experiment_results(file: str,
                             parameters: dict,
                             results: dict,
                             sep=';',
+                            start_index: int = 0,
                             return_dataframe=False):
     """Save (update) experiment results to a CSV using pandas.DataFrame.
 
@@ -549,6 +550,11 @@ def save_experiment_results(file: str,
     sep : str
         Column separator in the CSV file. ';' by default.
     
+    start_index : int
+        Index of the first row in the experiment (and the CSV file) when
+        creating a new file. If the file already exists, this is ignored.
+        0 by default.
+    
     return_dataframe : bool
         If True, return the DataFrame instance. False by default.
     
@@ -566,7 +572,7 @@ def save_experiment_results(file: str,
     except FileNotFoundError:
         df = pd.DataFrame([], columns=data.keys())
         df.index.name = 'Experiment'
-        i_exp = 0
+        i_exp = start_index
     else:
         # Make sure input results keys are the same as the ones in the file.
         columns_old = list(df.columns)
