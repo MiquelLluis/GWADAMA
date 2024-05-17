@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.8.1" />
+<title>gwadama.ioo API documentation</title>
+<meta name="description" content="Input &amp; Output Operations …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>gwadama.ioo</code></h1>
+</header>
+<section id="section-intro">
+<p>Input &amp; Output Operations</p>
+<p>Everything related to input data retrieval and output files.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Input &amp; Output Operations
+
+Everything related to input data retrieval and output files.
+
+&#34;&#34;&#34;
+from pathlib import Path
+from shutil import rmtree
+
+import h5py
+import numpy as np
+import pandas as pd
+from tqdm.auto import tqdm
+import watpy
+
+from .units import *
+
+
+
+class CoReManager:
+    &#34;&#34;&#34;Manage easily usual tasks of Watpy&#39;s CoRe_db instances.
+
+    Ad-hoc manager to automate and make easier usual tasks in Watpy, including
+    metadata and strain downloads, and spatial projection.
+
+    ATTRIBUTES
+    ----------
+    cdb : watpy.coredb.coredb.CoRe_db
+        Instance of CoRe_db from which everything is managed.
+
+    db_path : Path
+        Folder where is or will be stored CoRe database.
+        Refer to &#39;watpy.coredb.coredb.CoRe_db&#39; for more details.
+
+    eos : set
+        All EOS found available.
+
+    metadata : DataFrame
+        Metadata from all simulations in &#39;cdb&#39; collected in a single DF.
+
+    downloaded : dict
+        3-Level dictionary containing the path to existing strains (saved as
+        TXT files), their eccentricity and radius of extraction.
+        Tree-format:
+            txt_files[simkey][run] = {
+                &#39;file&#39;: &#39;path/to/file.txt&#39;,
+                &#39;eccentricity&#39;: ecc,
+                &#39;r_extraction&#39;: rext
+            }
+        NOTE: ONLY KEEPS 1 RUN PER SIMULATION FOR NOW
+
+    &#34;&#34;&#34;
+    fields_float = [
+        &#39;id_mass&#39;,
+        &#39;id_rest_mass&#39;,
+        &#39;id_mass_ratio&#39;,
+        &#39;id_ADM_mass&#39;,
+        &#39;id_ADM_angularmomentum&#39;,
+        &#39;id_gw_frequency_Hz&#39;,
+        &#39;id_gw_frequency_Momega22&#39;,
+        &#39;id_kappa2T&#39;,
+        &#39;id_Lambda&#39;,
+        &#39;id_eccentricity&#39;,
+        &#39;id_mass_starA&#39;,
+        &#39;id_rest_mass_starA&#39;,
+        &#39;id_mass_starB&#39;,
+        &#39;id_rest_mass_starB&#39;
+    ]
+    header_gw_txt = &#34;u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8&#34;
+
+    def __init__(self, db_path):
+        &#34;&#34;&#34;Initialize the manager.
+
+        PARAMETERS
+        ----------
+        db_path : str
+            Folder where is or will be stored CoRe database.
+            Refer to &#39;watpy.coredb.coredb.CoRe_db&#39; for more details.
+
+        &#34;&#34;&#34;
+        self.db_path = Path(db_path)
+        self.cdb = watpy.coredb.coredb.CoRe_db(db_path)
+        self.metadata = self._gen_metadata_dataframe()
+        self.eos = set(self.metadata[&#39;id_eos&#39;])
+        self.downloaded = self._look_for_existing_strains()
+
+    def __repr__(self):
+        return str(self.metadata)
+
+    def __getitem__(self, i):
+        return self.metadata[i]
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def show(self, key, to_float=False, to_file=None):
+        return self.cdb.idb.show(key, to_float=False, to_file=None)
+
+    def filter_by(self, key, value):
+        return self.metadata[self.metadata[key] == value]
+
+    def filter_multiple(self, filters):
+        md = self.metadata.copy()
+        for k, v in filters:
+            md = md[md[k] == v]
+
+        return md
+
+    def count_runs(self, filters=[]):
+        &#34;&#34;&#34;Count total number of runs in the database.
+
+        Parameters
+        ----------
+        filters : list of lists
+            Format: [[key0, value0], [key1, value1], ...]
+
+        &#34;&#34;&#34;
+        md = self.filter_multiple(filters)
+        counts = 0
+        for ind in md.index:
+            runs = md.loc[ind].available_runs
+            if runs is not None:
+                counts += len(runs.split(&#39;, &#39;))
+
+        return counts
+
+    def download_mode22(self, simkeys, keep_h5=False, overwrite=False,
+                         prot=&#39;https&#39;, lfs=False, verbose=True):
+        &#34;&#34;&#34;Download ONLY the optimum strains Rh_22.
+
+        Downloads each simulation, keeps the strains with the lowest
+        eccentricity and highest extraction point &#39;r&#39; in a TXT file, updates
+        the database &#39;self.downloaded&#39;, and (optional) removes the original
+        HDF5 file from CoRe to free up space.
+
+        Parameters
+        ----------
+        simkeys : list
+            List of simulation keys (&#39;db_keys&#39; in watpy) to download.
+
+        keep_h5 : bool
+            If False (default) removes the HDF5 file downloaded by watpy.
+
+        overwrite : bool
+            If False (default) and a certain simulation in &#39;simkeys&#39; is already
+            present in &#39;self.downloaded&#39;, skip it. Otherwise downloads
+            everything again.
+
+        verbose : bool
+            If True (default), print which simulations are downloaded and which
+            are skipped.
+
+        prot, lfs :
+            Refer to &#39;watpy.coredb.coredb.CoRe_db.sync&#39;.
+
+        &#34;&#34;&#34;
+        for skey in tqdm(simkeys):
+            if (not overwrite) and (skey in self.downloaded):
+                if verbose: print(f&#34;{skey} already downloaded, skipping.&#34;)
+                continue
+
+            self.cdb.sync(dbkeys=[skey], prot=prot, lfs=lfs, verbose=False)
+
+            # Get the gw data with lowest eccentricity and at the highest &#39;r&#39;
+            # of extraction.
+            runkey, ecc = self.get_runkey_lowest_eccentricity(skey)
+            run = self.cdb.sim[skey].run[runkey]
+            data = run.data.read_dset()[&#39;rh_22&#39;]
+            rext_key, rext = self._get_highest_r_extraction_(data)
+            gw_data = data[rext_key]
+
+            # Save gw data as TXT.
+            ofile = Path(run.path) / f&#39;Rh_l2_m2_r{rext:05d}.txt&#39;
+            np.savetxt(ofile, gw_data, header=self.header_gw_txt)
+
+            # Update download database.
+            self.downloaded[skey] = {}  # ONLY 1 RUN PER SIM FOR NOW
+            self.downloaded[skey][runkey] = {
+                &#39;file&#39;: ofile,
+                &#39;eccentricity&#39;: ecc,
+                &#39;r_extraction&#39;: rext
+            }
+
+            if not keep_h5: self._clean_h5_data(skey)
+            if verbose: print(f&#34;{skey} downloaded.&#34;)
+
+    def load_sim(self, skey):
+        &#34;&#34;&#34;Load a previously downloaded gw simulation.&#34;&#34;&#34;
+        
+        meta_sim = self.downloaded[skey]
+        file = next(iter(meta_sim.values()))[&#39;file&#39;]
+        gw_data = np.loadtxt(file)
+
+        return gw_data
+
+    @staticmethod
+    def sw_Y22(i, phi):
+        &#34;&#34;&#34;Spin-weighted spherical harmonic mode lm = 22.
+
+        Ref: Ajith et al., 2011
+
+        Parameters:
+        -----------
+        i : float
+            Inclination angle from the z-axis.
+
+        phi : float
+            Phase angle.
+
+        &#34;&#34;&#34;
+        return np.sqrt(5/(64*np.pi)) * (1 + np.cos(i))**2 * np.exp(2j*phi)
+
+    def gen_strain(self, skey, distance, inclination, phi):
+        &#34;&#34;&#34;Build strain from time-domain mode 22 in mass rescaled, geom. units.
+        
+        Parameters:
+        -----------
+        skey : str
+            Key (database_key) of the simulation.
+
+        distance : float
+            Distance to the source in Mpc.
+        
+        inclination, phi: float
+            Angle positions.
+
+        Returns:
+        --------
+        time : ndarray(float)
+            Time points in seconds.
+        
+        hplus, hcross : ndarray(float)
+            Polarizations of the rescaled strain.
+        
+        &#34;&#34;&#34;
+        gw_data = self.load_sim(skey)
+        mass = self.metadata.id_mass.loc[skey]
+        u_M = gw_data[:,0]
+        Rh = gw_data[:,1] - 1j*gw_data[:,2]
+
+        # Convert time.
+        time = u_M * mass * MSUN_SEC
+
+        # Genearte Strain polarizations.
+        sY22 = self.sw_Y22(phi, inclination)
+        amplitude_prefactor = mass * MSUN_MET / (distance * MPC_MET)
+        h = amplitude_prefactor * Rh * sY22
+        hplus = h.real
+        hcross = -h.imag
+        
+        return time, hplus, hcross
+
+    def get_runkey_lowest_eccentricity(self, skey):
+        &#34;&#34;&#34;Find the run with the lowest eccentricity for a given simulation.
+
+        Return the key of the run and the value of its eccentricity for which
+        this parameter is the lowest among all runs of the &#39;skey&#39; simulation.
+
+        If a simulation has multiple runs with the same eccentricity
+        (typically all values set to 0 or NAN) it will pick the first run in
+        the list.
+
+        If there are one or more runs with eccentricity = NAN, the first one
+        will be returned.
+
+        Parameters
+        ----------
+        skey : str
+            Key (database_key) of the simulation.
+
+        Returns
+        -------
+        run_key : str
+            Key of the run.
+        ecc : float
+            Eccentricity of the run.
+
+        &#34;&#34;&#34;
+        runs = self.cdb.sim[skey].run.copy()
+        run_key = &#39;R01&#39;
+        ecc = self.cast_to_float(runs.pop(&#39;R01&#39;).md.data[&#39;id_eccentricity&#39;])
+
+        if np.isnan(ecc):
+            return run_key, ecc
+
+        # Look for the minimum eccentricity, or the first one to be NAN.
+        for rkey, run in runs.items():
+            ecc_i = self.cast_to_float(run.md.data[&#39;id_eccentricity&#39;])
+            if ecc_i &lt; ecc:
+                run_key = rkey
+                ecc = ecc_i
+            elif np.isnan(ecc_i):
+                run_key = rkey
+                ecc = ecc_i
+                break
+
+        return run_key, ecc
+
+    @staticmethod
+    def cast_to_float(string):
+        &#34;&#34;&#34;Cast a string to float, considering &#39;&#39; also a NaN.&#34;&#34;&#34;
+
+        if string in [&#39;&#39;, None]:
+            n = np.nan
+        else:
+            n = float(string)
+
+        return n
+
+    def _clean_h5_data(self, skey):
+        &#34;&#34;&#34;Remove HDF5 files from a downloaded &#39;skey&#39; simulation.
+
+        Parameters
+        ----------
+        skey : str
+            Simulation key.
+
+        &#34;&#34;&#34;
+        root = Path(self.cdb.sim[skey].path)
+        # Remove HDF5 files.
+        files = root.glob(&#39;*/*.h5&#39;)
+        for file in files:
+            file.unlink()
+        # Remove .git folder.
+        folder = root / &#39;.git&#39;
+        rmtree(folder)
+
+    def _gen_metadata_dataframe(self):
+        idb = self.cdb.idb
+        key_list = idb.dbkeys
+        metalist = [core_md.data for core_md in idb.index]
+        md = pd.DataFrame(metalist, index=key_list)
+        # Convert data types of the selected columns:
+        for field in self.fields_float:
+            mask = (md[field] == &#39;NAN&#39;) | (md[field] == &#39;&#39;)
+            md[field].values[mask] = np.nan
+            md[field] = md[field].astype(float)
+
+        return md
+
+    def _get_highest_r_extraction_(self, extractions):
+        &#34;&#34;&#34;Return the key and value of &#39;r&#39; of the gw with the highest &#39;r&#39;.
+
+        It also includes the case when the value of &#39;r&#39; in the data is Inf
+        instead of a number.
+
+        Parameters
+        ----------
+        extractions : dict
+            Channel &#39;rh_22&#39; returned by CoRe_h5.read_dset().
+
+        &#34;&#34;&#34;
+        rext_key = max(extractions.keys())
+        if &#39;Inf&#39; in rext_key:
+            rext = 99999  # Highest number with 5 figures, to represent infinity.
+        else:
+            rext = int(rext_key[-9:-4])
+
+        return rext_key, rext
+
+    def _look_for_existing_strains(self):
+        &#34;&#34;&#34;Strains that were already extracted from CoRe&#39;s HDF5 files.
+
+        Save their paths, alongside the eccentricity and radius of extraction,
+        in a dictionary tree by simulation key and run.
+
+        Returns
+        -------
+        txt_files : dict
+            3-Level dictionary containing the path to existing strains
+            (extracted as TXT files), their eccentricity and radius of
+            extraction. Tree-format:
+                txt_files[simkey][run] = {
+                    &#39;file&#39;: &#39;path/to/file.txt&#39;,
+                    &#39;eccentricity&#39;: ecc,
+                    &#39;r_extraction&#39;: rext
+                }
+
+        &#34;&#34;&#34;
+        txt_files = {}
+        for file in self.db_path.rglob(&#39;Rh*.txt&#39;):
+            key = file.parts[-3].replace(&#39;_&#39;, &#39;:&#39;)
+            run = file.parts[-2]
+            ecc = self._read_eccentricity(file.parent/&#39;metadata.txt&#39;)
+            rext = int(file.stem[-5:])
+            
+            if key not in txt_files:
+                txt_files[key] = {}
+            
+            # If there are multiple files of the same sim and run, only keep
+            # the highest extraction point available.
+            elif run in txt_files[key]:
+                r0 = int(txt_files[key][run][&#39;file&#39;].stem[-5:])
+                if rext &lt; r0:
+                    continue
+
+            txt_files[key][run] = {
+                &#39;file&#39;: file,
+                &#39;eccentricity&#39;: ecc,
+                &#39;r_extraction&#39;: rext
+            }
+
+        return txt_files
+
+    def _read_eccentricity(self, file):
+        &#34;&#34;&#34;Get the value of eccentricity from a metadata file.&#34;&#34;&#34;
+
+        with open(file) as f:
+            for line in f:
+                if &#39;id_eccentricity&#39; in line:
+                    break
+            else:
+                raise EOFError(&#34;no value of eccentricity found in the file&#34;)
+        ecc_txt = line.split()[-1]
+        try:
+            ecc = float(ecc_txt)
+        except ValueError:
+            ecc = np.nan
+
+        return ecc
+
+
+def save_to_hdf5(file: str, *, data: dict, metadata: dict) -&gt; None:
+    &#34;&#34;&#34;Save nested dictionary of NumPy arrays to HDF5 file with metadata.
+
+    PARAMETERS
+    ----------
+    file: str
+        Path to the HDF5 file.
+
+    data: dict
+        Nested dictionary containing NumPy arrays.
+    
+    metadata: dict
+        Nested dictionary containing metadata for arrays.
+
+   
+    EXAMPLE
+    -------
+    ```
+    data = {
+        &#39;group1&#39;: {
+            &#39;array1&#39;: np.array([1, 2, 3]),
+            &#39;array2&#39;: np.array([4, 5, 6])
+        },
+        &#39;group2&#39;: {
+            &#39;array3&#39;: np.array([7, 8, 9]),
+            &#39;array4&#39;: np.array([10, 11, 12])
+        }
+    }
+    metadata = {
+        &#39;group1&#39;: {
+            &#39;array1&#39;: {&#39;description&#39;: &#39;Example data&#39;},
+            &#39;array2&#39;: {&#39;description&#39;: &#39;Another example&#39;}
+        },
+        &#39;group2&#39;: {
+            &#39;array3&#39;: {&#39;unit&#39;: &#39;m/s^2&#39;},
+            &#39;array4&#39;: {&#39;unit&#39;: &#39;kg&#39;}
+        }
+    }
+    save_to_hdf5(&#39;output.h5&#39;, data=data, metadata=metadata)
+    ```
+    
+    &#34;&#34;&#34;
+    with h5py.File(file, &#39;w&#39;) as hf:
+        _save_to_hdf5_recursive(
+            h5_group=hf, data=data, metadata=metadata
+        )
+    
+
+def _save_to_hdf5_recursive(*,
+                            h5_group: h5py.Group,
+                            data: dict,
+                            metadata: dict) -&gt; None:
+    &#34;&#34;&#34;Save nested dictionary of NumPy arrays to HDF5 group with metadata.
+
+    Save nested dictionary of NumPy arrays to HDF5 group with metadata
+    formatted in the same way as the data.
+
+    
+    PARAMETERS
+    ----------
+    h5_group: h5py.Group
+        H5PY Group into which store the data and optional metadata.
+
+    data_dict: dict
+        Nested dictionary containing NumPy arrays.
+    
+    metadata_dict: dict
+        Nested dictionary containing metadata for arrays.
+
+    &#34;&#34;&#34;
+    for key, value in data.items():
+        if isinstance(value, dict):
+            subgroup = h5_group.create_group(key)
+            _save_to_hdf5_recursive(
+                data=value, metadata=metadata[key], h5_group=subgroup
+        )
+        else:
+            dataset = h5_group.create_dataset(key, data=value)
+            for metadata_key, metadata_value in metadata[key].items():
+                dataset.attrs[metadata_key] = metadata_value
+
+
+def save_experiment_results(file: str,
+                            *,
+                            parameters: dict,
+                            results: dict,
+                            sep=&#39;;&#39;,
+                            start_index: int = 0,
+                            return_dataframe=False):
+    &#34;&#34;&#34;Save (update) experiment results to a CSV using pandas.DataFrame.
+
+    Parameters and results are saved as columns in a Pandas DataFrame, in a
+    new row of an existing CSV file, or as the first row if the file does not
+    exists. Each row represents an experiment.
+    Parameters&#39; keys may change depending on the experiment; when adding a new
+    key or omitting one, the corresponding place in the CSV file will be filled
+    with NaN.
+
+    Results are inserted at the beginning of the DataFrame&#39;s columns, and their
+    keys must not change between experiments.
+
+    If there is a complex parameter structure, it is recommended to provide
+    a flattened version with new and simpler keys.
+
+    Parameters
+    ----------
+    file : str
+        Path to the CSV file.
+        If the file already exists, loads it and appends the experiment data
+        to the end of the DataFrame, and updates the file.
+        If the file does not exist, creates it.
+    
+    parameters : dict
+        Experiment settings and hyper-parameters.
+        They must be registered in a flat dictionary.
+    
+    results : dict
+        Experiment results, tipically the LOSS overall statistics.
+        For example:
+        ```
+        results = {
+            &#39;loss max&#39;: 0.3,
+            &#39;loss_mean&#39;: 0.1,
+            &#39;loss_median&#39;: 0.08,
+            &#39;loss_min&#39;: 0.001
+        }
+        They will be inserted at the beginning of the DataFrame&#39;s columns.
+    
+    sep : str
+        Column separator in the CSV file. &#39;;&#39; by default.
+    
+    start_index : int
+        Index of the first row in the experiment (and the CSV file) when
+        creating a new file. If the file already exists, this is ignored.
+        0 by default.
+    
+    return_dataframe : bool
+        If True, return the DataFrame instance. False by default.
+    
+    Returns
+    -------
+    df : pandas.DataFrame, optional
+        The pandas DataFrame instance, only returned if &#39;return_dataframe&#39;
+        is True.
+    
+    &#34;&#34;&#34;
+    data = {**results, **parameters}
+
+    try:
+        df = pd.read_csv(file, sep=sep, index_col=0)
+    except FileNotFoundError:
+        df = pd.DataFrame([], columns=data.keys())
+        df.index.name = &#39;Experiment&#39;
+        i_exp = start_index
+    else:
+        # Make sure input results keys are the same as the ones in the file.
+        columns_old = list(df.columns)
+        results_keys = list(results.keys())
+        i_sep = columns_old.index(results_keys[-1]) + 1
+        if set(results_keys) != set(columns_old[:i_sep]):
+            raise ValueError(&#39;Experiment results keys must not change between experiments.&#39;)
+
+        i_exp = df.index[-1] + 1
+
+
+    for k, v in data.items():
+        df.at[i_exp, k] = v
+    
+    df.to_csv(file, sep=sep)
+
+    if return_dataframe:
+        return df</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="gwadama.ioo.save_experiment_results"><code class="name flex">
+<span>def <span class="ident">save_experiment_results</span></span>(<span>file: str, *, parameters: dict, results: dict, sep=';', start_index: int = 0, return_dataframe=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save (update) experiment results to a CSV using pandas.DataFrame.</p>
+<p>Parameters and results are saved as columns in a Pandas DataFrame, in a
+new row of an existing CSV file, or as the first row if the file does not
+exists. Each row represents an experiment.
+Parameters' keys may change depending on the experiment; when adding a new
+key or omitting one, the corresponding place in the CSV file will be filled
+with NaN.</p>
+<p>Results are inserted at the beginning of the DataFrame's columns, and their
+keys must not change between experiments.</p>
+<p>If there is a complex parameter structure, it is recommended to provide
+a flattened version with new and simpler keys.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>file</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to the CSV file.
+If the file already exists, loads it and appends the experiment data
+to the end of the DataFrame, and updates the file.
+If the file does not exist, creates it.</dd>
+<dt><strong><code>parameters</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Experiment settings and hyper-parameters.
+They must be registered in a flat dictionary.</dd>
+<dt><strong><code>results</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Experiment results, tipically the LOSS overall statistics.
+For example:
+```
+results = {
+'loss max': 0.3,
+'loss_mean': 0.1,
+'loss_median': 0.08,
+'loss_min': 0.001
+}
+They will be inserted at the beginning of the DataFrame's columns.</dd>
+<dt><strong><code>sep</code></strong> :&ensp;<code>str</code></dt>
+<dd>Column separator in the CSV file. ';' by default.</dd>
+<dt><strong><code>start_index</code></strong> :&ensp;<code>int</code></dt>
+<dd>Index of the first row in the experiment (and the CSV file) when
+creating a new file. If the file already exists, this is ignored.
+0 by default.</dd>
+<dt><strong><code>return_dataframe</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return the DataFrame instance. False by default.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>df</code></strong> :&ensp;<code>pandas.DataFrame</code>, optional</dt>
+<dd>The pandas DataFrame instance, only returned if 'return_dataframe'
+is True.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_experiment_results(file: str,
+                            *,
+                            parameters: dict,
+                            results: dict,
+                            sep=&#39;;&#39;,
+                            start_index: int = 0,
+                            return_dataframe=False):
+    &#34;&#34;&#34;Save (update) experiment results to a CSV using pandas.DataFrame.
+
+    Parameters and results are saved as columns in a Pandas DataFrame, in a
+    new row of an existing CSV file, or as the first row if the file does not
+    exists. Each row represents an experiment.
+    Parameters&#39; keys may change depending on the experiment; when adding a new
+    key or omitting one, the corresponding place in the CSV file will be filled
+    with NaN.
+
+    Results are inserted at the beginning of the DataFrame&#39;s columns, and their
+    keys must not change between experiments.
+
+    If there is a complex parameter structure, it is recommended to provide
+    a flattened version with new and simpler keys.
+
+    Parameters
+    ----------
+    file : str
+        Path to the CSV file.
+        If the file already exists, loads it and appends the experiment data
+        to the end of the DataFrame, and updates the file.
+        If the file does not exist, creates it.
+    
+    parameters : dict
+        Experiment settings and hyper-parameters.
+        They must be registered in a flat dictionary.
+    
+    results : dict
+        Experiment results, tipically the LOSS overall statistics.
+        For example:
+        ```
+        results = {
+            &#39;loss max&#39;: 0.3,
+            &#39;loss_mean&#39;: 0.1,
+            &#39;loss_median&#39;: 0.08,
+            &#39;loss_min&#39;: 0.001
+        }
+        They will be inserted at the beginning of the DataFrame&#39;s columns.
+    
+    sep : str
+        Column separator in the CSV file. &#39;;&#39; by default.
+    
+    start_index : int
+        Index of the first row in the experiment (and the CSV file) when
+        creating a new file. If the file already exists, this is ignored.
+        0 by default.
+    
+    return_dataframe : bool
+        If True, return the DataFrame instance. False by default.
+    
+    Returns
+    -------
+    df : pandas.DataFrame, optional
+        The pandas DataFrame instance, only returned if &#39;return_dataframe&#39;
+        is True.
+    
+    &#34;&#34;&#34;
+    data = {**results, **parameters}
+
+    try:
+        df = pd.read_csv(file, sep=sep, index_col=0)
+    except FileNotFoundError:
+        df = pd.DataFrame([], columns=data.keys())
+        df.index.name = &#39;Experiment&#39;
+        i_exp = start_index
+    else:
+        # Make sure input results keys are the same as the ones in the file.
+        columns_old = list(df.columns)
+        results_keys = list(results.keys())
+        i_sep = columns_old.index(results_keys[-1]) + 1
+        if set(results_keys) != set(columns_old[:i_sep]):
+            raise ValueError(&#39;Experiment results keys must not change between experiments.&#39;)
+
+        i_exp = df.index[-1] + 1
+
+
+    for k, v in data.items():
+        df.at[i_exp, k] = v
+    
+    df.to_csv(file, sep=sep)
+
+    if return_dataframe:
+        return df</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.save_to_hdf5"><code class="name flex">
+<span>def <span class="ident">save_to_hdf5</span></span>(<span>file: str, *, data: dict, metadata: dict) -> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save nested dictionary of NumPy arrays to HDF5 file with metadata.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>file</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to the HDF5 file.</dd>
+<dt><strong><code>data</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Nested dictionary containing NumPy arrays.</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Nested dictionary containing metadata for arrays.</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code>data = {
+    'group1': {
+        'array1': np.array([1, 2, 3]),
+        'array2': np.array([4, 5, 6])
+    },
+    'group2': {
+        'array3': np.array([7, 8, 9]),
+        'array4': np.array([10, 11, 12])
+    }
+}
+metadata = {
+    'group1': {
+        'array1': {'description': 'Example data'},
+        'array2': {'description': 'Another example'}
+    },
+    'group2': {
+        'array3': {'unit': 'm/s^2'},
+        'array4': {'unit': 'kg'}
+    }
+}
+save_to_hdf5('output.h5', data=data, metadata=metadata)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_to_hdf5(file: str, *, data: dict, metadata: dict) -&gt; None:
+    &#34;&#34;&#34;Save nested dictionary of NumPy arrays to HDF5 file with metadata.
+
+    PARAMETERS
+    ----------
+    file: str
+        Path to the HDF5 file.
+
+    data: dict
+        Nested dictionary containing NumPy arrays.
+    
+    metadata: dict
+        Nested dictionary containing metadata for arrays.
+
+   
+    EXAMPLE
+    -------
+    ```
+    data = {
+        &#39;group1&#39;: {
+            &#39;array1&#39;: np.array([1, 2, 3]),
+            &#39;array2&#39;: np.array([4, 5, 6])
+        },
+        &#39;group2&#39;: {
+            &#39;array3&#39;: np.array([7, 8, 9]),
+            &#39;array4&#39;: np.array([10, 11, 12])
+        }
+    }
+    metadata = {
+        &#39;group1&#39;: {
+            &#39;array1&#39;: {&#39;description&#39;: &#39;Example data&#39;},
+            &#39;array2&#39;: {&#39;description&#39;: &#39;Another example&#39;}
+        },
+        &#39;group2&#39;: {
+            &#39;array3&#39;: {&#39;unit&#39;: &#39;m/s^2&#39;},
+            &#39;array4&#39;: {&#39;unit&#39;: &#39;kg&#39;}
+        }
+    }
+    save_to_hdf5(&#39;output.h5&#39;, data=data, metadata=metadata)
+    ```
+    
+    &#34;&#34;&#34;
+    with h5py.File(file, &#39;w&#39;) as hf:
+        _save_to_hdf5_recursive(
+            h5_group=hf, data=data, metadata=metadata
+        )</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="gwadama.ioo.CoReManager"><code class="flex name class">
+<span>class <span class="ident">CoReManager</span></span>
+<span>(</span><span>db_path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage easily usual tasks of Watpy's CoRe_db instances.</p>
+<p>Ad-hoc manager to automate and make easier usual tasks in Watpy, including
+metadata and strain downloads, and spatial projection.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>cdb</code></strong> :&ensp;<code>watpy.coredb.coredb.CoRe_db</code></dt>
+<dd>Instance of CoRe_db from which everything is managed.</dd>
+<dt><strong><code>db_path</code></strong> :&ensp;<code>Path</code></dt>
+<dd>Folder where is or will be stored CoRe database.
+Refer to 'watpy.coredb.coredb.CoRe_db' for more details.</dd>
+<dt><strong><code>eos</code></strong> :&ensp;<code>set</code></dt>
+<dd>All EOS found available.</dd>
+<dt><strong><code>metadata</code></strong> :&ensp;<code>DataFrame</code></dt>
+<dd>Metadata from all simulations in 'cdb' collected in a single DF.</dd>
+<dt><strong><code>downloaded</code></strong> :&ensp;<code>dict</code></dt>
+<dd>3-Level dictionary containing the path to existing strains (saved as
+TXT files), their eccentricity and radius of extraction.
+Tree-format:
+txt_files[simkey][run] = {
+'file': 'path/to/file.txt',
+'eccentricity': ecc,
+'r_extraction': rext
+}
+NOTE: ONLY KEEPS 1 RUN PER SIMULATION FOR NOW</dd>
+</dl>
+<p>Initialize the manager.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>db_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Folder where is or will be stored CoRe database.
+Refer to 'watpy.coredb.coredb.CoRe_db' for more details.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CoReManager:
+    &#34;&#34;&#34;Manage easily usual tasks of Watpy&#39;s CoRe_db instances.
+
+    Ad-hoc manager to automate and make easier usual tasks in Watpy, including
+    metadata and strain downloads, and spatial projection.
+
+    ATTRIBUTES
+    ----------
+    cdb : watpy.coredb.coredb.CoRe_db
+        Instance of CoRe_db from which everything is managed.
+
+    db_path : Path
+        Folder where is or will be stored CoRe database.
+        Refer to &#39;watpy.coredb.coredb.CoRe_db&#39; for more details.
+
+    eos : set
+        All EOS found available.
+
+    metadata : DataFrame
+        Metadata from all simulations in &#39;cdb&#39; collected in a single DF.
+
+    downloaded : dict
+        3-Level dictionary containing the path to existing strains (saved as
+        TXT files), their eccentricity and radius of extraction.
+        Tree-format:
+            txt_files[simkey][run] = {
+                &#39;file&#39;: &#39;path/to/file.txt&#39;,
+                &#39;eccentricity&#39;: ecc,
+                &#39;r_extraction&#39;: rext
+            }
+        NOTE: ONLY KEEPS 1 RUN PER SIMULATION FOR NOW
+
+    &#34;&#34;&#34;
+    fields_float = [
+        &#39;id_mass&#39;,
+        &#39;id_rest_mass&#39;,
+        &#39;id_mass_ratio&#39;,
+        &#39;id_ADM_mass&#39;,
+        &#39;id_ADM_angularmomentum&#39;,
+        &#39;id_gw_frequency_Hz&#39;,
+        &#39;id_gw_frequency_Momega22&#39;,
+        &#39;id_kappa2T&#39;,
+        &#39;id_Lambda&#39;,
+        &#39;id_eccentricity&#39;,
+        &#39;id_mass_starA&#39;,
+        &#39;id_rest_mass_starA&#39;,
+        &#39;id_mass_starB&#39;,
+        &#39;id_rest_mass_starB&#39;
+    ]
+    header_gw_txt = &#34;u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8&#34;
+
+    def __init__(self, db_path):
+        &#34;&#34;&#34;Initialize the manager.
+
+        PARAMETERS
+        ----------
+        db_path : str
+            Folder where is or will be stored CoRe database.
+            Refer to &#39;watpy.coredb.coredb.CoRe_db&#39; for more details.
+
+        &#34;&#34;&#34;
+        self.db_path = Path(db_path)
+        self.cdb = watpy.coredb.coredb.CoRe_db(db_path)
+        self.metadata = self._gen_metadata_dataframe()
+        self.eos = set(self.metadata[&#39;id_eos&#39;])
+        self.downloaded = self._look_for_existing_strains()
+
+    def __repr__(self):
+        return str(self.metadata)
+
+    def __getitem__(self, i):
+        return self.metadata[i]
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def show(self, key, to_float=False, to_file=None):
+        return self.cdb.idb.show(key, to_float=False, to_file=None)
+
+    def filter_by(self, key, value):
+        return self.metadata[self.metadata[key] == value]
+
+    def filter_multiple(self, filters):
+        md = self.metadata.copy()
+        for k, v in filters:
+            md = md[md[k] == v]
+
+        return md
+
+    def count_runs(self, filters=[]):
+        &#34;&#34;&#34;Count total number of runs in the database.
+
+        Parameters
+        ----------
+        filters : list of lists
+            Format: [[key0, value0], [key1, value1], ...]
+
+        &#34;&#34;&#34;
+        md = self.filter_multiple(filters)
+        counts = 0
+        for ind in md.index:
+            runs = md.loc[ind].available_runs
+            if runs is not None:
+                counts += len(runs.split(&#39;, &#39;))
+
+        return counts
+
+    def download_mode22(self, simkeys, keep_h5=False, overwrite=False,
+                         prot=&#39;https&#39;, lfs=False, verbose=True):
+        &#34;&#34;&#34;Download ONLY the optimum strains Rh_22.
+
+        Downloads each simulation, keeps the strains with the lowest
+        eccentricity and highest extraction point &#39;r&#39; in a TXT file, updates
+        the database &#39;self.downloaded&#39;, and (optional) removes the original
+        HDF5 file from CoRe to free up space.
+
+        Parameters
+        ----------
+        simkeys : list
+            List of simulation keys (&#39;db_keys&#39; in watpy) to download.
+
+        keep_h5 : bool
+            If False (default) removes the HDF5 file downloaded by watpy.
+
+        overwrite : bool
+            If False (default) and a certain simulation in &#39;simkeys&#39; is already
+            present in &#39;self.downloaded&#39;, skip it. Otherwise downloads
+            everything again.
+
+        verbose : bool
+            If True (default), print which simulations are downloaded and which
+            are skipped.
+
+        prot, lfs :
+            Refer to &#39;watpy.coredb.coredb.CoRe_db.sync&#39;.
+
+        &#34;&#34;&#34;
+        for skey in tqdm(simkeys):
+            if (not overwrite) and (skey in self.downloaded):
+                if verbose: print(f&#34;{skey} already downloaded, skipping.&#34;)
+                continue
+
+            self.cdb.sync(dbkeys=[skey], prot=prot, lfs=lfs, verbose=False)
+
+            # Get the gw data with lowest eccentricity and at the highest &#39;r&#39;
+            # of extraction.
+            runkey, ecc = self.get_runkey_lowest_eccentricity(skey)
+            run = self.cdb.sim[skey].run[runkey]
+            data = run.data.read_dset()[&#39;rh_22&#39;]
+            rext_key, rext = self._get_highest_r_extraction_(data)
+            gw_data = data[rext_key]
+
+            # Save gw data as TXT.
+            ofile = Path(run.path) / f&#39;Rh_l2_m2_r{rext:05d}.txt&#39;
+            np.savetxt(ofile, gw_data, header=self.header_gw_txt)
+
+            # Update download database.
+            self.downloaded[skey] = {}  # ONLY 1 RUN PER SIM FOR NOW
+            self.downloaded[skey][runkey] = {
+                &#39;file&#39;: ofile,
+                &#39;eccentricity&#39;: ecc,
+                &#39;r_extraction&#39;: rext
+            }
+
+            if not keep_h5: self._clean_h5_data(skey)
+            if verbose: print(f&#34;{skey} downloaded.&#34;)
+
+    def load_sim(self, skey):
+        &#34;&#34;&#34;Load a previously downloaded gw simulation.&#34;&#34;&#34;
+        
+        meta_sim = self.downloaded[skey]
+        file = next(iter(meta_sim.values()))[&#39;file&#39;]
+        gw_data = np.loadtxt(file)
+
+        return gw_data
+
+    @staticmethod
+    def sw_Y22(i, phi):
+        &#34;&#34;&#34;Spin-weighted spherical harmonic mode lm = 22.
+
+        Ref: Ajith et al., 2011
+
+        Parameters:
+        -----------
+        i : float
+            Inclination angle from the z-axis.
+
+        phi : float
+            Phase angle.
+
+        &#34;&#34;&#34;
+        return np.sqrt(5/(64*np.pi)) * (1 + np.cos(i))**2 * np.exp(2j*phi)
+
+    def gen_strain(self, skey, distance, inclination, phi):
+        &#34;&#34;&#34;Build strain from time-domain mode 22 in mass rescaled, geom. units.
+        
+        Parameters:
+        -----------
+        skey : str
+            Key (database_key) of the simulation.
+
+        distance : float
+            Distance to the source in Mpc.
+        
+        inclination, phi: float
+            Angle positions.
+
+        Returns:
+        --------
+        time : ndarray(float)
+            Time points in seconds.
+        
+        hplus, hcross : ndarray(float)
+            Polarizations of the rescaled strain.
+        
+        &#34;&#34;&#34;
+        gw_data = self.load_sim(skey)
+        mass = self.metadata.id_mass.loc[skey]
+        u_M = gw_data[:,0]
+        Rh = gw_data[:,1] - 1j*gw_data[:,2]
+
+        # Convert time.
+        time = u_M * mass * MSUN_SEC
+
+        # Genearte Strain polarizations.
+        sY22 = self.sw_Y22(phi, inclination)
+        amplitude_prefactor = mass * MSUN_MET / (distance * MPC_MET)
+        h = amplitude_prefactor * Rh * sY22
+        hplus = h.real
+        hcross = -h.imag
+        
+        return time, hplus, hcross
+
+    def get_runkey_lowest_eccentricity(self, skey):
+        &#34;&#34;&#34;Find the run with the lowest eccentricity for a given simulation.
+
+        Return the key of the run and the value of its eccentricity for which
+        this parameter is the lowest among all runs of the &#39;skey&#39; simulation.
+
+        If a simulation has multiple runs with the same eccentricity
+        (typically all values set to 0 or NAN) it will pick the first run in
+        the list.
+
+        If there are one or more runs with eccentricity = NAN, the first one
+        will be returned.
+
+        Parameters
+        ----------
+        skey : str
+            Key (database_key) of the simulation.
+
+        Returns
+        -------
+        run_key : str
+            Key of the run.
+        ecc : float
+            Eccentricity of the run.
+
+        &#34;&#34;&#34;
+        runs = self.cdb.sim[skey].run.copy()
+        run_key = &#39;R01&#39;
+        ecc = self.cast_to_float(runs.pop(&#39;R01&#39;).md.data[&#39;id_eccentricity&#39;])
+
+        if np.isnan(ecc):
+            return run_key, ecc
+
+        # Look for the minimum eccentricity, or the first one to be NAN.
+        for rkey, run in runs.items():
+            ecc_i = self.cast_to_float(run.md.data[&#39;id_eccentricity&#39;])
+            if ecc_i &lt; ecc:
+                run_key = rkey
+                ecc = ecc_i
+            elif np.isnan(ecc_i):
+                run_key = rkey
+                ecc = ecc_i
+                break
+
+        return run_key, ecc
+
+    @staticmethod
+    def cast_to_float(string):
+        &#34;&#34;&#34;Cast a string to float, considering &#39;&#39; also a NaN.&#34;&#34;&#34;
+
+        if string in [&#39;&#39;, None]:
+            n = np.nan
+        else:
+            n = float(string)
+
+        return n
+
+    def _clean_h5_data(self, skey):
+        &#34;&#34;&#34;Remove HDF5 files from a downloaded &#39;skey&#39; simulation.
+
+        Parameters
+        ----------
+        skey : str
+            Simulation key.
+
+        &#34;&#34;&#34;
+        root = Path(self.cdb.sim[skey].path)
+        # Remove HDF5 files.
+        files = root.glob(&#39;*/*.h5&#39;)
+        for file in files:
+            file.unlink()
+        # Remove .git folder.
+        folder = root / &#39;.git&#39;
+        rmtree(folder)
+
+    def _gen_metadata_dataframe(self):
+        idb = self.cdb.idb
+        key_list = idb.dbkeys
+        metalist = [core_md.data for core_md in idb.index]
+        md = pd.DataFrame(metalist, index=key_list)
+        # Convert data types of the selected columns:
+        for field in self.fields_float:
+            mask = (md[field] == &#39;NAN&#39;) | (md[field] == &#39;&#39;)
+            md[field].values[mask] = np.nan
+            md[field] = md[field].astype(float)
+
+        return md
+
+    def _get_highest_r_extraction_(self, extractions):
+        &#34;&#34;&#34;Return the key and value of &#39;r&#39; of the gw with the highest &#39;r&#39;.
+
+        It also includes the case when the value of &#39;r&#39; in the data is Inf
+        instead of a number.
+
+        Parameters
+        ----------
+        extractions : dict
+            Channel &#39;rh_22&#39; returned by CoRe_h5.read_dset().
+
+        &#34;&#34;&#34;
+        rext_key = max(extractions.keys())
+        if &#39;Inf&#39; in rext_key:
+            rext = 99999  # Highest number with 5 figures, to represent infinity.
+        else:
+            rext = int(rext_key[-9:-4])
+
+        return rext_key, rext
+
+    def _look_for_existing_strains(self):
+        &#34;&#34;&#34;Strains that were already extracted from CoRe&#39;s HDF5 files.
+
+        Save their paths, alongside the eccentricity and radius of extraction,
+        in a dictionary tree by simulation key and run.
+
+        Returns
+        -------
+        txt_files : dict
+            3-Level dictionary containing the path to existing strains
+            (extracted as TXT files), their eccentricity and radius of
+            extraction. Tree-format:
+                txt_files[simkey][run] = {
+                    &#39;file&#39;: &#39;path/to/file.txt&#39;,
+                    &#39;eccentricity&#39;: ecc,
+                    &#39;r_extraction&#39;: rext
+                }
+
+        &#34;&#34;&#34;
+        txt_files = {}
+        for file in self.db_path.rglob(&#39;Rh*.txt&#39;):
+            key = file.parts[-3].replace(&#39;_&#39;, &#39;:&#39;)
+            run = file.parts[-2]
+            ecc = self._read_eccentricity(file.parent/&#39;metadata.txt&#39;)
+            rext = int(file.stem[-5:])
+            
+            if key not in txt_files:
+                txt_files[key] = {}
+            
+            # If there are multiple files of the same sim and run, only keep
+            # the highest extraction point available.
+            elif run in txt_files[key]:
+                r0 = int(txt_files[key][run][&#39;file&#39;].stem[-5:])
+                if rext &lt; r0:
+                    continue
+
+            txt_files[key][run] = {
+                &#39;file&#39;: file,
+                &#39;eccentricity&#39;: ecc,
+                &#39;r_extraction&#39;: rext
+            }
+
+        return txt_files
+
+    def _read_eccentricity(self, file):
+        &#34;&#34;&#34;Get the value of eccentricity from a metadata file.&#34;&#34;&#34;
+
+        with open(file) as f:
+            for line in f:
+                if &#39;id_eccentricity&#39; in line:
+                    break
+            else:
+                raise EOFError(&#34;no value of eccentricity found in the file&#34;)
+        ecc_txt = line.split()[-1]
+        try:
+            ecc = float(ecc_txt)
+        except ValueError:
+            ecc = np.nan
+
+        return ecc</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="gwadama.ioo.CoReManager.fields_float"><code class="name">var <span class="ident">fields_float</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="gwadama.ioo.CoReManager.header_gw_txt"><code class="name">var <span class="ident">header_gw_txt</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="gwadama.ioo.CoReManager.cast_to_float"><code class="name flex">
+<span>def <span class="ident">cast_to_float</span></span>(<span>string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Cast a string to float, considering '' also a NaN.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def cast_to_float(string):
+    &#34;&#34;&#34;Cast a string to float, considering &#39;&#39; also a NaN.&#34;&#34;&#34;
+
+    if string in [&#39;&#39;, None]:
+        n = np.nan
+    else:
+        n = float(string)
+
+    return n</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.CoReManager.sw_Y22"><code class="name flex">
+<span>def <span class="ident">sw_Y22</span></span>(<span>i, phi)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Spin-weighted spherical harmonic mode lm = 22.</p>
+<p>Ref: Ajith et al., 2011</p>
+<h2 id="parameters">Parameters:</h2>
+<p>i : float
+Inclination angle from the z-axis.</p>
+<p>phi : float
+Phase angle.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def sw_Y22(i, phi):
+    &#34;&#34;&#34;Spin-weighted spherical harmonic mode lm = 22.
+
+    Ref: Ajith et al., 2011
+
+    Parameters:
+    -----------
+    i : float
+        Inclination angle from the z-axis.
+
+    phi : float
+        Phase angle.
+
+    &#34;&#34;&#34;
+    return np.sqrt(5/(64*np.pi)) * (1 + np.cos(i))**2 * np.exp(2j*phi)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="gwadama.ioo.CoReManager.count_runs"><code class="name flex">
+<span>def <span class="ident">count_runs</span></span>(<span>self, filters=[])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Count total number of runs in the database.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filters</code></strong> :&ensp;<code>list</code> of <code>lists</code></dt>
+<dd>Format: [[key0, value0], [key1, value1], &hellip;]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def count_runs(self, filters=[]):
+    &#34;&#34;&#34;Count total number of runs in the database.
+
+    Parameters
+    ----------
+    filters : list of lists
+        Format: [[key0, value0], [key1, value1], ...]
+
+    &#34;&#34;&#34;
+    md = self.filter_multiple(filters)
+    counts = 0
+    for ind in md.index:
+        runs = md.loc[ind].available_runs
+        if runs is not None:
+            counts += len(runs.split(&#39;, &#39;))
+
+    return counts</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.CoReManager.download_mode22"><code class="name flex">
+<span>def <span class="ident">download_mode22</span></span>(<span>self, simkeys, keep_h5=False, overwrite=False, prot='https', lfs=False, verbose=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Download ONLY the optimum strains Rh_22.</p>
+<p>Downloads each simulation, keeps the strains with the lowest
+eccentricity and highest extraction point 'r' in a TXT file, updates
+the database 'self.downloaded', and (optional) removes the original
+HDF5 file from CoRe to free up space.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>simkeys</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of simulation keys ('db_keys' in watpy) to download.</dd>
+<dt><strong><code>keep_h5</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If False (default) removes the HDF5 file downloaded by watpy.</dd>
+<dt><strong><code>overwrite</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If False (default) and a certain simulation in 'simkeys' is already
+present in 'self.downloaded', skip it. Otherwise downloads
+everything again.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True (default), print which simulations are downloaded and which
+are skipped.</dd>
+</dl>
+<p>prot, lfs :
+Refer to 'watpy.coredb.coredb.CoRe_db.sync'.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def download_mode22(self, simkeys, keep_h5=False, overwrite=False,
+                     prot=&#39;https&#39;, lfs=False, verbose=True):
+    &#34;&#34;&#34;Download ONLY the optimum strains Rh_22.
+
+    Downloads each simulation, keeps the strains with the lowest
+    eccentricity and highest extraction point &#39;r&#39; in a TXT file, updates
+    the database &#39;self.downloaded&#39;, and (optional) removes the original
+    HDF5 file from CoRe to free up space.
+
+    Parameters
+    ----------
+    simkeys : list
+        List of simulation keys (&#39;db_keys&#39; in watpy) to download.
+
+    keep_h5 : bool
+        If False (default) removes the HDF5 file downloaded by watpy.
+
+    overwrite : bool
+        If False (default) and a certain simulation in &#39;simkeys&#39; is already
+        present in &#39;self.downloaded&#39;, skip it. Otherwise downloads
+        everything again.
+
+    verbose : bool
+        If True (default), print which simulations are downloaded and which
+        are skipped.
+
+    prot, lfs :
+        Refer to &#39;watpy.coredb.coredb.CoRe_db.sync&#39;.
+
+    &#34;&#34;&#34;
+    for skey in tqdm(simkeys):
+        if (not overwrite) and (skey in self.downloaded):
+            if verbose: print(f&#34;{skey} already downloaded, skipping.&#34;)
+            continue
+
+        self.cdb.sync(dbkeys=[skey], prot=prot, lfs=lfs, verbose=False)
+
+        # Get the gw data with lowest eccentricity and at the highest &#39;r&#39;
+        # of extraction.
+        runkey, ecc = self.get_runkey_lowest_eccentricity(skey)
+        run = self.cdb.sim[skey].run[runkey]
+        data = run.data.read_dset()[&#39;rh_22&#39;]
+        rext_key, rext = self._get_highest_r_extraction_(data)
+        gw_data = data[rext_key]
+
+        # Save gw data as TXT.
+        ofile = Path(run.path) / f&#39;Rh_l2_m2_r{rext:05d}.txt&#39;
+        np.savetxt(ofile, gw_data, header=self.header_gw_txt)
+
+        # Update download database.
+        self.downloaded[skey] = {}  # ONLY 1 RUN PER SIM FOR NOW
+        self.downloaded[skey][runkey] = {
+            &#39;file&#39;: ofile,
+            &#39;eccentricity&#39;: ecc,
+            &#39;r_extraction&#39;: rext
+        }
+
+        if not keep_h5: self._clean_h5_data(skey)
+        if verbose: print(f&#34;{skey} downloaded.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.CoReManager.filter_by"><code class="name flex">
+<span>def <span class="ident">filter_by</span></span>(<span>self, key, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter_by(self, key, value):
+    return self.metadata[self.metadata[key] == value]</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.CoReManager.filter_multiple"><code class="name flex">
+<span>def <span class="ident">filter_multiple</span></span>(<span>self, filters)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter_multiple(self, filters):
+    md = self.metadata.copy()
+    for k, v in filters:
+        md = md[md[k] == v]
+
+    return md</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.CoReManager.gen_strain"><code class="name flex">
+<span>def <span class="ident">gen_strain</span></span>(<span>self, skey, distance, inclination, phi)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build strain from time-domain mode 22 in mass rescaled, geom. units.</p>
+<h2 id="parameters">Parameters:</h2>
+<p>skey : str
+Key (database_key) of the simulation.</p>
+<p>distance : float
+Distance to the source in Mpc.</p>
+<p>inclination, phi: float
+Angle positions.</p>
+<h2 id="returns">Returns:</h2>
+<p>time : ndarray(float)
+Time points in seconds.</p>
+<p>hplus, hcross : ndarray(float)
+Polarizations of the rescaled strain.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def gen_strain(self, skey, distance, inclination, phi):
+    &#34;&#34;&#34;Build strain from time-domain mode 22 in mass rescaled, geom. units.
+    
+    Parameters:
+    -----------
+    skey : str
+        Key (database_key) of the simulation.
+
+    distance : float
+        Distance to the source in Mpc.
+    
+    inclination, phi: float
+        Angle positions.
+
+    Returns:
+    --------
+    time : ndarray(float)
+        Time points in seconds.
+    
+    hplus, hcross : ndarray(float)
+        Polarizations of the rescaled strain.
+    
+    &#34;&#34;&#34;
+    gw_data = self.load_sim(skey)
+    mass = self.metadata.id_mass.loc[skey]
+    u_M = gw_data[:,0]
+    Rh = gw_data[:,1] - 1j*gw_data[:,2]
+
+    # Convert time.
+    time = u_M * mass * MSUN_SEC
+
+    # Genearte Strain polarizations.
+    sY22 = self.sw_Y22(phi, inclination)
+    amplitude_prefactor = mass * MSUN_MET / (distance * MPC_MET)
+    h = amplitude_prefactor * Rh * sY22
+    hplus = h.real
+    hcross = -h.imag
+    
+    return time, hplus, hcross</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity"><code class="name flex">
+<span>def <span class="ident">get_runkey_lowest_eccentricity</span></span>(<span>self, skey)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Find the run with the lowest eccentricity for a given simulation.</p>
+<p>Return the key of the run and the value of its eccentricity for which
+this parameter is the lowest among all runs of the 'skey' simulation.</p>
+<p>If a simulation has multiple runs with the same eccentricity
+(typically all values set to 0 or NAN) it will pick the first run in
+the list.</p>
+<p>If there are one or more runs with eccentricity = NAN, the first one
+will be returned.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>skey</code></strong> :&ensp;<code>str</code></dt>
+<dd>Key (database_key) of the simulation.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>run_key</code></strong> :&ensp;<code>str</code></dt>
+<dd>Key of the run.</dd>
+<dt><strong><code>ecc</code></strong> :&ensp;<code>float</code></dt>
+<dd>Eccentricity of the run.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_runkey_lowest_eccentricity(self, skey):
+    &#34;&#34;&#34;Find the run with the lowest eccentricity for a given simulation.
+
+    Return the key of the run and the value of its eccentricity for which
+    this parameter is the lowest among all runs of the &#39;skey&#39; simulation.
+
+    If a simulation has multiple runs with the same eccentricity
+    (typically all values set to 0 or NAN) it will pick the first run in
+    the list.
+
+    If there are one or more runs with eccentricity = NAN, the first one
+    will be returned.
+
+    Parameters
+    ----------
+    skey : str
+        Key (database_key) of the simulation.
+
+    Returns
+    -------
+    run_key : str
+        Key of the run.
+    ecc : float
+        Eccentricity of the run.
+
+    &#34;&#34;&#34;
+    runs = self.cdb.sim[skey].run.copy()
+    run_key = &#39;R01&#39;
+    ecc = self.cast_to_float(runs.pop(&#39;R01&#39;).md.data[&#39;id_eccentricity&#39;])
+
+    if np.isnan(ecc):
+        return run_key, ecc
+
+    # Look for the minimum eccentricity, or the first one to be NAN.
+    for rkey, run in runs.items():
+        ecc_i = self.cast_to_float(run.md.data[&#39;id_eccentricity&#39;])
+        if ecc_i &lt; ecc:
+            run_key = rkey
+            ecc = ecc_i
+        elif np.isnan(ecc_i):
+            run_key = rkey
+            ecc = ecc_i
+            break
+
+    return run_key, ecc</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.CoReManager.load_sim"><code class="name flex">
+<span>def <span class="ident">load_sim</span></span>(<span>self, skey)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load a previously downloaded gw simulation.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_sim(self, skey):
+    &#34;&#34;&#34;Load a previously downloaded gw simulation.&#34;&#34;&#34;
+    
+    meta_sim = self.downloaded[skey]
+    file = next(iter(meta_sim.values()))[&#39;file&#39;]
+    gw_data = np.loadtxt(file)
+
+    return gw_data</code></pre>
+</details>
+</dd>
+<dt id="gwadama.ioo.CoReManager.show"><code class="name flex">
+<span>def <span class="ident">show</span></span>(<span>self, key, to_float=False, to_file=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show(self, key, to_float=False, to_file=None):
+    return self.cdb.idb.show(key, to_float=False, to_file=None)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="gwadama" href="index.html">gwadama</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="gwadama.ioo.save_experiment_results" href="#gwadama.ioo.save_experiment_results">save_experiment_results</a></code></li>
+<li><code><a title="gwadama.ioo.save_to_hdf5" href="#gwadama.ioo.save_to_hdf5">save_to_hdf5</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="gwadama.ioo.CoReManager" href="#gwadama.ioo.CoReManager">CoReManager</a></code></h4>
+<ul class="">
+<li><code><a title="gwadama.ioo.CoReManager.cast_to_float" href="#gwadama.ioo.CoReManager.cast_to_float">cast_to_float</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.count_runs" href="#gwadama.ioo.CoReManager.count_runs">count_runs</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.download_mode22" href="#gwadama.ioo.CoReManager.download_mode22">download_mode22</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.fields_float" href="#gwadama.ioo.CoReManager.fields_float">fields_float</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.filter_by" href="#gwadama.ioo.CoReManager.filter_by">filter_by</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.filter_multiple" href="#gwadama.ioo.CoReManager.filter_multiple">filter_multiple</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.gen_strain" href="#gwadama.ioo.CoReManager.gen_strain">gen_strain</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity" href="#gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity">get_runkey_lowest_eccentricity</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.header_gw_txt" href="#gwadama.ioo.CoReManager.header_gw_txt">header_gw_txt</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.load_sim" href="#gwadama.ioo.CoReManager.load_sim">load_sim</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.show" href="#gwadama.ioo.CoReManager.show">show</a></code></li>
+<li><code><a title="gwadama.ioo.CoReManager.sw_Y22" href="#gwadama.ioo.CoReManager.sw_Y22">sw_Y22</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
