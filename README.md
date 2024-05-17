@@ -10,6 +10,7 @@ dataset-related operations:
 - Pre-processing (normalization, resampling, whitening, filtering, ...)
 - Export to several formats.
 
+[DOCUMENTATION](https://miquellluis.github.io/GWADAMA/)
 
 REQUIREMENTS
 ------------
