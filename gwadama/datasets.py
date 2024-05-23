@@ -142,7 +142,7 @@ class Base:
         self.strains: dict = None
         
         # Number of nested layers in strains' dictionary. Keep updated always:
-        self._dict_depth: int = dictools._get_depth(self.strains)
+        self._dict_depth: int = dictools.get_depth(self.strains)
 
         self.max_length = self._find_max_length()
         self.random_seed: int = None  # SKlearn train_test_split doesn't accept a Generator yet.
@@ -1666,7 +1666,7 @@ class SyntheticWaves(Base):
                         hrss=self.metadata.at[i,'hrss']
                     )
         
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
 
         self._apply_threshold_windowing()
     
@@ -1913,7 +1913,7 @@ class CoReWaves(Base):
         self.units = 'IS'
         self.strains, self.times, self.metadata = self._get_strain_and_metadata(coredb)
         self._track_times = True
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
         self.labels = self._gen_labels()
         self.max_length = self._find_max_length()
 
@@ -2121,7 +2121,7 @@ class CoReWaves(Base):
             self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
         
         # Update side-effect attributes
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
         self._update_merger_positions()
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:

@@ -111,7 +111,7 @@ def _replicate_structure_nested_dict(input_dict: dict) -> dict:
     return replicated_dict
 
 
-def _get_depth(dict_: dict) -> int:
+def get_depth(dict_: dict) -> int:
     """Return the depth of the input nested dictionary.
     
     A simple (non-nested) dictionary has a depth of 1.
