@@ -139,7 +139,7 @@ def _replicate_structure_nested_dict(input_dict: dict) -&gt; dict:
     return replicated_dict
 
 
-def _get_depth(dict_: dict) -&gt; int:
+def get_depth(dict_: dict) -&gt; int:
     &#34;&#34;&#34;Return the depth of the input nested dictionary.
     
     A simple (non-nested) dictionary has a depth of 1.
@@ -356,6 +356,35 @@ keys as tuples.</p></div>
     return __flatten_nested_dict(dict_)</code></pre>
 </details>
 </dd>
+<dt id="gwadama.dictools.get_depth"><code class="name flex">
+<span>def <span class="ident">get_depth</span></span>(<span>dict_: dict) -> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the depth of the input nested dictionary.</p>
+<p>A simple (non-nested) dictionary has a depth of 1.
+Assumes a homogeneous nested dictionary, and only looks for the first
+element at each layer.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_depth(dict_: dict) -&gt; int:
+    &#34;&#34;&#34;Return the depth of the input nested dictionary.
+    
+    A simple (non-nested) dictionary has a depth of 1.
+    Assumes a homogeneous nested dictionary, and only looks for the first
+    element at each layer.
+    
+    &#34;&#34;&#34;
+    depth = 0
+    while isinstance(dict_, dict):
+        key = next(iter(dict_.keys()))
+        dict_ = dict_[key]
+        depth += 1
+    
+    return depth</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -375,6 +404,7 @@ keys as tuples.</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="gwadama.dictools.flatten_nested_dict" href="#gwadama.dictools.flatten_nested_dict">flatten_nested_dict</a></code></li>
+<li><code><a title="gwadama.dictools.get_depth" href="#gwadama.dictools.get_depth">get_depth</a></code></li>
 </ul>
 </li>
 </ul>

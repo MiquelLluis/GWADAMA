@@ -151,6 +151,7 @@ class Base:
     Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as &#39;Xtrain&#39; and
         &#39;Xtest&#39; respectively.
+        See the attribute &#39;labels&#39; for more info.
     
     Caveats
     -------
@@ -175,7 +176,7 @@ class Base:
         self.strains: dict = None
         
         # Number of nested layers in strains&#39; dictionary. Keep updated always:
-        self._dict_depth: int = dictools._get_depth(self.strains)
+        self._dict_depth: int = dictools.get_depth(self.strains)
 
         self.max_length = self._find_max_length()
         self.random_seed: int = None  # SKlearn train_test_split doesn&#39;t accept a Generator yet.
@@ -784,12 +785,13 @@ class BaseInjected(Base):
     Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using SKLearn train_test_split
         function with stratified labels.
-        Shape: {id: strain}.
+        Shape adds the SNR layer: {id: {snr: strain}}.
         The &#39;id&#39; corresponds to the strain&#39;s index at &#39;self.metadata&#39;.
     
     Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as &#39;Xtrain&#39; and
         &#39;Xtest&#39; respectively.
+        NOTE: Does not include the SNR layer, therefore labels are not repeated.
 
     &#34;&#34;&#34;
     def __init__(self,
@@ -1317,6 +1319,8 @@ class BaseInjected(Base):
         whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
 
+        NOTE: Same signals injected at different SNR are stacked continuously.
+
         Parameters
         ----------
         length : int, optional
@@ -1326,7 +1330,7 @@ class BaseInjected(Base):
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
             selected, they are stacked zipped as follows:
-            ```monospace
+            ```
             eos0 id0 snr0
             eos0 id0 snr1
                  ...
@@ -1366,6 +1370,8 @@ class BaseInjected(Base):
         Stacks all signals in the test subset into an homogeneous numpy array
         whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        NOTE: Same signals injected at different SNR are stacked continuously.
 
         Parameters
         ----------
@@ -1482,7 +1488,7 @@ class BaseInjected(Base):
             metadata.reset_index(inplace=True, names=&#39;id&#39;)
             metadata.insert(1, &#39;snr&#39;, snr_list)  # after &#39;id&#39;.
             
-            return stacked_signals, lengths, metadata        
+            return stacked_signals, lengths, metadata
         return stacked_signals, lengths
 
 
@@ -1699,7 +1705,7 @@ class SyntheticWaves(Base):
                         hrss=self.metadata.at[i,&#39;hrss&#39;]
                     )
         
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
 
         self._apply_threshold_windowing()
     
@@ -1946,7 +1952,7 @@ class CoReWaves(Base):
         self.units = &#39;IS&#39;
         self.strains, self.times, self.metadata = self._get_strain_and_metadata(coredb)
         self._track_times = True
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
         self.labels = self._gen_labels()
         self.max_length = self._find_max_length()
 
@@ -2154,7 +2160,7 @@ class CoReWaves(Base):
             self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
         
         # Update side-effect attributes
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
         self._update_merger_positions()
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
@@ -2482,7 +2488,8 @@ They are just another views into the same data stored at 'self.strains',
 so no copies are performed.</dd>
 <dt><strong><code>Ytrain</code></strong>, <strong><code>Ytest</code></strong> :&ensp;<code>NDArray[int]</code>, optional</dt>
 <dd>1D Array containing the labels in the same order as 'Xtrain' and
-'Xtest' respectively.</dd>
+'Xtest' respectively.
+See the attribute 'labels' for more info.</dd>
 </dl>
 <h2 id="caveats">Caveats</h2>
 <ul>
@@ -2580,6 +2587,7 @@ extra depth layer.</li>
     Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as &#39;Xtrain&#39; and
         &#39;Xtest&#39; respectively.
+        See the attribute &#39;labels&#39; for more info.
     
     Caveats
     -------
@@ -2604,7 +2612,7 @@ extra depth layer.</li>
         self.strains: dict = None
         
         # Number of nested layers in strains&#39; dictionary. Keep updated always:
-        self._dict_depth: int = dictools._get_depth(self.strains)
+        self._dict_depth: int = dictools.get_depth(self.strains)
 
         self.max_length = self._find_max_length()
         self.random_seed: int = None  # SKlearn train_test_split doesn&#39;t accept a Generator yet.
@@ -3785,11 +3793,12 @@ for more information.</p>
 <dt><strong><code>Xtrain</code></strong>, <strong><code>Xtest</code></strong> :&ensp;<code>dict</code>, optional</dt>
 <dd>Train and test subsets randomly split using SKLearn train_test_split
 function with stratified labels.
-Shape: {id: strain}.
+Shape adds the SNR layer: {id: {snr: strain}}.
 The 'id' corresponds to the strain's index at 'self.metadata'.</dd>
 <dt><strong><code>Ytrain</code></strong>, <strong><code>Ytest</code></strong> :&ensp;<code>NDArray[int]</code>, optional</dt>
 <dd>1D Array containing the labels in the same order as 'Xtrain' and
-'Xtest' respectively.</dd>
+'Xtest' respectively.
+NOTE: Does not include the SNR layer, therefore labels are not repeated.</dd>
 </dl>
 <p>Base constructor for injected datasets.</p>
 <p>TODO: Update docstring.</p>
@@ -4005,12 +4014,13 @@ Numpy's default RandomGenerator.</dd>
     Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using SKLearn train_test_split
         function with stratified labels.
-        Shape: {id: strain}.
+        Shape adds the SNR layer: {id: {snr: strain}}.
         The &#39;id&#39; corresponds to the strain&#39;s index at &#39;self.metadata&#39;.
     
     Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as &#39;Xtrain&#39; and
         &#39;Xtest&#39; respectively.
+        NOTE: Does not include the SNR layer, therefore labels are not repeated.
 
     &#34;&#34;&#34;
     def __init__(self,
@@ -4538,6 +4548,8 @@ Numpy's default RandomGenerator.</dd>
         whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
 
+        NOTE: Same signals injected at different SNR are stacked continuously.
+
         Parameters
         ----------
         length : int, optional
@@ -4547,7 +4559,7 @@ Numpy's default RandomGenerator.</dd>
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
             selected, they are stacked zipped as follows:
-            ```monospace
+            ```
             eos0 id0 snr0
             eos0 id0 snr1
                  ...
@@ -4587,6 +4599,8 @@ Numpy's default RandomGenerator.</dd>
         Stacks all signals in the test subset into an homogeneous numpy array
         whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        NOTE: Same signals injected at different SNR are stacked continuously.
 
         Parameters
         ----------
@@ -4703,7 +4717,7 @@ Numpy's default RandomGenerator.</dd>
             metadata.reset_index(inplace=True, names=&#39;id&#39;)
             metadata.insert(1, &#39;snr&#39;, snr_list)  # after &#39;id&#39;.
             
-            return stacked_signals, lengths, metadata        
+            return stacked_signals, lengths, metadata
         return stacked_signals, lengths</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -4953,6 +4967,7 @@ this exception.</dd>
 <p>Stacks all signals in the test subset into an homogeneous numpy array
 whose length (axis=1) is determined by either 'length' or, if None, by
 the longest strain in the subset. The remaining space is zeroed.</p>
+<p>NOTE: Same signals injected at different SNR are stacked continuously.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>length</code></strong> :&ensp;<code>int</code>, optional</dt>
@@ -4998,6 +5013,8 @@ with its entries in the same order as the 'test_array'.</dd>
     Stacks all signals in the test subset into an homogeneous numpy array
     whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
     the longest strain in the subset. The remaining space is zeroed.
+
+    NOTE: Same signals injected at different SNR are stacked continuously.
 
     Parameters
     ----------
@@ -5048,6 +5065,7 @@ with its entries in the same order as the 'test_array'.</dd>
 <p>Stacks all signals in the train subset into an homogeneous numpy array
 whose length (axis=1) is determined by either 'length' or, if None, by
 the longest strain in the subset. The remaining space is zeroed.</p>
+<p>NOTE: Same signals injected at different SNR are stacked continuously.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>length</code></strong> :&ensp;<code>int</code>, optional</dt>
@@ -5056,8 +5074,7 @@ determines the length.</dd>
 <dt><strong><code>snr</code></strong> :&ensp;<code>int | list[int] | str</code></dt>
 <dd>SNR injections which to include in the stack. If more than one are
 selected, they are stacked zipped as follows:
-<code>monospace
-eos0 id0 snr0
+<code>eos0 id0 snr0
 eos0 id0 snr1
 ...</code>
 All injections are included by default.</dd>
@@ -5091,6 +5108,8 @@ with its entries in the same order as the 'train_array'.</dd>
     whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
     the longest strain in the subset. The remaining space is zeroed.
 
+    NOTE: Same signals injected at different SNR are stacked continuously.
+
     Parameters
     ----------
     length : int, optional
@@ -5100,7 +5119,7 @@ with its entries in the same order as the 'train_array'.</dd>
     snr : int | list[int] | str
         SNR injections which to include in the stack. If more than one are
         selected, they are stacked zipped as follows:
-        ```monospace
+        ```
         eos0 id0 snr0
         eos0 id0 snr1
              ...
@@ -5465,7 +5484,7 @@ cropping range as value. The range is given as a tuple of the form
         self.units = &#39;IS&#39;
         self.strains, self.times, self.metadata = self._get_strain_and_metadata(coredb)
         self._track_times = True
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
         self.labels = self._gen_labels()
         self.max_length = self._find_max_length()
 
@@ -5673,7 +5692,7 @@ cropping range as value. The range is given as a tuple of the form
             self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
         
         # Update side-effect attributes
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
         self._update_merger_positions()
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
@@ -5931,7 +5950,7 @@ Possibilities are 'ET1', 'ET2', and 'ET3'.</dd>
         self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
     
     # Update side-effect attributes
-    self._dict_depth = dictools._get_depth(self.strains)
+    self._dict_depth = dictools.get_depth(self.strains)
     self._update_merger_positions()
     self.max_length = self._find_max_length()
     if self.Xtrain is not None:
@@ -6714,7 +6733,7 @@ with the flag <code>stratified=True</code>.</dd>
                         hrss=self.metadata.at[i,&#39;hrss&#39;]
                     )
         
-        self._dict_depth = dictools._get_depth(self.strains)
+        self._dict_depth = dictools.get_depth(self.strains)
 
         self._apply_threshold_windowing()
     

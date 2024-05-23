@@ -118,6 +118,7 @@ class Base:
     Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as 'Xtrain' and
         'Xtest' respectively.
+        See the attribute 'labels' for more info.
     
     Caveats
     -------
@@ -751,12 +752,13 @@ class BaseInjected(Base):
     Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using SKLearn train_test_split
         function with stratified labels.
-        Shape: {id: strain}.
+        Shape adds the SNR layer: {id: {snr: strain}}.
         The 'id' corresponds to the strain's index at 'self.metadata'.
     
     Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as 'Xtrain' and
         'Xtest' respectively.
+        NOTE: Does not include the SNR layer, therefore labels are not repeated.
 
     """
     def __init__(self,
@@ -1284,6 +1286,8 @@ class BaseInjected(Base):
         whose length (axis=1) is determined by either 'length' or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
 
+        NOTE: Same signals injected at different SNR are stacked continuously.
+
         Parameters
         ----------
         length : int, optional
@@ -1293,7 +1297,7 @@ class BaseInjected(Base):
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
             selected, they are stacked zipped as follows:
-            ```monospace
+            ```
             eos0 id0 snr0
             eos0 id0 snr1
                  ...
@@ -1333,6 +1337,8 @@ class BaseInjected(Base):
         Stacks all signals in the test subset into an homogeneous numpy array
         whose length (axis=1) is determined by either 'length' or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        NOTE: Same signals injected at different SNR are stacked continuously.
 
         Parameters
         ----------
@@ -1449,7 +1455,7 @@ class BaseInjected(Base):
             metadata.reset_index(inplace=True, names='id')
             metadata.insert(1, 'snr', snr_list)  # after 'id'.
             
-            return stacked_signals, lengths, metadata        
+            return stacked_signals, lengths, metadata
         return stacked_signals, lengths
 
 
