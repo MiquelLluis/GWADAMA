@@ -3,8 +3,10 @@
 Main classes to manage GW datasets.
 
 There are two basic type of datasets, clean and injected:
+
 - Clean datasets' classes inherit from the Base class, extending their properties
   as needed.
+
 - Injected datasets' classes inherit from the BaseInjected class, and
   optionally from other UserDefined(Base) classes.
 
@@ -45,7 +47,9 @@ class Base:
     1D NDArray containing the features.
     
     By default there are two basic levels:
+        
         - Class; to group up strains in categories.
+        
         - Id; An unique identifier for each strain, which must exist in the
           metadata DataFrame as Index.
     
@@ -73,11 +77,15 @@ class Base:
         Strains stored as a nested dictionary, with each strain in an
         independent array to provide more flexibility with data of a wide
         range of lengths.
+        
         - Shape: {class: {id: strain} }
+        
         - The 'class' key is the name of the class, a string which must exist
           in the 'classes' list.
+        
         - The 'id' is a unique identifier for each strain, and must exist in
           the index of the 'metadata' (DataFrame) attribute.
+        
         - Extra depths can be added as variations of each strain, such as
           polarizations.
     
@@ -100,6 +108,7 @@ class Base:
     sample_rate : int, optional
         If the 'times' attribute is present, this value is ignored. Otherwise
         it is assumed all strains are constantly sampled to this value.
+        
         NOTE: If dealing with variable sampling rates, avoid setting this
         attribute to anything other than None.
     
@@ -358,6 +367,7 @@ class Base:
             samples.
             If limits is a dictionary, it must be of the form {id: (start, end)},
             where id is the identifier of each strain.
+            
             NOTE: If extra layers below ID are present, they will be shrunk
             accordingly.
 
@@ -491,6 +501,7 @@ class Base:
             If float, should be between 0.0 and 1.0 and represent the proportion
             of the dataset to include in the train subset.
             If int, represents the absolute number of train waves.
+            
             Ref: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
         
         random_seed : int, optional
@@ -611,9 +622,12 @@ class BaseInjected(Base):
     initialized from an instance of any Class(Base) instance (clean dataset).
     
     By default there are THREE basic levels:
+        
         - Class; to group up strains in categories.
+        
         - Id; An unique identifier for each strain, which must exist in the
           metadata DataFrame as Index.
+        
         - SNR; the signal-to-noise ratio at which has been injected w.r.t. a
           power spectral density of reference (e.g. the sensitivity of a GW
           detector).
@@ -628,10 +642,12 @@ class BaseInjected(Base):
     the parent Class(Base) instance.
 
     TODO:
+    
     - Generalize to any number of extra nested levels. For example the
       injection method rn only works with 3 levels. I need an extra step to
       iterate over any number of intermediate levels between ID and SNR. This
       will be necessary at the very least for working with polarizations.
+    
     - Track the injection GPS times? To be able to reconstruct the associated
       times of each GW.
 
@@ -653,9 +669,12 @@ class BaseInjected(Base):
     strains_clean : dict[dict]
         Strains inherited (copied) from a clean Class(Base) instance.
         This copy is kept in order to perform new injections.
+        
         - Shape: {class: {id: strain} }
+        
         - The 'class' key is the name of the class, a string which must exist
           in the 'classes' list.
+        
         - The 'id' is a unique identifier for each strain, and must exist in
           the index of the 'metadata' (DataFrame) attribute.
         
@@ -667,14 +686,19 @@ class BaseInjected(Base):
         Injected trains stored as a nested dictionary, with each strain in an
         independent array to provide more flexibility with data of a wide
         range of lengths.
+        
         - Shape: {class: {id: {snr: strain} } }
+        
         - The 'class' key is the name of the class, a string which must exist
           in the 'classes' list.
+        
         - The 'id' is a unique identifier for each strain, and must exist in
           the index of the 'metadata' (DataFrame) attribute.
+        
         - Extra depths can be added as variations of each strain, such as
           polarizations. However they should be added between the 'id' and
           the 'snr' layer!
+        
         - The 'snr' key is an integer indicating the signal-to-noise ratio of
           the injection.
         
@@ -758,6 +782,7 @@ class BaseInjected(Base):
     Ytrain, Ytest : NDArray[int], optional
         1D Array containing the labels in the same order as 'Xtrain' and
         'Xtest' respectively.
+        
         NOTE: Does not include the SNR layer, therefore labels are not repeated.
 
     """
@@ -800,10 +825,12 @@ class BaseInjected(Base):
             of frequencies of interest. Can be given as a callable function
             whose argument is expected to be an array of frequencies, or as a
             2d-array with shape (2, psd_length) so that
+            
             ```
             psd[0] = frequency_samples
             psd[1] = psd_samples
             ```.
+            
             NOTE: It is also used to compute the 'asd' attribute (ASD).
 
         detector : str
@@ -816,10 +843,13 @@ class BaseInjected(Base):
         
         whiten_params : dict
             Parameters of the whitening filter, with the following entries:
+            
             - 'flength' : int
                 Length (in samples) of the time-domain FIR whitening.
+            
             - 'highpass' : float
                 Frequency cutoff.
+            
             - 'normed' : bool
                 Normalization applied after the whitening filter.
 
@@ -1052,12 +1082,17 @@ class BaseInjected(Base):
     def gen_injections(self, snr: int|float|list, pad: int = 0):
         """Inject all strains in simulated noise with the given SNR values.
 
+        
         - The SNR is computed using a matched filter against the noise PSD.
+        
         - If `pad > 0`, it also updates the time arrays.
+        
         - If strain units are in geometrized, they will be converted first to
           IS, injected, and converted back to geometrized.
+        
         - After each injection, applies a highpass filter at the low-cut
           frequency specified at __init__.
+        
         - If the method 'whiten' has been already called, all further
           injections will automatically be whitened and their pad removed.
         
@@ -1297,11 +1332,13 @@ class BaseInjected(Base):
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
             selected, they are stacked zipped as follows:
+            
             ```
             eos0 id0 snr0
             eos0 id0 snr1
                  ...
             ```
+            
             All injections are included by default.
         
         with_metadata : bool
@@ -1349,11 +1386,13 @@ class BaseInjected(Base):
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
             selected, they are stacked zipped as follows:
-            ```monospace
+            
+            ```
             eos0 id0 snr0
             eos0 id0 snr1
                  ...
             ```
+            
             All injections are included by default.
 
         with_metadata : bool
@@ -1398,11 +1437,13 @@ class BaseInjected(Base):
         snr : int | list[int] | str
             The SNR injections to include in the stack. If more than one are
             selected, they are stacked zipped as follows:
-            ```monospace
+            
+            ```
             eos0 id0 snr0
             eos0 id0 snr1
                 ...
             ```
+            
             All injections are included by default.
 
         with_metadata : bool
@@ -1463,9 +1504,13 @@ class SyntheticWaves(Base):
     """Class for building synthetically generated wavforms and background noise.
 
     Part of the datasets for the CLAWDIA main paper.
+    
     The classes are hardcoded:
+        
         SG: Sine Gaussian,
+        
         G:  Gaussian,
+        
         RD: Ring-Down.
 
 
@@ -1530,9 +1575,13 @@ class SyntheticWaves(Base):
         wave_parameters_limits : dict
             Min/Max limits of the waveforms' parameters, 9 in total.
             Keys:
+            
             - mf0,   Mf0:   min/Max central frequency (SG and RD).
+            
             - mQ,    MQ:    min/Max quality factor (SG and RD).
+            
             - mhrss, Mhrss: min/Max sum squared amplitude of the wave.
+            
             - mT,    MT:    min/Max duration (only G).
         
         max_length : int
@@ -1808,12 +1857,18 @@ class CoReWaves(Base):
     GW.
 
     Workflow:
+    
     - Load the strains from a CoreWaEasy instance, discarding or cropping those
       indicated with their respective arguments.
+    
     - Resample.
+    
     - Project onto the ET detector arms.
+    
     - Change units and scale from geometrized to IS and vice versa.
+    
     - Export the (latest version of) dataset to a HDF5.
+    
     - Export the (latest version of) dataset to a GWF.
 
     Attributes
@@ -1842,6 +1897,7 @@ class CoReWaves(Base):
         The order is the same as inside 'strains' if unrolled to a flat list
         of strains up to the second depth level (the id.).
         Example:
+        
         ```
         metadata[eos][key] = {
             'id': str,
@@ -2219,9 +2275,11 @@ class CoReWaves(Base):
 
 class InjectedCoReWaves(BaseInjected):
     """Manage injections of GW data from CoRe dataset.
-
+    
     - Tracks index position of the merger.
+    
     - Computes the SNR only at the ring-down starting from the merger.
+    
     - Computes also the usual SNR over the whole signal and stores it for
       later reference (attr. 'whole_snr_list').
 
@@ -2264,8 +2322,12 @@ class InjectedCoReWaves(BaseInjected):
             Can be given as a callable function whose argument is
             expected to be an array of frequencies, or as a 2d-array
             with shape (2, psd_length) so that
+
+            ```
                 psd[0] = frequency_samples
                 psd[1] = psd_samples.
+            ```
+            
             NOTE: It is also used to compute the 'asd' attribute (ASD).
         
         detector : str
