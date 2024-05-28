@@ -52,10 +52,10 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
     NOTES
     -----
     - Strains are converted to frequency domain in order to project them,
-     and hence must be windowed. By default a Tukey window is used with
-     `alpha=0.1`, therefore the initial length of the strains has to be taken
-     into account since around 5% of the beginning and the end of the signal
-     will be damped.
+      and hence must be windowed.
+    - Before the FFT, a Tukey window is used with `alpha=0.04`, therefore the
+      initial length of the strains has to be taken into account since around
+      2% of the beginning and the end of the signal will be damped.
         
     """
     et_list = bilby.gw.detector.InterferometerList(['ET'])

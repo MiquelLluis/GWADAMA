@@ -42,26 +42,30 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
     
     PARAMETERS
     ----------
-    h_plus, h_cros: NDArray
+    h_plus, h_cros : NDArray
         GW polarizations.
     
-    parameters: dict
+    parameters : dict
         Sky position and time of the event, as requested by Bilby&#39;s method:
+
+        ```
         {
             ra: 0,
             dec: 0,
             geocent_time: 0, # In GPS.
-            psi: 0  # Binary polarisation angle
+            psi: 0  # Binary polarization angle
         }
+        ```
+
         REF: https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response
     
-    sf: int
+    sf : int
         Sample rate of the waveform.
     
-    nfft: int
+    nfft : int
         Length of the FFT window.
     
-    detector: str, optional
+    detector : str, optional
         If &#39;all&#39;, return the projection in all three detectors of ET.
         Otherwise, specify a single detector of ET: ET1, ET2, ET3.
     
@@ -70,6 +74,14 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
     strains_et: NDArray
         Strain(s) projected. If only one detector specified, it is a 1d-array.
         Otherwise, a 2d-array with shape (3, strain).
+
+    NOTES
+    -----
+    - Strains are converted to frequency domain in order to project them,
+      and hence must be windowed.
+    - Before the FFT, a Tukey window is used with `alpha=0.04`, therefore the
+      initial length of the strains has to be taken into account since around
+      2% of the beginning and the end of the signal will be damped.
         
     &#34;&#34;&#34;
     et_list = bilby.gw.detector.InterferometerList([&#39;ET&#39;])
@@ -80,12 +92,12 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
     l_input = len(h_plus)
     assert l_input &lt;= nfft
 
-    # Pad signal and apply window
+    # Pad signal and apply window (first)
     pad_l = (nfft - l_input)//2
     pad_r = pad_l + (nfft - l_input)%2
-    window = sp.signal.windows.tukey(nfft, 0.3)
-    h_plus_padded = np.pad(h_plus, (pad_l,pad_r)) * window
-    h_cros_padded = np.pad(h_cros, (pad_l,pad_r)) * window
+    window = sp.signal.windows.tukey(l_input, 0.04)
+    h_plus_padded = np.pad(h_plus*window, (pad_l,pad_r))
+    h_cros_padded = np.pad(h_cros*window, (pad_l,pad_r))
 
     i_merger_pad = find_merger(h_plus_padded - 1j*h_cros_padded)
 
@@ -150,15 +162,17 @@ Einstein Telescope (ET) detector in the proposed configuration.</p>
 <dt><strong><code>h_plus</code></strong>, <strong><code>h_cros</code></strong> :&ensp;<code>NDArray</code></dt>
 <dd>GW polarizations.</dd>
 <dt><strong><code>parameters</code></strong> :&ensp;<code>dict</code></dt>
-<dd>Sky position and time of the event, as requested by Bilby's method:
-{
+<dd>
+<p>Sky position and time of the event, as requested by Bilby's method:</p>
+<p><code>{
 ra: 0,
 dec: 0,
 geocent_time: 0, # In GPS.
 psi: 0
-# Binary polarisation angle
-}
-REF: <a href="https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response">https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response</a></dd>
+# Binary polarization angle
+}</code></p>
+<p>REF: <a href="https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response">https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response</a></p>
+</dd>
 <dt><strong><code>sf</code></strong> :&ensp;<code>int</code></dt>
 <dd>Sample rate of the waveform.</dd>
 <dt><strong><code>nfft</code></strong> :&ensp;<code>int</code></dt>
@@ -172,7 +186,15 @@ Otherwise, specify a single detector of ET: ET1, ET2, ET3.</dd>
 <dt><strong><code>strains_et</code></strong> :&ensp;<code>NDArray</code></dt>
 <dd>Strain(s) projected. If only one detector specified, it is a 1d-array.
 Otherwise, a 2d-array with shape (3, strain).</dd>
-</dl></div>
+</dl>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Strains are converted to frequency domain in order to project them,
+and hence must be windowed.</li>
+<li>Before the FFT, a Tukey window is used with <code>alpha=0.04</code>, therefore the
+initial length of the strains has to be taken into account since around
+2% of the beginning and the end of the signal will be damped.</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -186,26 +208,30 @@ Otherwise, a 2d-array with shape (3, strain).</dd>
     
     PARAMETERS
     ----------
-    h_plus, h_cros: NDArray
+    h_plus, h_cros : NDArray
         GW polarizations.
     
-    parameters: dict
+    parameters : dict
         Sky position and time of the event, as requested by Bilby&#39;s method:
+
+        ```
         {
             ra: 0,
             dec: 0,
             geocent_time: 0, # In GPS.
-            psi: 0  # Binary polarisation angle
+            psi: 0  # Binary polarization angle
         }
+        ```
+
         REF: https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response
     
-    sf: int
+    sf : int
         Sample rate of the waveform.
     
-    nfft: int
+    nfft : int
         Length of the FFT window.
     
-    detector: str, optional
+    detector : str, optional
         If &#39;all&#39;, return the projection in all three detectors of ET.
         Otherwise, specify a single detector of ET: ET1, ET2, ET3.
     
@@ -214,6 +240,14 @@ Otherwise, a 2d-array with shape (3, strain).</dd>
     strains_et: NDArray
         Strain(s) projected. If only one detector specified, it is a 1d-array.
         Otherwise, a 2d-array with shape (3, strain).
+
+    NOTES
+    -----
+    - Strains are converted to frequency domain in order to project them,
+      and hence must be windowed.
+    - Before the FFT, a Tukey window is used with `alpha=0.04`, therefore the
+      initial length of the strains has to be taken into account since around
+      2% of the beginning and the end of the signal will be damped.
         
     &#34;&#34;&#34;
     et_list = bilby.gw.detector.InterferometerList([&#39;ET&#39;])
@@ -224,12 +258,12 @@ Otherwise, a 2d-array with shape (3, strain).</dd>
     l_input = len(h_plus)
     assert l_input &lt;= nfft
 
-    # Pad signal and apply window
+    # Pad signal and apply window (first)
     pad_l = (nfft - l_input)//2
     pad_r = pad_l + (nfft - l_input)%2
-    window = sp.signal.windows.tukey(nfft, 0.3)
-    h_plus_padded = np.pad(h_plus, (pad_l,pad_r)) * window
-    h_cros_padded = np.pad(h_cros, (pad_l,pad_r)) * window
+    window = sp.signal.windows.tukey(l_input, 0.04)
+    h_plus_padded = np.pad(h_plus*window, (pad_l,pad_r))
+    h_cros_padded = np.pad(h_cros*window, (pad_l,pad_r))
 
     i_merger_pad = find_merger(h_plus_padded - 1j*h_cros_padded)
 
