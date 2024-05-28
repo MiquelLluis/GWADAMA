@@ -16,26 +16,30 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
     
     PARAMETERS
     ----------
-    h_plus, h_cros: NDArray
+    h_plus, h_cros : NDArray
         GW polarizations.
     
-    parameters: dict
+    parameters : dict
         Sky position and time of the event, as requested by Bilby's method:
+
+        ```
         {
             ra: 0,
             dec: 0,
             geocent_time: 0, # In GPS.
-            psi: 0  # Binary polarisation angle
+            psi: 0  # Binary polarization angle
         }
+        ```
+
         REF: https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response
     
-    sf: int
+    sf : int
         Sample rate of the waveform.
     
-    nfft: int
+    nfft : int
         Length of the FFT window.
     
-    detector: str, optional
+    detector : str, optional
         If 'all', return the projection in all three detectors of ET.
         Otherwise, specify a single detector of ET: ET1, ET2, ET3.
     
@@ -44,6 +48,14 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
     strains_et: NDArray
         Strain(s) projected. If only one detector specified, it is a 1d-array.
         Otherwise, a 2d-array with shape (3, strain).
+
+    NOTES
+    -----
+    - Strains are converted to frequency domain in order to project them,
+     and hence must be windowed. By default a Tukey window is used with
+     `alpha=0.1`, therefore the initial length of the strains has to be taken
+     into account since around 5% of the beginning and the end of the signal
+     will be damped.
         
     """
     et_list = bilby.gw.detector.InterferometerList(['ET'])
@@ -54,12 +66,12 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
     l_input = len(h_plus)
     assert l_input <= nfft
 
-    # Pad signal and apply window
+    # Pad signal and apply window (first)
     pad_l = (nfft - l_input)//2
     pad_r = pad_l + (nfft - l_input)%2
-    window = sp.signal.windows.tukey(nfft, 0.3)
-    h_plus_padded = np.pad(h_plus, (pad_l,pad_r)) * window
-    h_cros_padded = np.pad(h_cros, (pad_l,pad_r)) * window
+    window = sp.signal.windows.tukey(l_input, 0.04)
+    h_plus_padded = np.pad(h_plus*window, (pad_l,pad_r))
+    h_cros_padded = np.pad(h_cros*window, (pad_l,pad_r))
 
     i_merger_pad = find_merger(h_plus_padded - 1j*h_cros_padded)
 
