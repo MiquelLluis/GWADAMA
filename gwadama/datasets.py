@@ -146,10 +146,10 @@ class Base:
         # Attributes whose values must be set up during initialization.
         #----------------------------------------------------------------------
     
+        self.strains: dict = None
         self.classes: list[str] = None
         self.metadata: pd.DataFrame = None
         self.labels: dict[int] = self._gen_labels()
-        self.strains: dict = None
         
         # Number of nested layers in strains' dictionary. Keep updated always:
         self._dict_depth: int = dictools.get_depth(self.strains)
