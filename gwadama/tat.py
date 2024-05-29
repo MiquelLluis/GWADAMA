@@ -62,6 +62,8 @@ def resample(strain: np.ndarray,
         sr_max = 1 / np.min(np.diff(time))
     elif isinstance(time, int):
         sr_max = time
+        t1 = (len(strain) - 1) / sr_max
+        time = gen_time_array(0, t1, sr_max)
     else:
         raise TypeError("'time' type not recognized")
 
@@ -70,13 +72,17 @@ def resample(strain: np.ndarray,
     sr_up = int((sr_max // sample_rate + 1) * sample_rate)
     # Intentionally skipping last time point to avoid extrapolation by round-off errors.
     time_up = np.arange(time[0], time[-1], 1/sr_up)
-    strain = sp_make_interp_spline(time, strain, k=2)(time_up)
+    strain = sp_make_interp_spline(time, strain, k=2)(time_up)  # len(strain) = len(strain) - 1
+    time = time_up
 
-    # Downsample:
+    # Downsample (if needed):
     #
     factor_down = sr_up // sample_rate
-    time = time[::factor_down]
-    strain = sp.signal.decimate(strain, factor_down, ftype='fir')
+    if factor_down > 1:
+        time = time[::factor_down]
+        strain = sp.signal.decimate(strain, factor_down, ftype='fir')
+    elif factor_down < 1:
+        raise RuntimeError(f"factor_down = {factor_down} < 1")
     
     return strain, time, sr_up, factor_down if full_output else strain
 
