@@ -585,7 +585,7 @@ class Base:
             first axis of 'train_array'.
 
         """
-        return dictools._dict_to_stacked_array(self.Xtrain, target_length=length)
+        return dictools.dict_to_stacked_array(self.Xtrain, target_length=length)
     
     def get_xtest_array(self, length=None):
         """Get the test subset stacked in a zero-padded Numpy 2d-array.
@@ -608,7 +608,7 @@ class Base:
             first axis of 'test_array'.
 
         """
-        return dictools._dict_to_stacked_array(self.Xtest, target_length=length)
+        return dictools.dict_to_stacked_array(self.Xtest, target_length=length)
 
 
 class BaseInjected(Base):
@@ -1487,7 +1487,7 @@ class BaseInjected(Base):
         
         strains = dictools.flatten_nested_dict(strains)
 
-        stacked_signals, lengths = dictools._dict_to_stacked_array(strains, target_length=length)
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
         
         if with_metadata:
             id_list = [k[0] for k in strains]

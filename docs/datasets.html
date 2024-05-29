@@ -624,7 +624,7 @@ class Base:
             first axis of &#39;train_array&#39;.
 
         &#34;&#34;&#34;
-        return dictools._dict_to_stacked_array(self.Xtrain, target_length=length)
+        return dictools.dict_to_stacked_array(self.Xtrain, target_length=length)
     
     def get_xtest_array(self, length=None):
         &#34;&#34;&#34;Get the test subset stacked in a zero-padded Numpy 2d-array.
@@ -647,7 +647,7 @@ class Base:
             first axis of &#39;test_array&#39;.
 
         &#34;&#34;&#34;
-        return dictools._dict_to_stacked_array(self.Xtest, target_length=length)
+        return dictools.dict_to_stacked_array(self.Xtest, target_length=length)
 
 
 class BaseInjected(Base):
@@ -1526,7 +1526,7 @@ class BaseInjected(Base):
         
         strains = dictools.flatten_nested_dict(strains)
 
-        stacked_signals, lengths = dictools._dict_to_stacked_array(strains, target_length=length)
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
         
         if with_metadata:
             id_list = [k[0] for k in strains]
@@ -3136,7 +3136,7 @@ extra depth layer.</li>
             first axis of &#39;train_array&#39;.
 
         &#34;&#34;&#34;
-        return dictools._dict_to_stacked_array(self.Xtrain, target_length=length)
+        return dictools.dict_to_stacked_array(self.Xtrain, target_length=length)
     
     def get_xtest_array(self, length=None):
         &#34;&#34;&#34;Get the test subset stacked in a zero-padded Numpy 2d-array.
@@ -3159,7 +3159,7 @@ extra depth layer.</li>
             first axis of &#39;test_array&#39;.
 
         &#34;&#34;&#34;
-        return dictools._dict_to_stacked_array(self.Xtest, target_length=length)</code></pre>
+        return dictools.dict_to_stacked_array(self.Xtest, target_length=length)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3413,7 +3413,7 @@ first axis of 'test_array'.</dd>
         first axis of &#39;test_array&#39;.
 
     &#34;&#34;&#34;
-    return dictools._dict_to_stacked_array(self.Xtest, target_length=length)</code></pre>
+    return dictools.dict_to_stacked_array(self.Xtest, target_length=length)</code></pre>
 </details>
 </dd>
 <dt id="gwadama.datasets.Base.get_xtrain_array"><code class="name flex">
@@ -3465,7 +3465,7 @@ first axis of 'train_array'.</dd>
         first axis of &#39;train_array&#39;.
 
     &#34;&#34;&#34;
-    return dictools._dict_to_stacked_array(self.Xtrain, target_length=length)</code></pre>
+    return dictools.dict_to_stacked_array(self.Xtrain, target_length=length)</code></pre>
 </details>
 </dd>
 <dt id="gwadama.datasets.Base.items"><code class="name flex">
@@ -4882,7 +4882,7 @@ Numpy's default RandomGenerator.</dd>
         
         strains = dictools.flatten_nested_dict(strains)
 
-        stacked_signals, lengths = dictools._dict_to_stacked_array(strains, target_length=length)
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
         
         if with_metadata:
             id_list = [k[0] for k in strains]

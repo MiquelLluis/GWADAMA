@@ -156,7 +156,7 @@ def get_depth(dict_: dict) -&gt; int:
     return depth
 
 
-def _dict_to_stacked_array(dict_: dict, target_length: int = None) -&gt; tuple[np.ndarray, list]:
+def dict_to_stacked_array(dict_: dict, target_length: int = None) -&gt; tuple[np.ndarray, list]:
     &#34;&#34;&#34;Stack the arrays inside a dict() to a 2d-array.
     
     Given a NON-nested dict whose values are flat numpy arrays, with potentially different
@@ -335,6 +335,87 @@ def _get_next_item(dict_):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gwadama.dictools.dict_to_stacked_array"><code class="name flex">
+<span>def <span class="ident">dict_to_stacked_array</span></span>(<span>dict_: dict, target_length: int = None) -> tuple[numpy.ndarray, list]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stack the arrays inside a dict() to a 2d-array.</p>
+<p>Given a NON-nested dict whose values are flat numpy arrays, with potentially different
+lengths, stacks them in a homogeneous 2d-array aligned to the left,
+zero-padding the remaining space.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dict_</code></strong> :&ensp;<code>dict[str: np.ndarray]</code></dt>
+<dd>NON-nested Python dictionary containing numpy 1d-arrays.</dd>
+<dt><strong><code>target_length</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>If given, defines the size of the second axis of the returned 2d-array.
+If omitted, the size will be equal to the longest array inside 'dict_'.
+Must be larger or equal than the longest array inside 'dict_'.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>stacked_arrays</code></strong> :&ensp;<code>2d-array</code></dt>
+<dd>Stacked arrays, with right zero-padding those original strains whose
+length were shorter.</dd>
+<dt><strong><code>lengths</code></strong> :&ensp;<code>list</code></dt>
+<dd>Original length of each input array, following the same order as the
+first axis of 'stacked_arrays'.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dict_to_stacked_array(dict_: dict, target_length: int = None) -&gt; tuple[np.ndarray, list]:
+    &#34;&#34;&#34;Stack the arrays inside a dict() to a 2d-array.
+    
+    Given a NON-nested dict whose values are flat numpy arrays, with potentially different
+    lengths, stacks them in a homogeneous 2d-array aligned to the left,
+    zero-padding the remaining space.
+
+    Parameters
+    ----------
+    dict_ : dict[str: np.ndarray]
+        NON-nested Python dictionary containing numpy 1d-arrays.
+    
+    target_length : int, optional
+        If given, defines the size of the second axis of the returned 2d-array.
+        If omitted, the size will be equal to the longest array inside &#39;dict_&#39;.
+        Must be larger or equal than the longest array inside &#39;dict_&#39;.
+    
+    Returns
+    -------
+    stacked_arrays : 2d-array
+        Stacked arrays, with right zero-padding those original strains whose
+        length were shorter.
+    
+    lengths : list
+        Original length of each input array, following the same order as the
+        first axis of &#39;stacked_arrays&#39;.
+    
+    &#34;&#34;&#34;
+    if target_length is None:
+        target_length = 0
+        for array in dict_.values():
+            l = len(array)
+            if l &gt; target_length:
+                target_length = l
+        if target_length == 0:
+            raise ValueError(
+                &#34;no arrays with nonzero length were found inside &#39;dict_&#39;&#34;
+            )
+
+    stacked_arrays = np.zeros((len(dict_), target_length), dtype=float)
+    lengths = []
+
+    for i, array in enumerate(dict_.values()):
+        l = len(array)
+        pad = target_length - l
+        stacked_arrays[i] = np.pad(array, (0, pad))
+        lengths.append(l)
+    
+    return stacked_arrays, lengths</code></pre>
+</details>
+</dd>
 <dt id="gwadama.dictools.flatten_nested_dict"><code class="name flex">
 <span>def <span class="ident">flatten_nested_dict</span></span>(<span>dict_: dict) -> dict</span>
 </code></dt>
@@ -403,6 +484,7 @@ element at each layer.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gwadama.dictools.dict_to_stacked_array" href="#gwadama.dictools.dict_to_stacked_array">dict_to_stacked_array</a></code></li>
 <li><code><a title="gwadama.dictools.flatten_nested_dict" href="#gwadama.dictools.flatten_nested_dict">flatten_nested_dict</a></code></li>
 <li><code><a title="gwadama.dictools.get_depth" href="#gwadama.dictools.get_depth">get_depth</a></code></li>
 </ul>

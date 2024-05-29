@@ -128,7 +128,7 @@ def get_depth(dict_: dict) -> int:
     return depth
 
 
-def _dict_to_stacked_array(dict_: dict, target_length: int = None) -> tuple[np.ndarray, list]:
+def dict_to_stacked_array(dict_: dict, target_length: int = None) -> tuple[np.ndarray, list]:
     """Stack the arrays inside a dict() to a 2d-array.
     
     Given a NON-nested dict whose values are flat numpy arrays, with potentially different
