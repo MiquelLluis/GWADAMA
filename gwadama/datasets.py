@@ -339,6 +339,35 @@ class Base:
 
         return strain
 
+    def get_strains_array(self, length: int = None) -> np.ndarray:
+        """Get all strains stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals into an homogeneous numpy array whose length
+        (axis=1) is determined by either 'length' or, if None, by the longest
+        strain in the subset.
+        The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+            Target length of the 'strains_array'. If None, the longest signal
+            determines the length.
+
+        Returns
+        -------
+        strains_array : np.ndarray
+            train subset.
+        
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of 'train_array'.
+
+        """
+        strains_flat = dictools.flatten_nested_dict(self.strains)
+        strains_array, lengths = dictools.dict_to_stacked_array(strains_flat, target_length=length)
+
+        return strains_array, lengths
+
     def get_times(self, *indices) -> np.ndarray:
         """Get a single time array from the complete index coordinates.
         
