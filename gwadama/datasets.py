@@ -203,6 +203,9 @@ class Base:
 
     def _init_strains_dict(self) -> dict:
         return {clas: {} for clas in self.classes}
+    
+    def _init_times_dict(self) -> dict:
+        return dictools._replicate_structure_nested_dict(self.strains)
 
     def _find_max_length(self) -> int:
         """Return the length of the longest signal present in strains."""
@@ -226,7 +229,7 @@ class Base:
             Nested dictionary with the same shape as 'self.strains'.
         
         """
-        times = self._init_strains_dict()  # might change this method's name
+        times = self._init_times_dict()
         for *keys, strain in self.items():
             length = len(strain)
             t_end = (length - 1) / self.sample_rate
@@ -420,11 +423,11 @@ class Base:
             if self.sample_rate is None:
                 raise ValueError("neither time samples nor a global sampling rate were defined")
             
-            times = self._gen_times()
+            self.times = self._gen_times()
             self._track_times = True
 
         for *keys, strain in self.items():
-            time = dictools._get_value_from_nested_dict(times, keys)
+            time = dictools._get_value_from_nested_dict(self.times, keys)
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
