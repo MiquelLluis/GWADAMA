@@ -266,7 +266,7 @@ def __flatten_nested_dict(dict_in, parent_keys=()):
     return flattened_dict
     
 
-def _filter_nested_dict(dict_, condition, layer) -&gt; dict:
+def filter_nested_dict(dict_, condition, layer) -&gt; dict:
     &#34;&#34;&#34;Filter a layer of a nested dictionary.
 
     Filter a nested dictionary based on a condition applied to the keys of the
@@ -416,6 +416,75 @@ first axis of 'stacked_arrays'.</dd>
     return stacked_arrays, lengths</code></pre>
 </details>
 </dd>
+<dt id="gwadama.dictools.filter_nested_dict"><code class="name flex">
+<span>def <span class="ident">filter_nested_dict</span></span>(<span>dict_, condition, layer) -> dict</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filter a layer of a nested dictionary.</p>
+<p>Filter a nested dictionary based on a condition applied to the keys of the
+specified layer.</p>
+<p>NOTE: Layer numbering begins with 0, as array-likes do; as God commands.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dict_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The nested dictionary to be filtered.</dd>
+<dt><strong><code>condition</code></strong> :&ensp;<code>callable</code></dt>
+<dd>The condition function to apply.
+Should take a single argument, the key, and return a boolean indicating
+wether to include its related value.</dd>
+<dt><strong><code>layer</code></strong> :&ensp;<code>int</code></dt>
+<dd>The layer at which to apply the condition.
+1 corresponds to the top level, 2 to the second level, and so on.
+Default is 1.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dd>dict
+Filtered version of the nested dictionary.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter_nested_dict(dict_, condition, layer) -&gt; dict:
+    &#34;&#34;&#34;Filter a layer of a nested dictionary.
+
+    Filter a nested dictionary based on a condition applied to the keys of the
+    specified layer.
+
+    NOTE: Layer numbering begins with 0, as array-likes do; as God commands.
+
+    Parameters
+    ----------
+    dict_ : dict
+        The nested dictionary to be filtered.
+    
+    condition : callable
+        The condition function to apply.
+        Should take a single argument, the key, and return a boolean indicating
+        wether to include its related value.
+    
+    layer : int
+        The layer at which to apply the condition.
+        1 corresponds to the top level, 2 to the second level, and so on.
+        Default is 1.
+
+    Returns
+    -------
+    : dict
+        Filtered version of the nested dictionary.
+
+    &#34;&#34;&#34;
+    def filter_layer(dictionary, current_layer):
+        if current_layer == layer:
+            return {k: v for k, v in dictionary.items() if condition(k)}
+
+        return {k: filter_layer(v, current_layer + 1) if isinstance(v, dict) else v
+                for k, v in dictionary.items()}
+
+    return filter_layer(dict_, 0)</code></pre>
+</details>
+</dd>
 <dt id="gwadama.dictools.flatten_nested_dict"><code class="name flex">
 <span>def <span class="ident">flatten_nested_dict</span></span>(<span>dict_: dict) -> dict</span>
 </code></dt>
@@ -485,6 +554,7 @@ element at each layer.</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="gwadama.dictools.dict_to_stacked_array" href="#gwadama.dictools.dict_to_stacked_array">dict_to_stacked_array</a></code></li>
+<li><code><a title="gwadama.dictools.filter_nested_dict" href="#gwadama.dictools.filter_nested_dict">filter_nested_dict</a></code></li>
 <li><code><a title="gwadama.dictools.flatten_nested_dict" href="#gwadama.dictools.flatten_nested_dict">flatten_nested_dict</a></code></li>
 <li><code><a title="gwadama.dictools.get_depth" href="#gwadama.dictools.get_depth">get_depth</a></code></li>
 </ul>

@@ -185,10 +185,10 @@ class Base:
         # Attributes whose values must be set up during initialization.
         #----------------------------------------------------------------------
     
+        self.strains: dict = None
         self.classes: list[str] = None
         self.metadata: pd.DataFrame = None
         self.labels: dict[int] = self._gen_labels()
-        self.strains: dict = None
         
         # Number of nested layers in strains&#39; dictionary. Keep updated always:
         self._dict_depth: int = dictools.get_depth(self.strains)
@@ -242,6 +242,9 @@ class Base:
 
     def _init_strains_dict(self) -&gt; dict:
         return {clas: {} for clas in self.classes}
+    
+    def _init_times_dict(self) -&gt; dict:
+        return dictools._replicate_structure_nested_dict(self.strains)
 
     def _find_max_length(self) -&gt; int:
         &#34;&#34;&#34;Return the length of the longest signal present in strains.&#34;&#34;&#34;
@@ -265,7 +268,7 @@ class Base:
             Nested dictionary with the same shape as &#39;self.strains&#39;.
         
         &#34;&#34;&#34;
-        times = self._init_strains_dict()  # might change this method&#39;s name
+        times = self._init_times_dict()
         for *keys, strain in self.items():
             length = len(strain)
             t_end = (length - 1) / self.sample_rate
@@ -375,6 +378,35 @@ class Base:
 
         return strain
 
+    def get_strains_array(self, length: int = None) -&gt; np.ndarray:
+        &#34;&#34;&#34;Get all strains stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals into an homogeneous numpy array whose length
+        (axis=1) is determined by either &#39;length&#39; or, if None, by the longest
+        strain in the subset.
+        The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+            Target length of the &#39;strains_array&#39;. If None, the longest signal
+            determines the length.
+
+        Returns
+        -------
+        strains_array : np.ndarray
+            train subset.
+        
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of &#39;train_array&#39;.
+
+        &#34;&#34;&#34;
+        strains_flat = dictools.flatten_nested_dict(self.strains)
+        strains_array, lengths = dictools.dict_to_stacked_array(strains_flat, target_length=length) 
+
+        return strains_array, lengths
+
     def get_times(self, *indices) -&gt; np.ndarray:
         &#34;&#34;&#34;Get a single time array from the complete index coordinates.
         
@@ -459,11 +491,11 @@ class Base:
             if self.sample_rate is None:
                 raise ValueError(&#34;neither time samples nor a global sampling rate were defined&#34;)
             
-            times = self._gen_times()
+            self.times = self._gen_times()
             self._track_times = True
 
         for *keys, strain in self.items():
-            time = dictools._get_value_from_nested_dict(times, keys)
+            time = dictools._get_value_from_nested_dict(self.times, keys)
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
@@ -1519,7 +1551,9 @@ class BaseInjected(Base):
             if isinstance(snr, int):
                 snr = [snr]
 
-            strains = dictools._filter_nested_dict(strains, lambda k: k in snr, layer=2)
+            # NOTE: Here SNR is in Layer 1 because the Train/Test subset
+            # dictionaries do not have the &#39;class&#39; first layer.
+            strains = dictools.filter_nested_dict(strains, lambda k: k in snr, layer=1)
 
         elif snr != &#39;all&#39;:
             raise ValueError(&#34;the value of &#39;snr&#39; is not valid&#34;)
@@ -2697,10 +2731,10 @@ extra depth layer.</li>
         # Attributes whose values must be set up during initialization.
         #----------------------------------------------------------------------
     
+        self.strains: dict = None
         self.classes: list[str] = None
         self.metadata: pd.DataFrame = None
         self.labels: dict[int] = self._gen_labels()
-        self.strains: dict = None
         
         # Number of nested layers in strains&#39; dictionary. Keep updated always:
         self._dict_depth: int = dictools.get_depth(self.strains)
@@ -2754,6 +2788,9 @@ extra depth layer.</li>
 
     def _init_strains_dict(self) -&gt; dict:
         return {clas: {} for clas in self.classes}
+    
+    def _init_times_dict(self) -&gt; dict:
+        return dictools._replicate_structure_nested_dict(self.strains)
 
     def _find_max_length(self) -&gt; int:
         &#34;&#34;&#34;Return the length of the longest signal present in strains.&#34;&#34;&#34;
@@ -2777,7 +2814,7 @@ extra depth layer.</li>
             Nested dictionary with the same shape as &#39;self.strains&#39;.
         
         &#34;&#34;&#34;
-        times = self._init_strains_dict()  # might change this method&#39;s name
+        times = self._init_times_dict()
         for *keys, strain in self.items():
             length = len(strain)
             t_end = (length - 1) / self.sample_rate
@@ -2887,6 +2924,35 @@ extra depth layer.</li>
 
         return strain
 
+    def get_strains_array(self, length: int = None) -&gt; np.ndarray:
+        &#34;&#34;&#34;Get all strains stacked in a zero-padded Numpy 2d-array.
+
+        Stacks all signals into an homogeneous numpy array whose length
+        (axis=1) is determined by either &#39;length&#39; or, if None, by the longest
+        strain in the subset.
+        The remaining space is zeroed.
+
+        Parameters
+        ----------
+        length : int, optional
+            Target length of the &#39;strains_array&#39;. If None, the longest signal
+            determines the length.
+
+        Returns
+        -------
+        strains_array : np.ndarray
+            train subset.
+        
+        lengths : list
+            Original length of each strain, following the same order as the
+            first axis of &#39;train_array&#39;.
+
+        &#34;&#34;&#34;
+        strains_flat = dictools.flatten_nested_dict(self.strains)
+        strains_array, lengths = dictools.dict_to_stacked_array(strains_flat, target_length=length) 
+
+        return strains_array, lengths
+
     def get_times(self, *indices) -&gt; np.ndarray:
         &#34;&#34;&#34;Get a single time array from the complete index coordinates.
         
@@ -2971,11 +3037,11 @@ extra depth layer.</li>
             if self.sample_rate is None:
                 raise ValueError(&#34;neither time samples nor a global sampling rate were defined&#34;)
             
-            times = self._gen_times()
+            self.times = self._gen_times()
             self._track_times = True
 
         for *keys, strain in self.items():
-            time = dictools._get_value_from_nested_dict(times, keys)
+            time = dictools._get_value_from_nested_dict(self.times, keys)
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
@@ -3338,6 +3404,63 @@ amplitude.</dd>
     return strain</code></pre>
 </details>
 </dd>
+<dt id="gwadama.datasets.Base.get_strains_array"><code class="name flex">
+<span>def <span class="ident">get_strains_array</span></span>(<span>self, length: int = None) -> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get all strains stacked in a zero-padded Numpy 2d-array.</p>
+<p>Stacks all signals into an homogeneous numpy array whose length
+(axis=1) is determined by either 'length' or, if None, by the longest
+strain in the subset.
+The remaining space is zeroed.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>length</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Target length of the 'strains_array'. If None, the longest signal
+determines the length.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>strains_array</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>train subset.</dd>
+<dt><strong><code>lengths</code></strong> :&ensp;<code>list</code></dt>
+<dd>Original length of each strain, following the same order as the
+first axis of 'train_array'.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_strains_array(self, length: int = None) -&gt; np.ndarray:
+    &#34;&#34;&#34;Get all strains stacked in a zero-padded Numpy 2d-array.
+
+    Stacks all signals into an homogeneous numpy array whose length
+    (axis=1) is determined by either &#39;length&#39; or, if None, by the longest
+    strain in the subset.
+    The remaining space is zeroed.
+
+    Parameters
+    ----------
+    length : int, optional
+        Target length of the &#39;strains_array&#39;. If None, the longest signal
+        determines the length.
+
+    Returns
+    -------
+    strains_array : np.ndarray
+        train subset.
+    
+    lengths : list
+        Original length of each strain, following the same order as the
+        first axis of &#39;train_array&#39;.
+
+    &#34;&#34;&#34;
+    strains_flat = dictools.flatten_nested_dict(self.strains)
+    strains_array, lengths = dictools.dict_to_stacked_array(strains_flat, target_length=length) 
+
+    return strains_array, lengths</code></pre>
+</details>
+</dd>
 <dt id="gwadama.datasets.Base.get_times"><code class="name flex">
 <span>def <span class="ident">get_times</span></span>(<span>self, *indices) -> numpy.ndarray</span>
 </code></dt>
@@ -3613,11 +3736,11 @@ generate the time arrays previous to the resampling.</p>
         if self.sample_rate is None:
             raise ValueError(&#34;neither time samples nor a global sampling rate were defined&#34;)
         
-        times = self._gen_times()
+        self.times = self._gen_times()
         self._track_times = True
 
     for *keys, strain in self.items():
-        time = dictools._get_value_from_nested_dict(times, keys)
+        time = dictools._get_value_from_nested_dict(self.times, keys)
         strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
             strain, time, sample_rate, full_output=True
         )
@@ -4875,7 +4998,9 @@ Numpy's default RandomGenerator.</dd>
             if isinstance(snr, int):
                 snr = [snr]
 
-            strains = dictools._filter_nested_dict(strains, lambda k: k in snr, layer=2)
+            # NOTE: Here SNR is in Layer 1 because the Train/Test subset
+            # dictionaries do not have the &#39;class&#39; first layer.
+            strains = dictools.filter_nested_dict(strains, lambda k: k in snr, layer=1)
 
         elif snr != &#39;all&#39;:
             raise ValueError(&#34;the value of &#39;snr&#39; is not valid&#34;)
@@ -5456,6 +5581,7 @@ performing the whitening.</p></div>
 <li><code><a title="gwadama.datasets.Base.build_train_test_subsets" href="#gwadama.datasets.Base.build_train_test_subsets">build_train_test_subsets</a></code></li>
 <li><code><a title="gwadama.datasets.Base.find_class" href="#gwadama.datasets.Base.find_class">find_class</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_strain" href="#gwadama.datasets.Base.get_strain">get_strain</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_strains_array" href="#gwadama.datasets.Base.get_strains_array">get_strains_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.Base.items" href="#gwadama.datasets.Base.items">items</a></code></li>
 <li><code><a title="gwadama.datasets.Base.keys" href="#gwadama.datasets.Base.keys">keys</a></code></li>
@@ -6276,6 +6402,7 @@ side of the merger (inspiral), with a given offset in samples.</p>
 <li><code><a title="gwadama.datasets.Base.build_train_test_subsets" href="#gwadama.datasets.Base.build_train_test_subsets">build_train_test_subsets</a></code></li>
 <li><code><a title="gwadama.datasets.Base.find_class" href="#gwadama.datasets.Base.find_class">find_class</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_strain" href="#gwadama.datasets.Base.get_strain">get_strain</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_strains_array" href="#gwadama.datasets.Base.get_strains_array">get_strains_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtest_array" href="#gwadama.datasets.Base.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtrain_array" href="#gwadama.datasets.Base.get_xtrain_array">get_xtrain_array</a></code></li>
@@ -6533,6 +6660,7 @@ expected to be injected.</dd>
 <li><code><a title="gwadama.datasets.BaseInjected.find_class" href="#gwadama.datasets.Base.find_class">find_class</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.gen_injections" href="#gwadama.datasets.BaseInjected.gen_injections">gen_injections</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_strain" href="#gwadama.datasets.Base.get_strain">get_strain</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.get_strains_array" href="#gwadama.datasets.Base.get_strains_array">get_strains_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtest_array" href="#gwadama.datasets.BaseInjected.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtrain_array" href="#gwadama.datasets.BaseInjected.get_xtrain_array">get_xtrain_array</a></code></li>
@@ -6663,6 +6791,7 @@ Numpy's default RandomGenerator.</dd>
 <li><code><a title="gwadama.datasets.BaseInjected.find_class" href="#gwadama.datasets.Base.find_class">find_class</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.gen_injections" href="#gwadama.datasets.BaseInjected.gen_injections">gen_injections</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_strain" href="#gwadama.datasets.Base.get_strain">get_strain</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.get_strains_array" href="#gwadama.datasets.Base.get_strains_array">get_strains_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtest_array" href="#gwadama.datasets.BaseInjected.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtrain_array" href="#gwadama.datasets.BaseInjected.get_xtrain_array">get_xtrain_array</a></code></li>
@@ -7108,6 +7237,7 @@ with the flag <code>stratified=True</code>.</dd>
 <li><code><a title="gwadama.datasets.Base.build_train_test_subsets" href="#gwadama.datasets.Base.build_train_test_subsets">build_train_test_subsets</a></code></li>
 <li><code><a title="gwadama.datasets.Base.find_class" href="#gwadama.datasets.Base.find_class">find_class</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_strain" href="#gwadama.datasets.Base.get_strain">get_strain</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_strains_array" href="#gwadama.datasets.Base.get_strains_array">get_strains_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtest_array" href="#gwadama.datasets.Base.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtrain_array" href="#gwadama.datasets.Base.get_xtrain_array">get_xtrain_array</a></code></li>
@@ -7142,6 +7272,7 @@ with the flag <code>stratified=True</code>.</dd>
 <li><code><a title="gwadama.datasets.Base.build_train_test_subsets" href="#gwadama.datasets.Base.build_train_test_subsets">build_train_test_subsets</a></code></li>
 <li><code><a title="gwadama.datasets.Base.find_class" href="#gwadama.datasets.Base.find_class">find_class</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_strain" href="#gwadama.datasets.Base.get_strain">get_strain</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_strains_array" href="#gwadama.datasets.Base.get_strains_array">get_strains_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtest_array" href="#gwadama.datasets.Base.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtrain_array" href="#gwadama.datasets.Base.get_xtrain_array">get_xtrain_array</a></code></li>

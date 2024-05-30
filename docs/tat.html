@@ -59,12 +59,13 @@ def resample(strain: np.ndarray,
     strain: 1d-array
         Only one strain.
     
-    time: 1d-array | int
-        Time points. If an Int is given, it is interpreted as the former
-        sampling rate, and assumed to be constant.
+    time: 1d-array | int | float
+        Time points. If an Int or Float is given, it is interpreted as the
+        former sampling rate, and assumed to be constant.
     
     sample_rate: int
         Target sample rate.
+        NOTE: It cannot be fractional.
     
     full_output: bool, optional
         If True, also returns the new time points, the upscaled sampling rate,
@@ -90,6 +91,8 @@ def resample(strain: np.ndarray,
         sr_max = 1 / np.min(np.diff(time))
     elif isinstance(time, int):
         sr_max = time
+        t1 = (len(strain) - 1) / sr_max
+        time = gen_time_array(0, t1, sr_max)
     else:
         raise TypeError(&#34;&#39;time&#39; type not recognized&#34;)
 
@@ -98,13 +101,17 @@ def resample(strain: np.ndarray,
     sr_up = int((sr_max // sample_rate + 1) * sample_rate)
     # Intentionally skipping last time point to avoid extrapolation by round-off errors.
     time_up = np.arange(time[0], time[-1], 1/sr_up)
-    strain = sp_make_interp_spline(time, strain, k=2)(time_up)
+    strain = sp_make_interp_spline(time, strain, k=2)(time_up)  # len(strain) = len(strain) - 1
+    time = time_up
 
-    # Downsample:
+    # Downsample (if needed):
     #
     factor_down = sr_up // sample_rate
-    time = time[::factor_down]
-    strain = sp.signal.decimate(strain, factor_down, ftype=&#39;fir&#39;)
+    if factor_down &gt; 1:
+        time = time[::factor_down]
+        strain = sp.signal.decimate(strain, factor_down, ftype=&#39;fir&#39;)
+    elif factor_down &lt; 1:
+        raise RuntimeError(f&#34;factor_down = {factor_down} &lt; 1&#34;)
     
     return strain, time, sr_up, factor_down if full_output else strain
 
@@ -142,8 +149,22 @@ def gen_time_array(t0, t1, sr):
     return times
 
 
-def pad_time_array(times: np.ndarray, pad: int) -&gt; np.ndarray:
-    &#34;&#34;&#34;Extend a time array on both sides by &#39;pad&#39; number of samples.
+def pad_time_array(times: np.ndarray, pad: int | tuple) -&gt; np.ndarray:
+    &#34;&#34;&#34;Extend a time array by &#39;pad&#39; number of samples.
+
+    Parameters
+    ----------
+    times: NDArray
+        Time array.
+    
+    pad: int | tuple
+        If int, number of samples to add on both sides.
+        If tuple, number of samples to add on each side.
+    
+    Returns
+    -------
+    NDArray
+        Padded time array.
     
     NOTES
     -----
@@ -152,12 +173,20 @@ def pad_time_array(times: np.ndarray, pad: int) -&gt; np.ndarray:
       different.
     
     &#34;&#34;&#34;
-    l = 2*pad + len(times)
-    dt = times[1] - times[0]
-    t0 = times[0] - pad*dt
-    t1 = t0 + (l-1)*dt
+    if isinstance(pad, int):
+        pad0, pad1 = pad, pad
+    elif isinstance(pad, tuple):
+        pad0, pad1 = pad
+    else:
+        raise TypeError(&#34;&#39;pad&#39; type not recognized&#34;)
 
-    return np.linspace(t0, t1, l)
+    length = len(times) + pad0 + pad1
+    dt = times[1] - times[0]
+
+    t0 = times[0] - pad0*dt
+    t1 = t0 + (length-1)*dt
+
+    return np.linspace(t0, t1, length)
 
 
 def shrink_time_array(times: np.ndarray, unpad: int) -&gt; np.ndarray:
@@ -305,10 +334,23 @@ be adjusted.</dd>
 </details>
 </dd>
 <dt id="gwadama.tat.pad_time_array"><code class="name flex">
-<span>def <span class="ident">pad_time_array</span></span>(<span>times: numpy.ndarray, pad: int) -> numpy.ndarray</span>
+<span>def <span class="ident">pad_time_array</span></span>(<span>times: numpy.ndarray, pad: int | tuple) -> numpy.ndarray</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Extend a time array on both sides by 'pad' number of samples.</p>
+<div class="desc"><p>Extend a time array by 'pad' number of samples.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>times</code></strong> :&ensp;<code>NDArray</code></dt>
+<dd>Time array.</dd>
+<dt><strong><code>pad</code></strong> :&ensp;<code>int | tuple</code></dt>
+<dd>If int, number of samples to add on both sides.
+If tuple, number of samples to add on each side.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>NDArray</code></dt>
+<dd>Padded time array.</dd>
+</dl>
 <h2 id="notes">Notes</h2>
 <ul>
 <li>Computes again the entire time array.</li>
@@ -319,8 +361,22 @@ different.</li>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def pad_time_array(times: np.ndarray, pad: int) -&gt; np.ndarray:
-    &#34;&#34;&#34;Extend a time array on both sides by &#39;pad&#39; number of samples.
+<pre><code class="python">def pad_time_array(times: np.ndarray, pad: int | tuple) -&gt; np.ndarray:
+    &#34;&#34;&#34;Extend a time array by &#39;pad&#39; number of samples.
+
+    Parameters
+    ----------
+    times: NDArray
+        Time array.
+    
+    pad: int | tuple
+        If int, number of samples to add on both sides.
+        If tuple, number of samples to add on each side.
+    
+    Returns
+    -------
+    NDArray
+        Padded time array.
     
     NOTES
     -----
@@ -329,12 +385,20 @@ different.</li>
       different.
     
     &#34;&#34;&#34;
-    l = 2*pad + len(times)
-    dt = times[1] - times[0]
-    t0 = times[0] - pad*dt
-    t1 = t0 + (l-1)*dt
+    if isinstance(pad, int):
+        pad0, pad1 = pad, pad
+    elif isinstance(pad, tuple):
+        pad0, pad1 = pad
+    else:
+        raise TypeError(&#34;&#39;pad&#39; type not recognized&#34;)
 
-    return np.linspace(t0, t1, l)</code></pre>
+    length = len(times) + pad0 + pad1
+    dt = times[1] - times[0]
+
+    t0 = times[0] - pad0*dt
+    t1 = t0 + (length-1)*dt
+
+    return np.linspace(t0, t1, length)</code></pre>
 </details>
 </dd>
 <dt id="gwadama.tat.resample"><code class="name flex">
@@ -351,11 +415,12 @@ strain, and the target sample rate.</p>
 <dl>
 <dt><strong><code>strain</code></strong> :&ensp;<code>1d-array</code></dt>
 <dd>Only one strain.</dd>
-<dt><strong><code>time</code></strong> :&ensp;<code>1d-array | int</code></dt>
-<dd>Time points. If an Int is given, it is interpreted as the former
-sampling rate, and assumed to be constant.</dd>
+<dt><strong><code>time</code></strong> :&ensp;<code>1d-array | int | float</code></dt>
+<dd>Time points. If an Int or Float is given, it is interpreted as the
+former sampling rate, and assumed to be constant.</dd>
 <dt><strong><code>sample_rate</code></strong> :&ensp;<code>int</code></dt>
-<dd>Target sample rate.</dd>
+<dd>Target sample rate.
+NOTE: It cannot be fractional.</dd>
 <dt><strong><code>full_output</code></strong> :&ensp;<code>bool</code>, optional</dt>
 <dd>If True, also returns the new time points, the upscaled sampling rate,
 and the factor down.</dd>
@@ -394,12 +459,13 @@ and the factor down.</dd>
     strain: 1d-array
         Only one strain.
     
-    time: 1d-array | int
-        Time points. If an Int is given, it is interpreted as the former
-        sampling rate, and assumed to be constant.
+    time: 1d-array | int | float
+        Time points. If an Int or Float is given, it is interpreted as the
+        former sampling rate, and assumed to be constant.
     
     sample_rate: int
         Target sample rate.
+        NOTE: It cannot be fractional.
     
     full_output: bool, optional
         If True, also returns the new time points, the upscaled sampling rate,
@@ -425,6 +491,8 @@ and the factor down.</dd>
         sr_max = 1 / np.min(np.diff(time))
     elif isinstance(time, int):
         sr_max = time
+        t1 = (len(strain) - 1) / sr_max
+        time = gen_time_array(0, t1, sr_max)
     else:
         raise TypeError(&#34;&#39;time&#39; type not recognized&#34;)
 
@@ -433,13 +501,17 @@ and the factor down.</dd>
     sr_up = int((sr_max // sample_rate + 1) * sample_rate)
     # Intentionally skipping last time point to avoid extrapolation by round-off errors.
     time_up = np.arange(time[0], time[-1], 1/sr_up)
-    strain = sp_make_interp_spline(time, strain, k=2)(time_up)
+    strain = sp_make_interp_spline(time, strain, k=2)(time_up)  # len(strain) = len(strain) - 1
+    time = time_up
 
-    # Downsample:
+    # Downsample (if needed):
     #
     factor_down = sr_up // sample_rate
-    time = time[::factor_down]
-    strain = sp.signal.decimate(strain, factor_down, ftype=&#39;fir&#39;)
+    if factor_down &gt; 1:
+        time = time[::factor_down]
+        strain = sp.signal.decimate(strain, factor_down, ftype=&#39;fir&#39;)
+    elif factor_down &lt; 1:
+        raise RuntimeError(f&#34;factor_down = {factor_down} &lt; 1&#34;)
     
     return strain, time, sr_up, factor_down if full_output else strain</code></pre>
 </details>
