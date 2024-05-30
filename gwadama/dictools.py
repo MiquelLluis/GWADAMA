@@ -238,7 +238,7 @@ def __flatten_nested_dict(dict_in, parent_keys=()):
     return flattened_dict
     
 
-def _filter_nested_dict(dict_, condition, layer) -> dict:
+def filter_nested_dict(dict_, condition, layer) -> dict:
     """Filter a layer of a nested dictionary.
 
     Filter a nested dictionary based on a condition applied to the keys of the

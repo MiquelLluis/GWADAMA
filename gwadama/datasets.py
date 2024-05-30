@@ -364,7 +364,7 @@ class Base:
 
         """
         strains_flat = dictools.flatten_nested_dict(self.strains)
-        strains_array, lengths = dictools.dict_to_stacked_array(strains_flat, target_length=length)
+        strains_array, lengths = dictools.dict_to_stacked_array(strains_flat, target_length=length) 
 
         return strains_array, lengths
 
@@ -1512,7 +1512,9 @@ class BaseInjected(Base):
             if isinstance(snr, int):
                 snr = [snr]
 
-            strains = dictools._filter_nested_dict(strains, lambda k: k in snr, layer=2)
+            # NOTE: Here SNR is in Layer 1 because the Train/Test subset
+            # dictionaries do not have the 'class' first layer.
+            strains = dictools.filter_nested_dict(strains, lambda k: k in snr, layer=1)
 
         elif snr != 'all':
             raise ValueError("the value of 'snr' is not valid")
