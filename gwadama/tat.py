@@ -31,12 +31,13 @@ def resample(strain: np.ndarray,
     strain: 1d-array
         Only one strain.
     
-    time: 1d-array | int
-        Time points. If an Int is given, it is interpreted as the former
-        sampling rate, and assumed to be constant.
+    time: 1d-array | int | float
+        Time points. If an Int or Float is given, it is interpreted as the
+        former sampling rate, and assumed to be constant.
     
     sample_rate: int
         Target sample rate.
+        NOTE: It cannot be fractional.
     
     full_output: bool, optional
         If True, also returns the new time points, the upscaled sampling rate,
@@ -120,8 +121,22 @@ def gen_time_array(t0, t1, sr):
     return times
 
 
-def pad_time_array(times: np.ndarray, pad: int) -> np.ndarray:
-    """Extend a time array on both sides by 'pad' number of samples.
+def pad_time_array(times: np.ndarray, pad: int | tuple) -> np.ndarray:
+    """Extend a time array by 'pad' number of samples.
+
+    Parameters
+    ----------
+    times: NDArray
+        Time array.
+    
+    pad: int | tuple
+        If int, number of samples to add on both sides.
+        If tuple, number of samples to add on each side.
+    
+    Returns
+    -------
+    NDArray
+        Padded time array.
     
     NOTES
     -----
@@ -130,12 +145,20 @@ def pad_time_array(times: np.ndarray, pad: int) -> np.ndarray:
       different.
     
     """
-    l = 2*pad + len(times)
-    dt = times[1] - times[0]
-    t0 = times[0] - pad*dt
-    t1 = t0 + (l-1)*dt
+    if isinstance(pad, int):
+        pad0, pad1 = pad, pad
+    elif isinstance(pad, tuple):
+        pad0, pad1 = pad
+    else:
+        raise TypeError("'pad' type not recognized")
 
-    return np.linspace(t0, t1, l)
+    length = len(times) + pad0 + pad1
+    dt = times[1] - times[0]
+
+    t0 = times[0] - pad0*dt
+    t1 = t0 + (length-1)*dt
+
+    return np.linspace(t0, t1, length)
 
 
 def shrink_time_array(times: np.ndarray, unpad: int) -> np.ndarray:
