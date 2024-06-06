@@ -62,8 +62,8 @@ class Base:
     
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
 
     metadata : pandas.DataFrame
         All parameters and data related to the strains.
@@ -90,8 +90,8 @@ class Base:
           polarizations.
     
     labels : dict
-        Indices of the class of each wave ID, with shape {id: class_index}.
-        Each ID points to the index of its class in the 'classes' attribute.
+        Class label of each wave ID, with shape {id: class_label}.
+        Each ID points to the label of its class in the 'classes' attribute.
         Can be automatically constructed by calling the '_gen_labels()' method.
     
     max_length : int
@@ -147,7 +147,8 @@ class Base:
         #----------------------------------------------------------------------
     
         self.strains: dict = None
-        self.classes: list[str] = None
+        self.classes: dict[str] = None
+        self._check_classes_dict(self.classes)
         self.metadata: pd.DataFrame = None
         self.labels: dict[int] = self._gen_labels()
         
@@ -178,6 +179,19 @@ class Base:
         #   Labels:
         self.Ytrain: np.ndarray = None
         self.Ytest: np.ndarray = None
+
+    def _check_classes_dict(self, classes: dict[str]):
+        if not isinstance(classes, dict):
+            raise TypeError("'classes' must be a dictionary")
+        
+        if not all(isinstance(k, str) for k in classes.keys()):
+            raise TypeError("'classes' keys must be strings")
+        
+        labels = classes.values()
+        if not all(isinstance(label, int) for label in labels):
+            raise TypeError("'classes' values must be integers")
+        if len(set(labels)) != len(classes):
+            raise ValueError("'classes' values must be unique")
     
     def __len__(self):
         return len(self.metadata)
@@ -185,19 +199,18 @@ class Base:
     def _gen_labels(self) -> dict:
         """Constructs the labels' dictionary.
 
-        The labels attribute maps each class label to its indexed position in
-        the class list atribute.
+        The labels attribute maps each ID to the integer value of its class,
+        mapped in the 'classes' attribute.
         
         Returns
         -------
         labels : dict
-            Shape {id: i_class} for each GW in the dataset.
+            Shape {id: class_label} for each GW in the dataset.
         
         """
         labels = {}
-        map_clas = {clas: i for i, clas in enumerate(self.classes)}
         for clas, id_ in self.keys(max_depth=2):
-            labels[id_] = map_clas[clas]
+            labels[id_] = self.classes[clas]
         
         return labels
 
@@ -581,7 +594,7 @@ class Base:
         labels = np.empty(len(indices), dtype=int)
         for i, id_ in enumerate(indices):
             labels[i] = self.labels[id_]
-            clas = self.classes[labels[i]]
+            clas = self.find_class(id_)
             strains[id_] = self.strains[clas][id_]
         
         return strains, labels
@@ -909,6 +922,7 @@ class BaseInjected(Base):
         #----------------------------------------------------------------------
 
         self.classes = clean_dataset.classes.copy()
+        self._check_classes_dict(self.classes)
         self.labels = clean_dataset.labels.copy()
         self.metadata = deepcopy(clean_dataset.metadata)
         self.strains_clean = deepcopy(clean_dataset.strains)
@@ -1550,8 +1564,8 @@ class SyntheticWaves(Base):
 
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
     
     strains : dict {class: {key: gw_strains} }
         Strains stored as a nested dictionary, with each strain in an
@@ -1590,7 +1604,7 @@ class SyntheticWaves(Base):
 
     def __init__(self,
                  *,
-                 classes: list[str],
+                 classes: dict,
                  n_waves_per_class: int,
                  wave_parameters_limits: dict,
                  max_length: int,
@@ -1648,6 +1662,7 @@ class SyntheticWaves(Base):
         random_seed : int, optional.
         
         """
+        self._check_classes_dict(self.classes)
         self.classes = classes
         self.n_waves_per_class = n_waves_per_class
         self.sample_rate = sample_rate
@@ -1907,8 +1922,10 @@ class CoReWaves(Base):
 
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
+        The keys are the name of the Equation of State (EOS) used to describe
+        the physics behind the simulation which produced each strain.
     
     strains : dict {class: {id: gw_strain} }
         Strains stored as a nested dictionary, with each strain in an
@@ -1977,8 +1994,8 @@ class CoReWaves(Base):
             Instance of CoReManager with the actual data.
         
         classes : dict[str]
-            Dictionary with the class name as key and the corresponding label
-            index as value.
+            Dictionary with the Equation of State (class) name as key and the
+            corresponding label index as value.
         
         discarded : set[str]
             Set of GW IDs to discard from the dataset.
@@ -1998,6 +2015,7 @@ class CoReWaves(Base):
             Azimuthal angle of the source in radians.
 
         """
+        self._check_classes_dict(classes)
         self.classes = classes
         self.discarded = discarded
         self.cropped = cropped
