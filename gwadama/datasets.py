@@ -1709,6 +1709,7 @@ class BaseInjected(Base):
         elif snr != 'all':
             raise ValueError("the value of 'snr' is not valid")
         
+
         strains = dictools.flatten_nested_dict(strains)
 
         stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
@@ -1722,6 +1723,172 @@ class BaseInjected(Base):
             
             return stacked_signals, lengths, metadata
         return stacked_signals, lengths
+
+    def get_ytrain_array(self, classes='all', snr='all', with_id=False, with_index=False):
+        """Get the filtered training labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | 'all'
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices w.r.t. the stacked
+            arrays returned by 'get_xtrain_array' WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered train labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered train labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered train labels.
+
+        """
+        return self._filter_labels(
+            self.Ytrain, list(self.Xtrain), classes, snr,
+            with_id=with_id, with_index=with_index
+        )
+
+    def get_ytest_array(self, classes='all', snr='all', with_id=False, with_index=False):
+        """Get the filtered test labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | 'all'
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices w.r.t. the stacked
+            arrays returned by 'get_xtest_array' WITHOUT filters.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered test labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered test labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered test labels.
+
+        """
+        return self._filter_labels(
+            self.Ytest, list(self.Xtest), classes, snr,
+            with_id=with_id, with_index=with_index
+        )
+    
+    def _filter_labels(self, labels, labels_id, classes, snr, with_id=False, with_index=False):
+        """Filter labels based on 'classes' and 'snr'.
+
+        This is a helper function for 'get_ytrain_array' and 'get_ytest_array'.
+        
+        Parameters
+        ----------
+        labels : np.ndarray
+            The array containing the labels.
+
+        labels_id : list
+            IDs associated to the labels.
+        
+        classes : str | list[str] | 'all'
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related indices w.r.t. the stacked array
+            returned by '_stack_subset' given the strains related to 'labels'
+            WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        filtered_labels : np.ndarray
+            Filtered labels.
+
+        filtered_ids : np.ndarray, optional
+            IDs associated to the filtered labels.
+
+        filtered_indices : np.ndarray, optional
+            Indices associated to the filtered labels.
+
+        """
+        # First get labels and IDs filtered by 'classes'.
+        filtered_labels, filtered_ids, filtered_indices = super()._filter_labels(
+            labels, labels_id, classes, with_id=True, with_index=True
+        )
+
+        if isinstance(snr, str):
+            if snr != 'all':
+                raise ValueError("only the str 'all' is allowed for 'snr'.")
+        elif isinstance(snr, int):
+            snr = [snr]
+        elif not isinstance(snr, list):
+            raise TypeError("the type of 'snr' is not valid")
+        
+        n_snr_total = len(self.snr_list)
+
+        # Next repeat all by the total number of SNR values.
+        filtered_labels = np.repeat(filtered_labels, n_snr_total)
+        filtered_ids = np.repeat(filtered_ids, n_snr_total)
+        filtered_indices = np.repeat(filtered_indices, n_snr_total)
+
+        n_filtered = len(filtered_labels)
+
+        # Then convert the indices to include the total number of SNR repetitions.
+        for i in range(0, n_filtered, n_snr_total):
+            i_old = filtered_indices[i]
+            i_new0 = i_old * n_snr_total
+            i_new1 = i_new0 + n_snr_total
+            filtered_indices[i:i+n_snr_total] = np.arange(i_new0, i_new1)
+
+        if snr != 'all':
+            # Finally filter out those not present in the 'snr' list.
+            mask = np.isin(self.snr_list, snr)
+            mask = np.tile(mask, n_filtered//n_snr_total)
+            filtered_labels = filtered_labels[mask]
+            filtered_ids = filtered_ids[mask]
+            filtered_indices = filtered_indices[mask]
+
+        if with_id and with_index:
+            return filtered_labels, filtered_ids, filtered_indices
+        if with_id:
+            return filtered_labels, filtered_ids
+        if with_index:
+            return filtered_labels, filtered_indices
+        return filtered_labels
+        
 
 
 class SyntheticWaves(Base):
