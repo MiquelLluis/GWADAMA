@@ -654,6 +654,150 @@ class Base:
 
         """
         return dictools.dict_to_stacked_array(self.Xtest, target_length=length)
+    
+    def get_ytrain_array(self, classes='all', with_id=False, with_index=False):
+        """Get the filtered training labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | 'all'
+            The classes to include in the labels.
+            All classes are included by default.
+
+        with_id : bool
+            If True, return also the list of related IDs.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices; w.r.t. the stacked
+            arrays returned by 'get_xtrain_array' WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered train labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered train labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered train labels.
+
+        """
+        return self._filter_labels(
+            self.Ytrain, list(self.Xtrain), classes,
+            with_id=with_id, with_index=with_index
+        )
+
+    def get_ytest_array(self, classes='all', with_id=False, with_index=False):
+        """Get the filtered test labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | 'all'
+            The classes to include in the labels.
+            All classes are included by default.
+
+        with_id : bool
+            If True, return also the list of related IDs.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices; w.r.t. the stacked
+            arrays returned by 'get_xtest_array' WITHOUT filters.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered test labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered test labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered test labels.
+
+        """
+        return self._filter_labels(
+            self.Ytest, list(self.Xtest), classes,
+            with_id=with_id, with_index=with_index
+        )
+    
+    def _filter_labels(self, labels, labels_id, classes, with_id=False, with_index=False):
+        """Filter labels based on 'classes'.
+
+        This is a helper function for 'get_ytrain_array' and 'get_ytest_array'.
+        
+        Parameters
+        ----------
+        labels : np.ndarray
+            The array containing the labels.
+        
+        labels_id : list
+            IDs associated to the labels.
+        
+        classes : str | list[str] | 'all'
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related indices w.r.t. the stacked array
+            returned by '_stack_subset' given the strains related to 'labels'
+            WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        filtered_labels : np.ndarray
+            Filtered labels.
+
+        filtered_ids : np.ndarray, optional
+            IDs associated to the filtered labels.
+
+        filtered_indices : np.ndarray, optional
+            Indices associated to the filtered labels.
+
+        """
+        if len(labels) != len(labels_id):
+            raise ValueError("'labels' and 'labels_id' must have the same length.")
+
+        if isinstance(classes, str):
+            if classes == 'all':
+                return labels
+            else:
+                classes = [classes]
+        elif not isinstance(classes, list):
+            raise TypeError("'classes' must be a string or list of strings.")
+        
+        filtered_labels = []
+        filtered_ids = []
+        filtered_indices = []
+        
+        i = 0
+        for label, id in zip(labels, labels_id):
+            if self.find_class(id) in classes:
+                filtered_labels.append(label)
+                filtered_ids.append(id)
+                filtered_indices.append(i)
+            i += 1
+        
+        filtered_labels = np.array(filtered_labels)
+        filtered_ids = np.array(filtered_ids)
+        filtered_indices = np.array(filtered_indices)
+        
+        if with_id and with_index:
+            return filtered_labels, filtered_ids, filtered_indices
+        if with_id:
+            return filtered_labels, filtered_ids
+        if with_index:
+            return filtered_labels, filtered_indices
+        return filtered_labels
+        
+
+        
 
 
 class BaseInjected(Base):
