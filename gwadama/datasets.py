@@ -1504,12 +1504,18 @@ class BaseInjected(Base):
         if self.Xtrain is not None:
             self._update_train_test_subsets()
 
-    def get_xtrain_array(self, length=None, snr: int | list | str = 'all', with_metadata=False):
+    def get_xtrain_array(self,
+                         length: int = None,
+                         classes: str | list = 'all',
+                         snr: int | list | str = 'all',
+                         with_metadata: bool = False):
         """Get the train subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the train subset into an homogeneous numpy array
         whose length (axis=1) is determined by either 'length' or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        Allows the possibility to filter by class and SNR.
 
         NOTE: Same signals injected at different SNR are stacked continuously.
 
@@ -1518,6 +1524,10 @@ class BaseInjected(Base):
         length : int, optional
             Target length of the 'train_array'. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            Classes which to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
@@ -1553,17 +1563,20 @@ class BaseInjected(Base):
             with its entries in the same order as the 'train_array'.
 
         """
-        return self._stack_subset(self.Xtrain, length, snr, with_metadata)
+        return self._stack_subset(self.Xtrain, length, classes, snr, with_metadata)
     
     def get_xtest_array(self,
                         length: int = None,
+                        classes: str | list = 'all',
                         snr: int | list | str = 'all',
-                        with_metadata=False):
+                        with_metadata: bool = False):
         """Get the test subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the test subset into an homogeneous numpy array
         whose length (axis=1) is determined by either 'length' or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        Allows the possibility to filter by class and SNR.
 
         NOTE: Same signals injected at different SNR are stacked continuously.
 
@@ -1572,6 +1585,10 @@ class BaseInjected(Base):
         length : int, optional
             Target length of the 'test_array'. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            Classes which to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
@@ -1607,9 +1624,9 @@ class BaseInjected(Base):
             with its entries in the same order as the 'test_array'.
         
         """
-        return self._stack_subset(self.Xtest, length, snr, with_metadata)
+        return self._stack_subset(self.Xtest, length, classes, snr, with_metadata)
 
-    def _stack_subset(self, strains, length, snr, with_metadata):
+    def _stack_subset(self, strains, length, classes, snr, with_metadata):
         """Stack a subset of strains into a zero-padded 2d-array.
 
         This is a helper function for 'get_xtrain_array' and 'get_xtest_array'.
@@ -1623,6 +1640,10 @@ class BaseInjected(Base):
         length : int, optional
             The target length of the stacked array. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            The classes to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             The SNR injections to include in the stack. If more than one are
@@ -1663,9 +1684,20 @@ class BaseInjected(Base):
         Raises
         ------
         ValueError
-            If the value of 'snr' is not valid.
+            If the value of 'classes' or 'snr' is not valid.
 
         """
+        if isinstance(classes, str):
+            classes = [classes]
+
+            # NOTE: Here there is no 'class' layer, therefore it must be
+            # traced back from the ID.
+            def filter_(id):
+                clas = self.find_class(id)
+                return clas in classes
+
+            strains = dictools.filter_nested_dict(strains, filter_, layer=0)
+
         if isinstance(snr, (int, list)):
             if isinstance(snr, int):
                 snr = [snr]
