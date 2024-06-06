@@ -796,7 +796,7 @@ class Base:
             return filtered_labels, filtered_indices
         return filtered_labels
         
-    def stack_by_id(self, id_list, length):
+    def stack_by_id(self, id_list: list, length: int = None):
         """Stack an subset of strains by their ID into a Numpy array.
 
         Stack an arbitrary selection of strains by their original ID into a
@@ -804,7 +804,7 @@ class Base:
 
         Parameters
         ----------
-        id_list : array-like
+        id_list : list
             The IDs of the strains to be stacked.
 
         length : int, optional
@@ -827,6 +827,9 @@ class Base:
           unique.
 
         """
+        if not isinstance(id_list, list):
+            raise TypeError("'id_list' must be a list of IDs.")
+
         # Collapse the Class layer.
         strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
 
@@ -1930,7 +1933,7 @@ class BaseInjected(Base):
             return filtered_labels, filtered_indices
         return filtered_labels
 
-    def stack_by_id(self, id_list, length, snr_included):
+    def stack_by_id(self, id_list: list, length: int, snr_included):
         """Stack a subset of strains by ID into a zero-padded 2d-array.
 
         This may allow (for example) to group up strains by their original ID
@@ -1979,6 +1982,9 @@ class BaseInjected(Base):
             If the value of 'snr' is not valid.
 
         """
+        if not isinstance(id_list, list):
+            raise TypeError("'id_list' must be a list of IDs.")
+        
         # Collapse the Class layer.
         strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
 
