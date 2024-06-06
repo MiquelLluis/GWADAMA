@@ -1731,16 +1731,20 @@ class BaseInjected(Base):
             If the value of 'classes' or 'snr' is not valid.
 
         """
-        if isinstance(classes, str):
-            classes = [classes]
+        if isinstance(classes, (str, list)):
+            if isinstance(classes, str):
+                classes = [classes]
 
             # NOTE: Here there is no 'class' layer, therefore it must be
             # traced back from the ID.
             def filter_(id):
                 clas = self.find_class(id)
                 return clas in classes
-
             strains = dictools.filter_nested_dict(strains, filter_, layer=0)
+
+        else:
+            raise TypeError("the type of 'classes' is not valid")
+
 
         if isinstance(snr, (int, list)):
             if isinstance(snr, int):
@@ -1750,6 +1754,7 @@ class BaseInjected(Base):
             # dictionaries do not have the 'class' first layer.
             strains = dictools.filter_nested_dict(strains, lambda k: k in snr, layer=1)
 
+        # If `snr == 'all'`, no filter is applied over 'strains'.
         elif snr != 'all':
             raise ValueError("the value of 'snr' is not valid")
         
