@@ -796,6 +796,47 @@ class Base:
             return filtered_labels, filtered_indices
         return filtered_labels
         
+    def stack_by_id(self, id_list, length):
+        """Stack an subset of strains by their ID into a Numpy array.
+
+        Stack an arbitrary selection of strains by their original ID into a
+        zero-padded 2d-array.
+
+        Parameters
+        ----------
+        id_list : array-like
+            The IDs of the strains to be stacked.
+
+        length : int, optional
+            The target length of the stacked array. If None, the longest signal
+            determines the length.
+
+        Returns
+        -------
+        stacked_signals : np.ndarray
+            The array containing the stacked strains.
+
+        lengths : list
+            The original lengths of each strain, following the same order as
+            the first axis of 'stacked_signals'.
+
+        Notes
+        -----
+        - Unlike in 'get_xtrain_array' and 'get_xtest_array', this method does
+          not filter by 'classes' since it would be redundant, as IDs are
+          unique.
+
+        """
+        # Collapse the Class layer.
+        strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
+
+        # Filter out those not in the 'id_list'.
+        strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+
+        strains = dictools.flatten_nested_dict(strains)
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
+        
+        return stacked_signals, lengths
 
         
 
@@ -1888,6 +1929,75 @@ class BaseInjected(Base):
         if with_index:
             return filtered_labels, filtered_indices
         return filtered_labels
+
+    def stack_by_id(self, id_list, length, snr_included):
+        """Stack a subset of strains by ID into a zero-padded 2d-array.
+
+        This may allow (for example) to group up strains by their original ID
+        without leaking differnet injections (SNR) of the same strain into
+        different splits.
+
+        Parameters
+        ----------
+        id_list : array-like
+            The IDs of the strains to be stacked.
+
+        length : int, optional
+            The target length of the stacked array. If None, the longest signal
+            determines the length.
+
+        snr_included : int | list[int] | str
+            The SNR injections to include in the stack. If more than one are
+            selected, they are stacked zipped as follows:
+            
+            ```
+            id0 snr0
+            id0 snr1
+              ...
+            ```
+            
+            All injections are included by default.
+
+        Returns
+        -------
+        stacked_signals : np.ndarray
+            The array containing the stacked strains.
+
+        lengths : list
+            The original lengths of each strain, following the same order as
+            the first axis of 'stacked_signals'.
+
+        Notes
+        -----
+        - Unlike in 'get_xtrain_array' and 'get_xtest_array', this method does
+          not filter by 'classes' since it would be redundant, as IDs are
+          unique.
+
+        Raises
+        ------
+        ValueError
+            If the value of 'snr' is not valid.
+
+        """
+        # Collapse the Class layer.
+        strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
+
+        # Filter out those not in the 'id_list'.
+        strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+
+        # Filter out those injections whose SNR isnot in the 'snr' list.
+        if isinstance(snr_included, (int, list)):
+            if isinstance(snr_included, int):
+                snr_included = [snr_included]
+            # NOTE: Here SNR is in Layer 1 because we collapsed the Class layer.
+            strains = dictools.filter_nested_dict(strains, lambda k: k in snr_included, layer=1)
+        elif snr_included != 'all':
+            raise ValueError("the value of 'snr' is not valid")
+
+        strains = dictools.flatten_nested_dict(strains)  # keys: "(id, snr)"
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
+        
+        return stacked_signals, lengths
         
 
 
