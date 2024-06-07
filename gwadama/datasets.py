@@ -1073,6 +1073,7 @@ class BaseInjected(Base):
 
         detector : str
             GW detector name.
+            Not used, just for identification.
 
         noise_length : int
             Length of the background noise array to be generated for later use.
@@ -2672,18 +2673,19 @@ class CoReWaves(Base):
             self._update_train_test_subsets()
 
     def project(self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float):
-        """Project strains into the ET detector at specified coordinates.
+        """Project strains into the chosen detector at specified coordinates.
+
+        Project strains into the chosen detector at specified coordinates,
+        using Bilby.
 
         This collapses the polarization layer in 'strains' and 'times' to a
         single strain.
-        Only one arm of the detector can be chosen.
         The times are rebuilt taking as a reference point the merger (t = 0).
         
         Parameters
         ----------
         detector : str
             Name of the ET arm in Bilby for InterferometerList().
-            Possibilities are 'ET1', 'ET2', and 'ET3'.
         
         ra, dec : float
             Sky position in equatorial coordinates.
@@ -2693,6 +2695,11 @@ class CoReWaves(Base):
         
         psi : float
             Polarization angle.
+
+        Caveats
+        -------
+        - The detector's name must exist in Bilby's InterferometerList().
+        - Only one arm can be chosen.
         
         """
         project_pars = dict(ra=ra, dec=dec, geocent_time=geo_time, psi=psi)
@@ -2701,7 +2708,7 @@ class CoReWaves(Base):
             hc = self.strains[clas][id_]['cross']
             
             # Drop the polarization layer.
-            strain = detectors.project_et(
+            strain = detectors.project(
                 hp, hc, parameters=project_pars, sf=self.sample_rate, 
                 nfft=2*self.sample_rate, detector=detector
             )
