@@ -558,7 +558,7 @@ class Base:
         i_train, i_test = train_test_split(
             indices,
             train_size=train_size,
-            random_state=self.random_seed,
+            random_state=random_seed,
             shuffle=True,
             stratify=list(self.labels.values())
         )

@@ -101,8 +101,8 @@ class Base:
     
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
 
     metadata : pandas.DataFrame
         All parameters and data related to the strains.
@@ -129,8 +129,8 @@ class Base:
           polarizations.
     
     labels : dict
-        Indices of the class of each wave ID, with shape {id: class_index}.
-        Each ID points to the index of its class in the &#39;classes&#39; attribute.
+        Class label of each wave ID, with shape {id: class_label}.
+        Each ID points to the label of its class in the &#39;classes&#39; attribute.
         Can be automatically constructed by calling the &#39;_gen_labels()&#39; method.
     
     max_length : int
@@ -186,7 +186,8 @@ class Base:
         #----------------------------------------------------------------------
     
         self.strains: dict = None
-        self.classes: list[str] = None
+        self.classes: dict[str] = None
+        self._check_classes_dict(self.classes)
         self.metadata: pd.DataFrame = None
         self.labels: dict[int] = self._gen_labels()
         
@@ -217,6 +218,19 @@ class Base:
         #   Labels:
         self.Ytrain: np.ndarray = None
         self.Ytest: np.ndarray = None
+
+    def _check_classes_dict(self, classes: dict[str]):
+        if not isinstance(classes, dict):
+            raise TypeError(&#34;&#39;classes&#39; must be a dictionary&#34;)
+        
+        if not all(isinstance(k, str) for k in classes.keys()):
+            raise TypeError(&#34;&#39;classes&#39; keys must be strings&#34;)
+        
+        labels = classes.values()
+        if not all(isinstance(label, int) for label in labels):
+            raise TypeError(&#34;&#39;classes&#39; values must be integers&#34;)
+        if len(set(labels)) != len(classes):
+            raise ValueError(&#34;&#39;classes&#39; values must be unique&#34;)
     
     def __len__(self):
         return len(self.metadata)
@@ -224,19 +238,18 @@ class Base:
     def _gen_labels(self) -&gt; dict:
         &#34;&#34;&#34;Constructs the labels&#39; dictionary.
 
-        The labels attribute maps each class label to its indexed position in
-        the class list atribute.
+        The labels attribute maps each ID to the integer value of its class,
+        mapped in the &#39;classes&#39; attribute.
         
         Returns
         -------
         labels : dict
-            Shape {id: i_class} for each GW in the dataset.
+            Shape {id: class_label} for each GW in the dataset.
         
         &#34;&#34;&#34;
         labels = {}
-        map_clas = {clas: i for i, clas in enumerate(self.classes)}
         for clas, id_ in self.keys(max_depth=2):
-            labels[id_] = map_clas[clas]
+            labels[id_] = self.classes[clas]
         
         return labels
 
@@ -584,7 +597,7 @@ class Base:
         i_train, i_test = train_test_split(
             indices,
             train_size=train_size,
-            random_state=self.random_seed,
+            random_state=random_seed,
             shuffle=True,
             stratify=list(self.labels.values())
         )
@@ -620,7 +633,7 @@ class Base:
         labels = np.empty(len(indices), dtype=int)
         for i, id_ in enumerate(indices):
             labels[i] = self.labels[id_]
-            clas = self.classes[labels[i]]
+            clas = self.find_class(id_)
             strains[id_] = self.strains[clas][id_]
         
         return strains, labels
@@ -680,6 +693,199 @@ class Base:
 
         &#34;&#34;&#34;
         return dictools.dict_to_stacked_array(self.Xtest, target_length=length)
+    
+    def get_ytrain_array(self, classes=&#39;all&#39;, with_id=False, with_index=False):
+        &#34;&#34;&#34;Get the filtered training labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+
+        with_id : bool
+            If True, return also the list of related IDs.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices; w.r.t. the stacked
+            arrays returned by &#39;get_xtrain_array&#39; WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered train labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered train labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered train labels.
+
+        &#34;&#34;&#34;
+        return self._filter_labels(
+            self.Ytrain, list(self.Xtrain), classes,
+            with_id=with_id, with_index=with_index
+        )
+
+    def get_ytest_array(self, classes=&#39;all&#39;, with_id=False, with_index=False):
+        &#34;&#34;&#34;Get the filtered test labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+
+        with_id : bool
+            If True, return also the list of related IDs.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices; w.r.t. the stacked
+            arrays returned by &#39;get_xtest_array&#39; WITHOUT filters.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered test labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered test labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered test labels.
+
+        &#34;&#34;&#34;
+        return self._filter_labels(
+            self.Ytest, list(self.Xtest), classes,
+            with_id=with_id, with_index=with_index
+        )
+    
+    def _filter_labels(self, labels, labels_id, classes, with_id=False, with_index=False):
+        &#34;&#34;&#34;Filter labels based on &#39;classes&#39;.
+
+        This is a helper function for &#39;get_ytrain_array&#39; and &#39;get_ytest_array&#39;.
+        
+        Parameters
+        ----------
+        labels : np.ndarray
+            The array containing the labels.
+        
+        labels_id : list
+            IDs associated to the labels.
+        
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related indices w.r.t. the stacked array
+            returned by &#39;_stack_subset&#39; given the strains related to &#39;labels&#39;
+            WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        filtered_labels : np.ndarray
+            Filtered labels.
+
+        filtered_ids : np.ndarray, optional
+            IDs associated to the filtered labels.
+
+        filtered_indices : np.ndarray, optional
+            Indices associated to the filtered labels.
+
+        &#34;&#34;&#34;
+        if len(labels) != len(labels_id):
+            raise ValueError(&#34;&#39;labels&#39; and &#39;labels_id&#39; must have the same length.&#34;)
+
+        if isinstance(classes, str):
+            if classes == &#39;all&#39;:
+                return labels
+            else:
+                classes = [classes]
+        elif not isinstance(classes, list):
+            raise TypeError(&#34;&#39;classes&#39; must be a string or list of strings.&#34;)
+        
+        filtered_labels = []
+        filtered_ids = []
+        filtered_indices = []
+        
+        i = 0
+        for label, id in zip(labels, labels_id):
+            if self.find_class(id) in classes:
+                filtered_labels.append(label)
+                filtered_ids.append(id)
+                filtered_indices.append(i)
+                i += 1  # Indices w.r.t. the FILTERED set!!!
+        
+        filtered_labels = np.array(filtered_labels)
+        filtered_ids = np.array(filtered_ids)
+        filtered_indices = np.array(filtered_indices)
+        
+        if with_id and with_index:
+            return filtered_labels, filtered_ids, filtered_indices
+        if with_id:
+            return filtered_labels, filtered_ids
+        if with_index:
+            return filtered_labels, filtered_indices
+        return filtered_labels
+        
+    def stack_by_id(self, id_list: list, length: int = None):
+        &#34;&#34;&#34;Stack an subset of strains by their ID into a Numpy array.
+
+        Stack an arbitrary selection of strains by their original ID into a
+        zero-padded 2d-array. The resulting order is the same as the order of
+        that in &#39;id_list&#39;.
+
+        Parameters
+        ----------
+        id_list : list
+            The IDs of the strains to be stacked.
+
+        length : int, optional
+            The target length of the stacked array. If None, the longest signal
+            determines the length.
+
+        Returns
+        -------
+        stacked_signals : np.ndarray
+            The array containing the stacked strains.
+
+        lengths : list
+            The original lengths of each strain, following the same order as
+            the first axis of &#39;stacked_signals&#39;.
+
+        Notes
+        -----
+        - Unlike in &#39;get_xtrain_array&#39; and &#39;get_xtest_array&#39;, this method does
+          not filter by &#39;classes&#39; since it would be redundant, as IDs are
+          unique.
+
+        &#34;&#34;&#34;
+        if not isinstance(id_list, list):
+            raise TypeError(&#34;&#39;id_list&#39; must be a list of IDs.&#34;)
+
+        # Collapse the Class layer.
+        strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
+
+        # Filter out those not in the &#39;id_list&#39;.
+        strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+        assert len(strains) == len(id_list)
+
+        # Sort them to match the order in &#39;id_list&#39;.
+        strains = {id: strains[id] for id in id_list}
+
+        strains = dictools.flatten_nested_dict(strains)
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
+        
+        return stacked_signals, lengths
+
+        
 
 
 class BaseInjected(Base):
@@ -948,6 +1154,7 @@ class BaseInjected(Base):
         #----------------------------------------------------------------------
 
         self.classes = clean_dataset.classes.copy()
+        self._check_classes_dict(self.classes)
         self.labels = clean_dataset.labels.copy()
         self.metadata = deepcopy(clean_dataset.metadata)
         self.strains_clean = deepcopy(clean_dataset.strains)
@@ -1385,12 +1592,18 @@ class BaseInjected(Base):
         if self.Xtrain is not None:
             self._update_train_test_subsets()
 
-    def get_xtrain_array(self, length=None, snr: int | list | str = &#39;all&#39;, with_metadata=False):
+    def get_xtrain_array(self,
+                         length: int = None,
+                         classes: str | list = &#39;all&#39;,
+                         snr: int | list | str = &#39;all&#39;,
+                         with_metadata: bool = False):
         &#34;&#34;&#34;Get the train subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the train subset into an homogeneous numpy array
         whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        Allows the possibility to filter by class and SNR.
 
         NOTE: Same signals injected at different SNR are stacked continuously.
 
@@ -1399,6 +1612,10 @@ class BaseInjected(Base):
         length : int, optional
             Target length of the &#39;train_array&#39;. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            Classes which to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
@@ -1434,17 +1651,20 @@ class BaseInjected(Base):
             with its entries in the same order as the &#39;train_array&#39;.
 
         &#34;&#34;&#34;
-        return self._stack_subset(self.Xtrain, length, snr, with_metadata)
+        return self._stack_subset(self.Xtrain, length, classes, snr, with_metadata)
     
     def get_xtest_array(self,
                         length: int = None,
+                        classes: str | list = &#39;all&#39;,
                         snr: int | list | str = &#39;all&#39;,
-                        with_metadata=False):
+                        with_metadata: bool = False):
         &#34;&#34;&#34;Get the test subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the test subset into an homogeneous numpy array
         whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        Allows the possibility to filter by class and SNR.
 
         NOTE: Same signals injected at different SNR are stacked continuously.
 
@@ -1453,6 +1673,10 @@ class BaseInjected(Base):
         length : int, optional
             Target length of the &#39;test_array&#39;. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            Classes which to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
@@ -1488,9 +1712,14 @@ class BaseInjected(Base):
             with its entries in the same order as the &#39;test_array&#39;.
         
         &#34;&#34;&#34;
-        return self._stack_subset(self.Xtest, length, snr, with_metadata)
+        return self._stack_subset(self.Xtest, length, classes, snr, with_metadata)
 
-    def _stack_subset(self, strains, length, snr, with_metadata):
+    def _stack_subset(self,
+                      strains: dict,
+                      length:  int = None,
+                      classes: str | list = &#39;all&#39;,
+                      snr: int | list | str = &#39;all&#39;,
+                      with_metadata: bool = False):
         &#34;&#34;&#34;Stack a subset of strains into a zero-padded 2d-array.
 
         This is a helper function for &#39;get_xtrain_array&#39; and &#39;get_xtest_array&#39;.
@@ -1499,11 +1728,15 @@ class BaseInjected(Base):
         ----------
         strains : dict
             A dictionary containing the strains to be stacked.
-            The keys are the IDs of the strains.
+            The keys of the first layer are the IDs of the strains.
 
         length : int, optional
             The target length of the stacked array. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            The classes to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             The SNR injections to include in the stack. If more than one are
@@ -1544,9 +1777,24 @@ class BaseInjected(Base):
         Raises
         ------
         ValueError
-            If the value of &#39;snr&#39; is not valid.
+            If the value of &#39;classes&#39; or &#39;snr&#39; is not valid.
 
         &#34;&#34;&#34;
+        if isinstance(classes, (str, list)) and classes != &#39;all&#39;:
+            if isinstance(classes, str):
+                classes = [classes]
+
+            # NOTE: Here there is no &#39;class&#39; layer, therefore it must be
+            # traced back from the ID, and filtered over this same layer.
+            def filter_class(id):
+                clas = self.find_class(id)
+                return clas in classes
+            strains = dictools.filter_nested_dict(strains, filter_class, layer=0)
+
+        elif classes != &#39;all&#39;:
+            raise TypeError(&#34;the type of &#39;classes&#39; is not valid&#34;)
+
+
         if isinstance(snr, (int, list)):
             if isinstance(snr, int):
                 snr = [snr]
@@ -1555,9 +1803,14 @@ class BaseInjected(Base):
             # dictionaries do not have the &#39;class&#39; first layer.
             strains = dictools.filter_nested_dict(strains, lambda k: k in snr, layer=1)
 
-        elif snr != &#39;all&#39;:
+        # If `snr == &#39;all&#39;`, no filter is applied over &#39;strains&#39;.
+        elif isinstance(snr, str) and snr != &#39;all&#39;:
             raise ValueError(&#34;the value of &#39;snr&#39; is not valid&#34;)
         
+        else:
+            raise TypeError(&#34;the type of &#39;snr&#39; is not valid&#34;)
+        
+
         strains = dictools.flatten_nested_dict(strains)
 
         stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
@@ -1571,6 +1824,247 @@ class BaseInjected(Base):
             
             return stacked_signals, lengths, metadata
         return stacked_signals, lengths
+
+    def get_ytrain_array(self, classes=&#39;all&#39;, snr=&#39;all&#39;, with_id=False, with_index=False):
+        &#34;&#34;&#34;Get the filtered training labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices w.r.t. the stacked
+            arrays returned by &#39;get_xtrain_array&#39; WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered train labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered train labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered train labels.
+
+        &#34;&#34;&#34;
+        return self._filter_labels(
+            self.Ytrain, list(self.Xtrain), classes, snr,
+            with_id=with_id, with_index=with_index
+        )
+
+    def get_ytest_array(self, classes=&#39;all&#39;, snr=&#39;all&#39;, with_id=False, with_index=False):
+        &#34;&#34;&#34;Get the filtered test labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices w.r.t. the stacked
+            arrays returned by &#39;get_xtest_array&#39; WITHOUT filters.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered test labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered test labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered test labels.
+
+        &#34;&#34;&#34;
+        return self._filter_labels(
+            self.Ytest, list(self.Xtest), classes, snr,
+            with_id=with_id, with_index=with_index
+        )
+    
+    def _filter_labels(self, labels, labels_id, classes, snr, with_id=False, with_index=False):
+        &#34;&#34;&#34;Filter labels based on &#39;classes&#39; and &#39;snr&#39;.
+
+        This is a helper function for &#39;get_ytrain_array&#39; and &#39;get_ytest_array&#39;.
+        
+        Parameters
+        ----------
+        labels : np.ndarray
+            The array containing the labels.
+
+        labels_id : list
+            IDs associated to the labels.
+        
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related indices w.r.t. the stacked array
+            returned by &#39;_stack_subset&#39; given the strains related to &#39;labels&#39;
+            WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        filtered_labels : np.ndarray
+            Filtered labels.
+
+        filtered_ids : np.ndarray, optional
+            IDs associated to the filtered labels.
+
+        filtered_indices : np.ndarray, optional
+            Indices associated to the filtered labels.
+
+        &#34;&#34;&#34;
+        # First get labels and IDs filtered by &#39;classes&#39;.
+        filtered_labels, filtered_ids, filtered_indices = super()._filter_labels(
+            labels, labels_id, classes, with_id=True, with_index=True
+        )
+
+        if isinstance(snr, str):
+            if snr != &#39;all&#39;:
+                raise ValueError(&#34;only the str &#39;all&#39; is allowed for &#39;snr&#39;.&#34;)
+        elif isinstance(snr, int):
+            snr = [snr]
+        elif not isinstance(snr, list):
+            raise TypeError(&#34;the type of &#39;snr&#39; is not valid&#34;)
+        
+        n_snr_total = len(self.snr_list)
+
+        # Next repeat all by the total number of SNR values.
+        filtered_labels = np.repeat(filtered_labels, n_snr_total)
+        filtered_ids = np.repeat(filtered_ids, n_snr_total)
+        filtered_indices = np.repeat(filtered_indices, n_snr_total)
+
+        n_filtered = len(filtered_labels)
+
+        # Then convert the indices to include the TOTAL number of SNR repetitions.
+        for i in range(0, n_filtered, n_snr_total):
+            i_old = filtered_indices[i]
+            i_new0 = i_old * n_snr_total
+            i_new1 = i_new0 + n_snr_total
+            filtered_indices[i:i+n_snr_total] = np.arange(i_new0, i_new1)
+
+        if snr != &#39;all&#39;:
+            # Finally filter out those not present in the &#39;snr&#39; list.
+            mask = np.isin(self.snr_list, snr)
+            mask = np.tile(mask, n_filtered//n_snr_total)
+            filtered_labels = filtered_labels[mask]
+            filtered_ids = filtered_ids[mask]
+            filtered_indices = filtered_indices[mask]
+
+        if with_id and with_index:
+            return filtered_labels, filtered_ids, filtered_indices
+        if with_id:
+            return filtered_labels, filtered_ids
+        if with_index:
+            return filtered_labels, filtered_indices
+        return filtered_labels
+
+    def stack_by_id(self,
+                    id_list: list,
+                    length: int = None,
+                    snr_included: int | list[int] | str = &#39;all&#39;):
+        &#34;&#34;&#34;Stack a subset of strains by ID into a zero-padded 2d-array.
+
+        This may allow (for example) to group up strains by their original ID
+        without leaking differnet injections (SNR) of the same strain into
+        different splits.
+
+        Parameters
+        ----------
+        id_list : array-like
+            The IDs of the strains to be stacked.
+
+        length : int, optional
+            The target length of the stacked array. If None, the longest signal
+            determines the length.
+
+        snr_included : int | list[int] | str, optional
+            The SNR injections to include in the stack. If more than one are
+            selected, they are stacked zipped as follows:
+            
+            ```
+            id0 snr0
+            id0 snr1
+              ...
+            ```
+            
+            All injections are included by default.
+
+        Returns
+        -------
+        stacked_signals : np.ndarray
+            The array containing the stacked strains.
+
+        lengths : list
+            The original lengths of each strain, following the same order as
+            the first axis of &#39;stacked_signals&#39;.
+
+        Notes
+        -----
+        - Unlike in &#39;get_xtrain_array&#39; and &#39;get_xtest_array&#39;, this method does
+          not filter by &#39;classes&#39; since it would be redundant, as IDs are
+          unique.
+
+        Raises
+        ------
+        ValueError
+            If the value of &#39;snr&#39; is not valid.
+
+        &#34;&#34;&#34;
+        if not isinstance(id_list, list):
+            raise TypeError(&#34;&#39;id_list&#39; must be a list of IDs.&#34;)
+        
+        # Collapse the Class layer.
+        strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
+
+        # Filter out those not in the &#39;id_list&#39;.
+        strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+
+        # Filter out those injections whose SNR isnot in the &#39;snr&#39; list.
+        if isinstance(snr_included, (int, list)):
+            if isinstance(snr_included, int):
+                snr_included = [snr_included]
+            # NOTE: Here SNR is in Layer 1 because we collapsed the Class layer.
+            strains = dictools.filter_nested_dict(strains, lambda k: k in snr_included, layer=1)
+        elif snr_included != &#39;all&#39;:
+            raise ValueError(&#34;the value of &#39;snr&#39; is not valid&#34;)
+
+        strains = dictools.flatten_nested_dict(strains)  # keys: &#34;(id, snr)&#34;
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
+        
+        return stacked_signals, lengths
+        
 
 
 class SyntheticWaves(Base):
@@ -1589,8 +2083,8 @@ class SyntheticWaves(Base):
 
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
     
     strains : dict {class: {key: gw_strains} }
         Strains stored as a nested dictionary, with each strain in an
@@ -1629,7 +2123,7 @@ class SyntheticWaves(Base):
 
     def __init__(self,
                  *,
-                 classes: list[str],
+                 classes: dict,
                  n_waves_per_class: int,
                  wave_parameters_limits: dict,
                  max_length: int,
@@ -1687,6 +2181,7 @@ class SyntheticWaves(Base):
         random_seed : int, optional.
         
         &#34;&#34;&#34;
+        self._check_classes_dict(self.classes)
         self.classes = classes
         self.n_waves_per_class = n_waves_per_class
         self.sample_rate = sample_rate
@@ -1946,8 +2441,10 @@ class CoReWaves(Base):
 
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
+        The keys are the name of the Equation of State (EOS) used to describe
+        the physics behind the simulation which produced each strain.
     
     strains : dict {class: {id: gw_strain} }
         Strains stored as a nested dictionary, with each strain in an
@@ -2016,8 +2513,8 @@ class CoReWaves(Base):
             Instance of CoReManager with the actual data.
         
         classes : dict[str]
-            Dictionary with the class name as key and the corresponding label
-            index as value.
+            Dictionary with the Equation of State (class) name as key and the
+            corresponding label index as value.
         
         discarded : set[str]
             Set of GW IDs to discard from the dataset.
@@ -2037,6 +2534,7 @@ class CoReWaves(Base):
             Azimuthal angle of the source in radians.
 
         &#34;&#34;&#34;
+        self._check_classes_dict(classes)
         self.classes = classes
         self.discarded = discarded
         self.cropped = cropped
@@ -2542,8 +3040,8 @@ be considered.</p>
 <p>NOTE: This class shall not be called directly. Use one of its subclasses.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>classes</code></strong> :&ensp;<code>list[str]</code></dt>
-<dd>List of labels, one per class (category).</dd>
+<dt><strong><code>classes</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dict of strings and their integer labels, one per class (category).</dd>
 <dt><strong><code>metadata</code></strong> :&ensp;<code>pandas.DataFrame</code></dt>
 <dd>All parameters and data related to the strains.
 The order is the same as inside 'strains' if unrolled to a flat list
@@ -2575,8 +3073,8 @@ polarizations.</p>
 </ul>
 </dd>
 <dt><strong><code>labels</code></strong> :&ensp;<code>dict</code></dt>
-<dd>Indices of the class of each wave ID, with shape {id: class_index}.
-Each ID points to the index of its class in the 'classes' attribute.
+<dd>Class label of each wave ID, with shape {id: class_label}.
+Each ID points to the label of its class in the 'classes' attribute.
 Can be automatically constructed by calling the '_gen_labels()' method.</dd>
 <dt><strong><code>max_length</code></strong> :&ensp;<code>int</code></dt>
 <dd>Length of the longest strain in the dataset.
@@ -2647,8 +3145,8 @@ extra depth layer.</li>
     
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
 
     metadata : pandas.DataFrame
         All parameters and data related to the strains.
@@ -2675,8 +3173,8 @@ extra depth layer.</li>
           polarizations.
     
     labels : dict
-        Indices of the class of each wave ID, with shape {id: class_index}.
-        Each ID points to the index of its class in the &#39;classes&#39; attribute.
+        Class label of each wave ID, with shape {id: class_label}.
+        Each ID points to the label of its class in the &#39;classes&#39; attribute.
         Can be automatically constructed by calling the &#39;_gen_labels()&#39; method.
     
     max_length : int
@@ -2732,7 +3230,8 @@ extra depth layer.</li>
         #----------------------------------------------------------------------
     
         self.strains: dict = None
-        self.classes: list[str] = None
+        self.classes: dict[str] = None
+        self._check_classes_dict(self.classes)
         self.metadata: pd.DataFrame = None
         self.labels: dict[int] = self._gen_labels()
         
@@ -2763,6 +3262,19 @@ extra depth layer.</li>
         #   Labels:
         self.Ytrain: np.ndarray = None
         self.Ytest: np.ndarray = None
+
+    def _check_classes_dict(self, classes: dict[str]):
+        if not isinstance(classes, dict):
+            raise TypeError(&#34;&#39;classes&#39; must be a dictionary&#34;)
+        
+        if not all(isinstance(k, str) for k in classes.keys()):
+            raise TypeError(&#34;&#39;classes&#39; keys must be strings&#34;)
+        
+        labels = classes.values()
+        if not all(isinstance(label, int) for label in labels):
+            raise TypeError(&#34;&#39;classes&#39; values must be integers&#34;)
+        if len(set(labels)) != len(classes):
+            raise ValueError(&#34;&#39;classes&#39; values must be unique&#34;)
     
     def __len__(self):
         return len(self.metadata)
@@ -2770,19 +3282,18 @@ extra depth layer.</li>
     def _gen_labels(self) -&gt; dict:
         &#34;&#34;&#34;Constructs the labels&#39; dictionary.
 
-        The labels attribute maps each class label to its indexed position in
-        the class list atribute.
+        The labels attribute maps each ID to the integer value of its class,
+        mapped in the &#39;classes&#39; attribute.
         
         Returns
         -------
         labels : dict
-            Shape {id: i_class} for each GW in the dataset.
+            Shape {id: class_label} for each GW in the dataset.
         
         &#34;&#34;&#34;
         labels = {}
-        map_clas = {clas: i for i, clas in enumerate(self.classes)}
         for clas, id_ in self.keys(max_depth=2):
-            labels[id_] = map_clas[clas]
+            labels[id_] = self.classes[clas]
         
         return labels
 
@@ -3130,7 +3641,7 @@ extra depth layer.</li>
         i_train, i_test = train_test_split(
             indices,
             train_size=train_size,
-            random_state=self.random_seed,
+            random_state=random_seed,
             shuffle=True,
             stratify=list(self.labels.values())
         )
@@ -3166,7 +3677,7 @@ extra depth layer.</li>
         labels = np.empty(len(indices), dtype=int)
         for i, id_ in enumerate(indices):
             labels[i] = self.labels[id_]
-            clas = self.classes[labels[i]]
+            clas = self.find_class(id_)
             strains[id_] = self.strains[clas][id_]
         
         return strains, labels
@@ -3225,7 +3736,198 @@ extra depth layer.</li>
             first axis of &#39;test_array&#39;.
 
         &#34;&#34;&#34;
-        return dictools.dict_to_stacked_array(self.Xtest, target_length=length)</code></pre>
+        return dictools.dict_to_stacked_array(self.Xtest, target_length=length)
+    
+    def get_ytrain_array(self, classes=&#39;all&#39;, with_id=False, with_index=False):
+        &#34;&#34;&#34;Get the filtered training labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+
+        with_id : bool
+            If True, return also the list of related IDs.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices; w.r.t. the stacked
+            arrays returned by &#39;get_xtrain_array&#39; WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered train labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered train labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered train labels.
+
+        &#34;&#34;&#34;
+        return self._filter_labels(
+            self.Ytrain, list(self.Xtrain), classes,
+            with_id=with_id, with_index=with_index
+        )
+
+    def get_ytest_array(self, classes=&#39;all&#39;, with_id=False, with_index=False):
+        &#34;&#34;&#34;Get the filtered test labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+
+        with_id : bool
+            If True, return also the list of related IDs.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices; w.r.t. the stacked
+            arrays returned by &#39;get_xtest_array&#39; WITHOUT filters.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered test labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered test labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered test labels.
+
+        &#34;&#34;&#34;
+        return self._filter_labels(
+            self.Ytest, list(self.Xtest), classes,
+            with_id=with_id, with_index=with_index
+        )
+    
+    def _filter_labels(self, labels, labels_id, classes, with_id=False, with_index=False):
+        &#34;&#34;&#34;Filter labels based on &#39;classes&#39;.
+
+        This is a helper function for &#39;get_ytrain_array&#39; and &#39;get_ytest_array&#39;.
+        
+        Parameters
+        ----------
+        labels : np.ndarray
+            The array containing the labels.
+        
+        labels_id : list
+            IDs associated to the labels.
+        
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related indices w.r.t. the stacked array
+            returned by &#39;_stack_subset&#39; given the strains related to &#39;labels&#39;
+            WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        filtered_labels : np.ndarray
+            Filtered labels.
+
+        filtered_ids : np.ndarray, optional
+            IDs associated to the filtered labels.
+
+        filtered_indices : np.ndarray, optional
+            Indices associated to the filtered labels.
+
+        &#34;&#34;&#34;
+        if len(labels) != len(labels_id):
+            raise ValueError(&#34;&#39;labels&#39; and &#39;labels_id&#39; must have the same length.&#34;)
+
+        if isinstance(classes, str):
+            if classes == &#39;all&#39;:
+                return labels
+            else:
+                classes = [classes]
+        elif not isinstance(classes, list):
+            raise TypeError(&#34;&#39;classes&#39; must be a string or list of strings.&#34;)
+        
+        filtered_labels = []
+        filtered_ids = []
+        filtered_indices = []
+        
+        i = 0
+        for label, id in zip(labels, labels_id):
+            if self.find_class(id) in classes:
+                filtered_labels.append(label)
+                filtered_ids.append(id)
+                filtered_indices.append(i)
+                i += 1  # Indices w.r.t. the FILTERED set!!!
+        
+        filtered_labels = np.array(filtered_labels)
+        filtered_ids = np.array(filtered_ids)
+        filtered_indices = np.array(filtered_indices)
+        
+        if with_id and with_index:
+            return filtered_labels, filtered_ids, filtered_indices
+        if with_id:
+            return filtered_labels, filtered_ids
+        if with_index:
+            return filtered_labels, filtered_indices
+        return filtered_labels
+        
+    def stack_by_id(self, id_list: list, length: int = None):
+        &#34;&#34;&#34;Stack an subset of strains by their ID into a Numpy array.
+
+        Stack an arbitrary selection of strains by their original ID into a
+        zero-padded 2d-array. The resulting order is the same as the order of
+        that in &#39;id_list&#39;.
+
+        Parameters
+        ----------
+        id_list : list
+            The IDs of the strains to be stacked.
+
+        length : int, optional
+            The target length of the stacked array. If None, the longest signal
+            determines the length.
+
+        Returns
+        -------
+        stacked_signals : np.ndarray
+            The array containing the stacked strains.
+
+        lengths : list
+            The original lengths of each strain, following the same order as
+            the first axis of &#39;stacked_signals&#39;.
+
+        Notes
+        -----
+        - Unlike in &#39;get_xtrain_array&#39; and &#39;get_xtest_array&#39;, this method does
+          not filter by &#39;classes&#39; since it would be redundant, as IDs are
+          unique.
+
+        &#34;&#34;&#34;
+        if not isinstance(id_list, list):
+            raise TypeError(&#34;&#39;id_list&#39; must be a list of IDs.&#34;)
+
+        # Collapse the Class layer.
+        strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
+
+        # Filter out those not in the &#39;id_list&#39;.
+        strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+        assert len(strains) == len(id_list)
+
+        # Sort them to match the order in &#39;id_list&#39;.
+        strains = {id: strains[id] for id in id_list}
+
+        strains = dictools.flatten_nested_dict(strains)
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
+        
+        return stacked_signals, lengths</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -3292,7 +3994,7 @@ It is also saved in its homonymous attribute.</dd>
     i_train, i_test = train_test_split(
         indices,
         train_size=train_size,
-        random_state=self.random_seed,
+        random_state=random_seed,
         shuffle=True,
         stratify=list(self.labels.values())
     )
@@ -3591,6 +4293,134 @@ first axis of 'train_array'.</dd>
     return dictools.dict_to_stacked_array(self.Xtrain, target_length=length)</code></pre>
 </details>
 </dd>
+<dt id="gwadama.datasets.Base.get_ytest_array"><code class="name flex">
+<span>def <span class="ident">get_ytest_array</span></span>(<span>self, classes='all', with_id=False, with_index=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the filtered test labels.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>classes</code></strong> :&ensp;<code>str | list[str] | 'all'</code></dt>
+<dd>The classes to include in the labels.
+All classes are included by default.</dd>
+<dt><strong><code>with_id</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return also the list of related IDs.</dd>
+<dt><strong><code>with_index</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return also the related GLOBAL indices; w.r.t. the stacked
+arrays returned by 'get_xtest_array' WITHOUT filters.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Filtered test labels.</dd>
+<dt><code>np.ndarray</code>, optional</dt>
+<dd>IDs associated to the filtered test labels.</dd>
+<dt><code>np.ndarray</code>, optional</dt>
+<dd>Indices associated to the filtered test labels.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_ytest_array(self, classes=&#39;all&#39;, with_id=False, with_index=False):
+    &#34;&#34;&#34;Get the filtered test labels.
+
+    Parameters
+    ----------
+    classes : str | list[str] | &#39;all&#39;
+        The classes to include in the labels.
+        All classes are included by default.
+
+    with_id : bool
+        If True, return also the list of related IDs.
+
+    with_index : bool
+        If True, return also the related GLOBAL indices; w.r.t. the stacked
+        arrays returned by &#39;get_xtest_array&#39; WITHOUT filters.
+
+    Returns
+    -------
+    np.ndarray
+        Filtered test labels.
+
+    np.ndarray, optional
+        IDs associated to the filtered test labels.
+    
+    np.ndarray, optional
+        Indices associated to the filtered test labels.
+
+    &#34;&#34;&#34;
+    return self._filter_labels(
+        self.Ytest, list(self.Xtest), classes,
+        with_id=with_id, with_index=with_index
+    )</code></pre>
+</details>
+</dd>
+<dt id="gwadama.datasets.Base.get_ytrain_array"><code class="name flex">
+<span>def <span class="ident">get_ytrain_array</span></span>(<span>self, classes='all', with_id=False, with_index=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the filtered training labels.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>classes</code></strong> :&ensp;<code>str | list[str] | 'all'</code></dt>
+<dd>The classes to include in the labels.
+All classes are included by default.</dd>
+<dt><strong><code>with_id</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return also the list of related IDs.</dd>
+<dt><strong><code>with_index</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return also the related GLOBAL indices; w.r.t. the stacked
+arrays returned by 'get_xtrain_array' WITHOUT filters.
+False by default.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Filtered train labels.</dd>
+<dt><code>np.ndarray</code>, optional</dt>
+<dd>IDs associated to the filtered train labels.</dd>
+<dt><code>np.ndarray</code>, optional</dt>
+<dd>Indices associated to the filtered train labels.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_ytrain_array(self, classes=&#39;all&#39;, with_id=False, with_index=False):
+    &#34;&#34;&#34;Get the filtered training labels.
+
+    Parameters
+    ----------
+    classes : str | list[str] | &#39;all&#39;
+        The classes to include in the labels.
+        All classes are included by default.
+
+    with_id : bool
+        If True, return also the list of related IDs.
+
+    with_index : bool
+        If True, return also the related GLOBAL indices; w.r.t. the stacked
+        arrays returned by &#39;get_xtrain_array&#39; WITHOUT filters.
+        False by default.
+
+    Returns
+    -------
+    np.ndarray
+        Filtered train labels.
+
+    np.ndarray, optional
+        IDs associated to the filtered train labels.
+    
+    np.ndarray, optional
+        Indices associated to the filtered train labels.
+
+    &#34;&#34;&#34;
+    return self._filter_labels(
+        self.Ytrain, list(self.Xtrain), classes,
+        with_id=with_id, with_index=with_index
+    )</code></pre>
+</details>
+</dd>
 <dt id="gwadama.datasets.Base.items"><code class="name flex">
 <span>def <span class="ident">items</span></span>(<span>self)</span>
 </code></dt>
@@ -3820,6 +4650,91 @@ accordingly.</p>
             dictools._set_value_to_nested_dict(self.times, [clas,id,*keys], times)
 
     self.max_length = self._find_max_length()</code></pre>
+</details>
+</dd>
+<dt id="gwadama.datasets.Base.stack_by_id"><code class="name flex">
+<span>def <span class="ident">stack_by_id</span></span>(<span>self, id_list: list, length: int = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stack an subset of strains by their ID into a Numpy array.</p>
+<p>Stack an arbitrary selection of strains by their original ID into a
+zero-padded 2d-array. The resulting order is the same as the order of
+that in 'id_list'.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>id_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>The IDs of the strains to be stacked.</dd>
+<dt><strong><code>length</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The target length of the stacked array. If None, the longest signal
+determines the length.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>stacked_signals</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The array containing the stacked strains.</dd>
+<dt><strong><code>lengths</code></strong> :&ensp;<code>list</code></dt>
+<dd>The original lengths of each strain, following the same order as
+the first axis of 'stacked_signals'.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Unlike in 'get_xtrain_array' and 'get_xtest_array', this method does
+not filter by 'classes' since it would be redundant, as IDs are
+unique.</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stack_by_id(self, id_list: list, length: int = None):
+    &#34;&#34;&#34;Stack an subset of strains by their ID into a Numpy array.
+
+    Stack an arbitrary selection of strains by their original ID into a
+    zero-padded 2d-array. The resulting order is the same as the order of
+    that in &#39;id_list&#39;.
+
+    Parameters
+    ----------
+    id_list : list
+        The IDs of the strains to be stacked.
+
+    length : int, optional
+        The target length of the stacked array. If None, the longest signal
+        determines the length.
+
+    Returns
+    -------
+    stacked_signals : np.ndarray
+        The array containing the stacked strains.
+
+    lengths : list
+        The original lengths of each strain, following the same order as
+        the first axis of &#39;stacked_signals&#39;.
+
+    Notes
+    -----
+    - Unlike in &#39;get_xtrain_array&#39; and &#39;get_xtest_array&#39;, this method does
+      not filter by &#39;classes&#39; since it would be redundant, as IDs are
+      unique.
+
+    &#34;&#34;&#34;
+    if not isinstance(id_list, list):
+        raise TypeError(&#34;&#39;id_list&#39; must be a list of IDs.&#34;)
+
+    # Collapse the Class layer.
+    strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
+
+    # Filter out those not in the &#39;id_list&#39;.
+    strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+    assert len(strains) == len(id_list)
+
+    # Sort them to match the order in &#39;id_list&#39;.
+    strains = {id: strains[id] for id in id_list}
+
+    strains = dictools.flatten_nested_dict(strains)
+    stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
+    
+    return stacked_signals, lengths</code></pre>
 </details>
 </dd>
 <dt id="gwadama.datasets.Base.whiten"><code class="name flex">
@@ -4395,6 +5310,7 @@ Numpy's default RandomGenerator.</dd>
         #----------------------------------------------------------------------
 
         self.classes = clean_dataset.classes.copy()
+        self._check_classes_dict(self.classes)
         self.labels = clean_dataset.labels.copy()
         self.metadata = deepcopy(clean_dataset.metadata)
         self.strains_clean = deepcopy(clean_dataset.strains)
@@ -4832,12 +5748,18 @@ Numpy's default RandomGenerator.</dd>
         if self.Xtrain is not None:
             self._update_train_test_subsets()
 
-    def get_xtrain_array(self, length=None, snr: int | list | str = &#39;all&#39;, with_metadata=False):
+    def get_xtrain_array(self,
+                         length: int = None,
+                         classes: str | list = &#39;all&#39;,
+                         snr: int | list | str = &#39;all&#39;,
+                         with_metadata: bool = False):
         &#34;&#34;&#34;Get the train subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the train subset into an homogeneous numpy array
         whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        Allows the possibility to filter by class and SNR.
 
         NOTE: Same signals injected at different SNR are stacked continuously.
 
@@ -4846,6 +5768,10 @@ Numpy's default RandomGenerator.</dd>
         length : int, optional
             Target length of the &#39;train_array&#39;. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            Classes which to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
@@ -4881,17 +5807,20 @@ Numpy's default RandomGenerator.</dd>
             with its entries in the same order as the &#39;train_array&#39;.
 
         &#34;&#34;&#34;
-        return self._stack_subset(self.Xtrain, length, snr, with_metadata)
+        return self._stack_subset(self.Xtrain, length, classes, snr, with_metadata)
     
     def get_xtest_array(self,
                         length: int = None,
+                        classes: str | list = &#39;all&#39;,
                         snr: int | list | str = &#39;all&#39;,
-                        with_metadata=False):
+                        with_metadata: bool = False):
         &#34;&#34;&#34;Get the test subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the test subset into an homogeneous numpy array
         whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
+
+        Allows the possibility to filter by class and SNR.
 
         NOTE: Same signals injected at different SNR are stacked continuously.
 
@@ -4900,6 +5829,10 @@ Numpy's default RandomGenerator.</dd>
         length : int, optional
             Target length of the &#39;test_array&#39;. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            Classes which to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             SNR injections which to include in the stack. If more than one are
@@ -4935,9 +5868,14 @@ Numpy's default RandomGenerator.</dd>
             with its entries in the same order as the &#39;test_array&#39;.
         
         &#34;&#34;&#34;
-        return self._stack_subset(self.Xtest, length, snr, with_metadata)
+        return self._stack_subset(self.Xtest, length, classes, snr, with_metadata)
 
-    def _stack_subset(self, strains, length, snr, with_metadata):
+    def _stack_subset(self,
+                      strains: dict,
+                      length:  int = None,
+                      classes: str | list = &#39;all&#39;,
+                      snr: int | list | str = &#39;all&#39;,
+                      with_metadata: bool = False):
         &#34;&#34;&#34;Stack a subset of strains into a zero-padded 2d-array.
 
         This is a helper function for &#39;get_xtrain_array&#39; and &#39;get_xtest_array&#39;.
@@ -4946,11 +5884,15 @@ Numpy's default RandomGenerator.</dd>
         ----------
         strains : dict
             A dictionary containing the strains to be stacked.
-            The keys are the IDs of the strains.
+            The keys of the first layer are the IDs of the strains.
 
         length : int, optional
             The target length of the stacked array. If None, the longest signal
             determines the length.
+
+        classes : str | list[str]
+            The classes to include in the stack.
+            All classes are included by default.
 
         snr : int | list[int] | str
             The SNR injections to include in the stack. If more than one are
@@ -4991,9 +5933,24 @@ Numpy's default RandomGenerator.</dd>
         Raises
         ------
         ValueError
-            If the value of &#39;snr&#39; is not valid.
+            If the value of &#39;classes&#39; or &#39;snr&#39; is not valid.
 
         &#34;&#34;&#34;
+        if isinstance(classes, (str, list)) and classes != &#39;all&#39;:
+            if isinstance(classes, str):
+                classes = [classes]
+
+            # NOTE: Here there is no &#39;class&#39; layer, therefore it must be
+            # traced back from the ID, and filtered over this same layer.
+            def filter_class(id):
+                clas = self.find_class(id)
+                return clas in classes
+            strains = dictools.filter_nested_dict(strains, filter_class, layer=0)
+
+        elif classes != &#39;all&#39;:
+            raise TypeError(&#34;the type of &#39;classes&#39; is not valid&#34;)
+
+
         if isinstance(snr, (int, list)):
             if isinstance(snr, int):
                 snr = [snr]
@@ -5002,9 +5959,14 @@ Numpy's default RandomGenerator.</dd>
             # dictionaries do not have the &#39;class&#39; first layer.
             strains = dictools.filter_nested_dict(strains, lambda k: k in snr, layer=1)
 
-        elif snr != &#39;all&#39;:
+        # If `snr == &#39;all&#39;`, no filter is applied over &#39;strains&#39;.
+        elif isinstance(snr, str) and snr != &#39;all&#39;:
             raise ValueError(&#34;the value of &#39;snr&#39; is not valid&#34;)
         
+        else:
+            raise TypeError(&#34;the type of &#39;snr&#39; is not valid&#34;)
+        
+
         strains = dictools.flatten_nested_dict(strains)
 
         stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
@@ -5017,6 +5979,246 @@ Numpy's default RandomGenerator.</dd>
             metadata.insert(1, &#39;snr&#39;, snr_list)  # after &#39;id&#39;.
             
             return stacked_signals, lengths, metadata
+        return stacked_signals, lengths
+
+    def get_ytrain_array(self, classes=&#39;all&#39;, snr=&#39;all&#39;, with_id=False, with_index=False):
+        &#34;&#34;&#34;Get the filtered training labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices w.r.t. the stacked
+            arrays returned by &#39;get_xtrain_array&#39; WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered train labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered train labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered train labels.
+
+        &#34;&#34;&#34;
+        return self._filter_labels(
+            self.Ytrain, list(self.Xtrain), classes, snr,
+            with_id=with_id, with_index=with_index
+        )
+
+    def get_ytest_array(self, classes=&#39;all&#39;, snr=&#39;all&#39;, with_id=False, with_index=False):
+        &#34;&#34;&#34;Get the filtered test labels.
+
+        Parameters
+        ----------
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related GLOBAL indices w.r.t. the stacked
+            arrays returned by &#39;get_xtest_array&#39; WITHOUT filters.
+
+        Returns
+        -------
+        np.ndarray
+            Filtered test labels.
+
+        np.ndarray, optional
+            IDs associated to the filtered test labels.
+        
+        np.ndarray, optional
+            Indices associated to the filtered test labels.
+
+        &#34;&#34;&#34;
+        return self._filter_labels(
+            self.Ytest, list(self.Xtest), classes, snr,
+            with_id=with_id, with_index=with_index
+        )
+    
+    def _filter_labels(self, labels, labels_id, classes, snr, with_id=False, with_index=False):
+        &#34;&#34;&#34;Filter labels based on &#39;classes&#39; and &#39;snr&#39;.
+
+        This is a helper function for &#39;get_ytrain_array&#39; and &#39;get_ytest_array&#39;.
+        
+        Parameters
+        ----------
+        labels : np.ndarray
+            The array containing the labels.
+
+        labels_id : list
+            IDs associated to the labels.
+        
+        classes : str | list[str] | &#39;all&#39;
+            The classes to include in the labels.
+            All classes are included by default.
+        
+        snr : int | list[int] | str
+            The SNR injections to include in the labels.
+            All injections are included by default.
+
+        with_id : bool
+            If True, return also the related IDs.
+            False by default.
+
+        with_index : bool
+            If True, return also the related indices w.r.t. the stacked array
+            returned by &#39;_stack_subset&#39; given the strains related to &#39;labels&#39;
+            WITHOUT filters.
+            False by default.
+
+        Returns
+        -------
+        filtered_labels : np.ndarray
+            Filtered labels.
+
+        filtered_ids : np.ndarray, optional
+            IDs associated to the filtered labels.
+
+        filtered_indices : np.ndarray, optional
+            Indices associated to the filtered labels.
+
+        &#34;&#34;&#34;
+        # First get labels and IDs filtered by &#39;classes&#39;.
+        filtered_labels, filtered_ids, filtered_indices = super()._filter_labels(
+            labels, labels_id, classes, with_id=True, with_index=True
+        )
+
+        if isinstance(snr, str):
+            if snr != &#39;all&#39;:
+                raise ValueError(&#34;only the str &#39;all&#39; is allowed for &#39;snr&#39;.&#34;)
+        elif isinstance(snr, int):
+            snr = [snr]
+        elif not isinstance(snr, list):
+            raise TypeError(&#34;the type of &#39;snr&#39; is not valid&#34;)
+        
+        n_snr_total = len(self.snr_list)
+
+        # Next repeat all by the total number of SNR values.
+        filtered_labels = np.repeat(filtered_labels, n_snr_total)
+        filtered_ids = np.repeat(filtered_ids, n_snr_total)
+        filtered_indices = np.repeat(filtered_indices, n_snr_total)
+
+        n_filtered = len(filtered_labels)
+
+        # Then convert the indices to include the TOTAL number of SNR repetitions.
+        for i in range(0, n_filtered, n_snr_total):
+            i_old = filtered_indices[i]
+            i_new0 = i_old * n_snr_total
+            i_new1 = i_new0 + n_snr_total
+            filtered_indices[i:i+n_snr_total] = np.arange(i_new0, i_new1)
+
+        if snr != &#39;all&#39;:
+            # Finally filter out those not present in the &#39;snr&#39; list.
+            mask = np.isin(self.snr_list, snr)
+            mask = np.tile(mask, n_filtered//n_snr_total)
+            filtered_labels = filtered_labels[mask]
+            filtered_ids = filtered_ids[mask]
+            filtered_indices = filtered_indices[mask]
+
+        if with_id and with_index:
+            return filtered_labels, filtered_ids, filtered_indices
+        if with_id:
+            return filtered_labels, filtered_ids
+        if with_index:
+            return filtered_labels, filtered_indices
+        return filtered_labels
+
+    def stack_by_id(self,
+                    id_list: list,
+                    length: int = None,
+                    snr_included: int | list[int] | str = &#39;all&#39;):
+        &#34;&#34;&#34;Stack a subset of strains by ID into a zero-padded 2d-array.
+
+        This may allow (for example) to group up strains by their original ID
+        without leaking differnet injections (SNR) of the same strain into
+        different splits.
+
+        Parameters
+        ----------
+        id_list : array-like
+            The IDs of the strains to be stacked.
+
+        length : int, optional
+            The target length of the stacked array. If None, the longest signal
+            determines the length.
+
+        snr_included : int | list[int] | str, optional
+            The SNR injections to include in the stack. If more than one are
+            selected, they are stacked zipped as follows:
+            
+            ```
+            id0 snr0
+            id0 snr1
+              ...
+            ```
+            
+            All injections are included by default.
+
+        Returns
+        -------
+        stacked_signals : np.ndarray
+            The array containing the stacked strains.
+
+        lengths : list
+            The original lengths of each strain, following the same order as
+            the first axis of &#39;stacked_signals&#39;.
+
+        Notes
+        -----
+        - Unlike in &#39;get_xtrain_array&#39; and &#39;get_xtest_array&#39;, this method does
+          not filter by &#39;classes&#39; since it would be redundant, as IDs are
+          unique.
+
+        Raises
+        ------
+        ValueError
+            If the value of &#39;snr&#39; is not valid.
+
+        &#34;&#34;&#34;
+        if not isinstance(id_list, list):
+            raise TypeError(&#34;&#39;id_list&#39; must be a list of IDs.&#34;)
+        
+        # Collapse the Class layer.
+        strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
+
+        # Filter out those not in the &#39;id_list&#39;.
+        strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+
+        # Filter out those injections whose SNR isnot in the &#39;snr&#39; list.
+        if isinstance(snr_included, (int, list)):
+            if isinstance(snr_included, int):
+                snr_included = [snr_included]
+            # NOTE: Here SNR is in Layer 1 because we collapsed the Class layer.
+            strains = dictools.filter_nested_dict(strains, lambda k: k in snr_included, layer=1)
+        elif snr_included != &#39;all&#39;:
+            raise ValueError(&#34;the value of &#39;snr&#39; is not valid&#34;)
+
+        strains = dictools.flatten_nested_dict(strains)  # keys: &#34;(id, snr)&#34;
+        stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
+        
         return stacked_signals, lengths</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5274,19 +6476,23 @@ this exception.</dd>
 </details>
 </dd>
 <dt id="gwadama.datasets.BaseInjected.get_xtest_array"><code class="name flex">
-<span>def <span class="ident">get_xtest_array</span></span>(<span>self, length: int = None, snr: int | list | str = 'all', with_metadata=False)</span>
+<span>def <span class="ident">get_xtest_array</span></span>(<span>self, length: int = None, classes: str | list = 'all', snr: int | list | str = 'all', with_metadata: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the test subset stacked in a zero-padded Numpy 2d-array.</p>
 <p>Stacks all signals in the test subset into an homogeneous numpy array
 whose length (axis=1) is determined by either 'length' or, if None, by
 the longest strain in the subset. The remaining space is zeroed.</p>
+<p>Allows the possibility to filter by class and SNR.</p>
 <p>NOTE: Same signals injected at different SNR are stacked continuously.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>length</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>Target length of the 'test_array'. If None, the longest signal
 determines the length.</dd>
+<dt><strong><code>classes</code></strong> :&ensp;<code>str | list[str]</code></dt>
+<dd>Classes which to include in the stack.
+All classes are included by default.</dd>
 <dt><strong><code>snr</code></strong> :&ensp;<code>int | list[int] | str</code></dt>
 <dd>
 <p>SNR injections which to include in the stack. If more than one are
@@ -5321,13 +6527,16 @@ with its entries in the same order as the 'test_array'.</dd>
 </summary>
 <pre><code class="python">def get_xtest_array(self,
                     length: int = None,
+                    classes: str | list = &#39;all&#39;,
                     snr: int | list | str = &#39;all&#39;,
-                    with_metadata=False):
+                    with_metadata: bool = False):
     &#34;&#34;&#34;Get the test subset stacked in a zero-padded Numpy 2d-array.
 
     Stacks all signals in the test subset into an homogeneous numpy array
     whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
     the longest strain in the subset. The remaining space is zeroed.
+
+    Allows the possibility to filter by class and SNR.
 
     NOTE: Same signals injected at different SNR are stacked continuously.
 
@@ -5336,6 +6545,10 @@ with its entries in the same order as the 'test_array'.</dd>
     length : int, optional
         Target length of the &#39;test_array&#39;. If None, the longest signal
         determines the length.
+
+    classes : str | list[str]
+        Classes which to include in the stack.
+        All classes are included by default.
 
     snr : int | list[int] | str
         SNR injections which to include in the stack. If more than one are
@@ -5371,23 +6584,27 @@ with its entries in the same order as the 'test_array'.</dd>
         with its entries in the same order as the &#39;test_array&#39;.
     
     &#34;&#34;&#34;
-    return self._stack_subset(self.Xtest, length, snr, with_metadata)</code></pre>
+    return self._stack_subset(self.Xtest, length, classes, snr, with_metadata)</code></pre>
 </details>
 </dd>
 <dt id="gwadama.datasets.BaseInjected.get_xtrain_array"><code class="name flex">
-<span>def <span class="ident">get_xtrain_array</span></span>(<span>self, length=None, snr: int | list | str = 'all', with_metadata=False)</span>
+<span>def <span class="ident">get_xtrain_array</span></span>(<span>self, length: int = None, classes: str | list = 'all', snr: int | list | str = 'all', with_metadata: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the train subset stacked in a zero-padded Numpy 2d-array.</p>
 <p>Stacks all signals in the train subset into an homogeneous numpy array
 whose length (axis=1) is determined by either 'length' or, if None, by
 the longest strain in the subset. The remaining space is zeroed.</p>
+<p>Allows the possibility to filter by class and SNR.</p>
 <p>NOTE: Same signals injected at different SNR are stacked continuously.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>length</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>Target length of the 'train_array'. If None, the longest signal
 determines the length.</dd>
+<dt><strong><code>classes</code></strong> :&ensp;<code>str | list[str]</code></dt>
+<dd>Classes which to include in the stack.
+All classes are included by default.</dd>
 <dt><strong><code>snr</code></strong> :&ensp;<code>int | list[int] | str</code></dt>
 <dd>
 <p>SNR injections which to include in the stack. If more than one are
@@ -5420,12 +6637,18 @@ with its entries in the same order as the 'train_array'.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_xtrain_array(self, length=None, snr: int | list | str = &#39;all&#39;, with_metadata=False):
+<pre><code class="python">def get_xtrain_array(self,
+                     length: int = None,
+                     classes: str | list = &#39;all&#39;,
+                     snr: int | list | str = &#39;all&#39;,
+                     with_metadata: bool = False):
     &#34;&#34;&#34;Get the train subset stacked in a zero-padded Numpy 2d-array.
 
     Stacks all signals in the train subset into an homogeneous numpy array
     whose length (axis=1) is determined by either &#39;length&#39; or, if None, by
     the longest strain in the subset. The remaining space is zeroed.
+
+    Allows the possibility to filter by class and SNR.
 
     NOTE: Same signals injected at different SNR are stacked continuously.
 
@@ -5434,6 +6657,10 @@ with its entries in the same order as the 'train_array'.</dd>
     length : int, optional
         Target length of the &#39;train_array&#39;. If None, the longest signal
         determines the length.
+
+    classes : str | list[str]
+        Classes which to include in the stack.
+        All classes are included by default.
 
     snr : int | list[int] | str
         SNR injections which to include in the stack. If more than one are
@@ -5469,7 +6696,153 @@ with its entries in the same order as the 'train_array'.</dd>
         with its entries in the same order as the &#39;train_array&#39;.
 
     &#34;&#34;&#34;
-    return self._stack_subset(self.Xtrain, length, snr, with_metadata)</code></pre>
+    return self._stack_subset(self.Xtrain, length, classes, snr, with_metadata)</code></pre>
+</details>
+</dd>
+<dt id="gwadama.datasets.BaseInjected.get_ytest_array"><code class="name flex">
+<span>def <span class="ident">get_ytest_array</span></span>(<span>self, classes='all', snr='all', with_id=False, with_index=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the filtered test labels.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>classes</code></strong> :&ensp;<code>str | list[str] | 'all'</code></dt>
+<dd>The classes to include in the labels.
+All classes are included by default.</dd>
+<dt><strong><code>snr</code></strong> :&ensp;<code>int | list[int] | str</code></dt>
+<dd>The SNR injections to include in the labels.
+All injections are included by default.</dd>
+<dt><strong><code>with_id</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return also the related IDs.
+False by default.</dd>
+<dt><strong><code>with_index</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return also the related GLOBAL indices w.r.t. the stacked
+arrays returned by 'get_xtest_array' WITHOUT filters.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Filtered test labels.</dd>
+<dt><code>np.ndarray</code>, optional</dt>
+<dd>IDs associated to the filtered test labels.</dd>
+<dt><code>np.ndarray</code>, optional</dt>
+<dd>Indices associated to the filtered test labels.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_ytest_array(self, classes=&#39;all&#39;, snr=&#39;all&#39;, with_id=False, with_index=False):
+    &#34;&#34;&#34;Get the filtered test labels.
+
+    Parameters
+    ----------
+    classes : str | list[str] | &#39;all&#39;
+        The classes to include in the labels.
+        All classes are included by default.
+    
+    snr : int | list[int] | str
+        The SNR injections to include in the labels.
+        All injections are included by default.
+
+    with_id : bool
+        If True, return also the related IDs.
+        False by default.
+
+    with_index : bool
+        If True, return also the related GLOBAL indices w.r.t. the stacked
+        arrays returned by &#39;get_xtest_array&#39; WITHOUT filters.
+
+    Returns
+    -------
+    np.ndarray
+        Filtered test labels.
+
+    np.ndarray, optional
+        IDs associated to the filtered test labels.
+    
+    np.ndarray, optional
+        Indices associated to the filtered test labels.
+
+    &#34;&#34;&#34;
+    return self._filter_labels(
+        self.Ytest, list(self.Xtest), classes, snr,
+        with_id=with_id, with_index=with_index
+    )</code></pre>
+</details>
+</dd>
+<dt id="gwadama.datasets.BaseInjected.get_ytrain_array"><code class="name flex">
+<span>def <span class="ident">get_ytrain_array</span></span>(<span>self, classes='all', snr='all', with_id=False, with_index=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the filtered training labels.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>classes</code></strong> :&ensp;<code>str | list[str] | 'all'</code></dt>
+<dd>The classes to include in the labels.
+All classes are included by default.</dd>
+<dt><strong><code>snr</code></strong> :&ensp;<code>int | list[int] | str</code></dt>
+<dd>The SNR injections to include in the labels.
+All injections are included by default.</dd>
+<dt><strong><code>with_id</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return also the related IDs.
+False by default.</dd>
+<dt><strong><code>with_index</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, return also the related GLOBAL indices w.r.t. the stacked
+arrays returned by 'get_xtrain_array' WITHOUT filters.
+False by default.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>Filtered train labels.</dd>
+<dt><code>np.ndarray</code>, optional</dt>
+<dd>IDs associated to the filtered train labels.</dd>
+<dt><code>np.ndarray</code>, optional</dt>
+<dd>Indices associated to the filtered train labels.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_ytrain_array(self, classes=&#39;all&#39;, snr=&#39;all&#39;, with_id=False, with_index=False):
+    &#34;&#34;&#34;Get the filtered training labels.
+
+    Parameters
+    ----------
+    classes : str | list[str] | &#39;all&#39;
+        The classes to include in the labels.
+        All classes are included by default.
+    
+    snr : int | list[int] | str
+        The SNR injections to include in the labels.
+        All injections are included by default.
+
+    with_id : bool
+        If True, return also the related IDs.
+        False by default.
+
+    with_index : bool
+        If True, return also the related GLOBAL indices w.r.t. the stacked
+        arrays returned by &#39;get_xtrain_array&#39; WITHOUT filters.
+        False by default.
+
+    Returns
+    -------
+    np.ndarray
+        Filtered train labels.
+
+    np.ndarray, optional
+        IDs associated to the filtered train labels.
+    
+    np.ndarray, optional
+        Indices associated to the filtered train labels.
+
+    &#34;&#34;&#34;
+    return self._filter_labels(
+        self.Ytrain, list(self.Xtrain), classes, snr,
+        with_id=with_id, with_index=with_index
+    )</code></pre>
 </details>
 </dd>
 <dt id="gwadama.datasets.BaseInjected.psd"><code class="name flex">
@@ -5495,6 +6868,130 @@ quadratic spline interpolant function.</p></div>
 
     &#34;&#34;&#34;
     return self._psd(frequencies)</code></pre>
+</details>
+</dd>
+<dt id="gwadama.datasets.BaseInjected.stack_by_id"><code class="name flex">
+<span>def <span class="ident">stack_by_id</span></span>(<span>self, id_list: list, length: int = None, snr_included: int | list[int] | str = 'all')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stack a subset of strains by ID into a zero-padded 2d-array.</p>
+<p>This may allow (for example) to group up strains by their original ID
+without leaking differnet injections (SNR) of the same strain into
+different splits.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>id_list</code></strong> :&ensp;<code>array-like</code></dt>
+<dd>The IDs of the strains to be stacked.</dd>
+<dt><strong><code>length</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The target length of the stacked array. If None, the longest signal
+determines the length.</dd>
+<dt><strong><code>snr_included</code></strong> :&ensp;<code>int | list[int] | str</code>, optional</dt>
+<dd>
+<p>The SNR injections to include in the stack. If more than one are
+selected, they are stacked zipped as follows:</p>
+<p><code>id0 snr0
+id0 snr1
+...</code></p>
+<p>All injections are included by default.</p>
+</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>stacked_signals</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The array containing the stacked strains.</dd>
+<dt><strong><code>lengths</code></strong> :&ensp;<code>list</code></dt>
+<dd>The original lengths of each strain, following the same order as
+the first axis of 'stacked_signals'.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Unlike in 'get_xtrain_array' and 'get_xtest_array', this method does
+not filter by 'classes' since it would be redundant, as IDs are
+unique.</li>
+</ul>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the value of 'snr' is not valid.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stack_by_id(self,
+                id_list: list,
+                length: int = None,
+                snr_included: int | list[int] | str = &#39;all&#39;):
+    &#34;&#34;&#34;Stack a subset of strains by ID into a zero-padded 2d-array.
+
+    This may allow (for example) to group up strains by their original ID
+    without leaking differnet injections (SNR) of the same strain into
+    different splits.
+
+    Parameters
+    ----------
+    id_list : array-like
+        The IDs of the strains to be stacked.
+
+    length : int, optional
+        The target length of the stacked array. If None, the longest signal
+        determines the length.
+
+    snr_included : int | list[int] | str, optional
+        The SNR injections to include in the stack. If more than one are
+        selected, they are stacked zipped as follows:
+        
+        ```
+        id0 snr0
+        id0 snr1
+          ...
+        ```
+        
+        All injections are included by default.
+
+    Returns
+    -------
+    stacked_signals : np.ndarray
+        The array containing the stacked strains.
+
+    lengths : list
+        The original lengths of each strain, following the same order as
+        the first axis of &#39;stacked_signals&#39;.
+
+    Notes
+    -----
+    - Unlike in &#39;get_xtrain_array&#39; and &#39;get_xtest_array&#39;, this method does
+      not filter by &#39;classes&#39; since it would be redundant, as IDs are
+      unique.
+
+    Raises
+    ------
+    ValueError
+        If the value of &#39;snr&#39; is not valid.
+
+    &#34;&#34;&#34;
+    if not isinstance(id_list, list):
+        raise TypeError(&#34;&#39;id_list&#39; must be a list of IDs.&#34;)
+    
+    # Collapse the Class layer.
+    strains = {id: ds for sub_strains in self.strains.values() for id, ds in sub_strains.items()}
+
+    # Filter out those not in the &#39;id_list&#39;.
+    strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+
+    # Filter out those injections whose SNR isnot in the &#39;snr&#39; list.
+    if isinstance(snr_included, (int, list)):
+        if isinstance(snr_included, int):
+            snr_included = [snr_included]
+        # NOTE: Here SNR is in Layer 1 because we collapsed the Class layer.
+        strains = dictools.filter_nested_dict(strains, lambda k: k in snr_included, layer=1)
+    elif snr_included != &#39;all&#39;:
+        raise ValueError(&#34;the value of &#39;snr&#39; is not valid&#34;)
+
+    strains = dictools.flatten_nested_dict(strains)  # keys: &#34;(id, snr)&#34;
+    stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
+    
+    return stacked_signals, lengths</code></pre>
 </details>
 </dd>
 <dt id="gwadama.datasets.BaseInjected.whiten"><code class="name flex">
@@ -5626,8 +7123,10 @@ indicated with their respective arguments.</p>
 </ul>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>classes</code></strong> :&ensp;<code>list[str]</code></dt>
-<dd>List of labels, one per class (category).</dd>
+<dt><strong><code>classes</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dict of strings and their integer labels, one per class (category).
+The keys are the name of the Equation of State (EOS) used to describe
+the physics behind the simulation which produced each strain.</dd>
 <dt><strong><code>strains</code></strong> :&ensp;<code>dict {class: {id: gw_strain} }</code></dt>
 <dd>Strains stored as a nested dictionary, with each strain in an
 independent array to provide more flexibility with data of a wide
@@ -5680,8 +7179,8 @@ Otherwise it is assumed all strains are constantly sampled to this.</p>
 <dt><strong><code>coredb</code></strong> :&ensp;<code>ioo.CoReManager</code></dt>
 <dd>Instance of CoReManager with the actual data.</dd>
 <dt><strong><code>classes</code></strong> :&ensp;<code>dict[str]</code></dt>
-<dd>Dictionary with the class name as key and the corresponding label
-index as value.</dd>
+<dd>Dictionary with the Equation of State (class) name as key and the
+corresponding label index as value.</dd>
 <dt><strong><code>discarded</code></strong> :&ensp;<code>set[str]</code></dt>
 <dd>Set of GW IDs to discard from the dataset.</dd>
 <dt><strong><code>cropped</code></strong> :&ensp;<code>dict[str]</code></dt>
@@ -5727,8 +7226,10 @@ cropping range as value. The range is given as a tuple of the form
 
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
+        The keys are the name of the Equation of State (EOS) used to describe
+        the physics behind the simulation which produced each strain.
     
     strains : dict {class: {id: gw_strain} }
         Strains stored as a nested dictionary, with each strain in an
@@ -5797,8 +7298,8 @@ cropping range as value. The range is given as a tuple of the form
             Instance of CoReManager with the actual data.
         
         classes : dict[str]
-            Dictionary with the class name as key and the corresponding label
-            index as value.
+            Dictionary with the Equation of State (class) name as key and the
+            corresponding label index as value.
         
         discarded : set[str]
             Set of GW IDs to discard from the dataset.
@@ -5818,6 +7319,7 @@ cropping range as value. The range is given as a tuple of the form
             Azimuthal angle of the source in radians.
 
         &#34;&#34;&#34;
+        self._check_classes_dict(classes)
         self.classes = classes
         self.discarded = discarded
         self.cropped = cropped
@@ -6406,9 +7908,12 @@ side of the merger (inspiral), with a given offset in samples.</p>
 <li><code><a title="gwadama.datasets.Base.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtest_array" href="#gwadama.datasets.Base.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtrain_array" href="#gwadama.datasets.Base.get_xtrain_array">get_xtrain_array</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_ytest_array" href="#gwadama.datasets.Base.get_ytest_array">get_ytest_array</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_ytrain_array" href="#gwadama.datasets.Base.get_ytrain_array">get_ytrain_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.items" href="#gwadama.datasets.Base.items">items</a></code></li>
 <li><code><a title="gwadama.datasets.Base.keys" href="#gwadama.datasets.Base.keys">keys</a></code></li>
 <li><code><a title="gwadama.datasets.Base.shrink_strains" href="#gwadama.datasets.Base.shrink_strains">shrink_strains</a></code></li>
+<li><code><a title="gwadama.datasets.Base.stack_by_id" href="#gwadama.datasets.Base.stack_by_id">stack_by_id</a></code></li>
 <li><code><a title="gwadama.datasets.Base.whiten" href="#gwadama.datasets.Base.whiten">whiten</a></code></li>
 </ul>
 </li>
@@ -6664,11 +8169,14 @@ expected to be injected.</dd>
 <li><code><a title="gwadama.datasets.BaseInjected.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtest_array" href="#gwadama.datasets.BaseInjected.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtrain_array" href="#gwadama.datasets.BaseInjected.get_xtrain_array">get_xtrain_array</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.get_ytest_array" href="#gwadama.datasets.BaseInjected.get_ytest_array">get_ytest_array</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.get_ytrain_array" href="#gwadama.datasets.BaseInjected.get_ytrain_array">get_ytrain_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.items" href="#gwadama.datasets.Base.items">items</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.keys" href="#gwadama.datasets.Base.keys">keys</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.psd" href="#gwadama.datasets.BaseInjected.psd">psd</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.resample" href="#gwadama.datasets.Base.resample">resample</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.shrink_strains" href="#gwadama.datasets.Base.shrink_strains">shrink_strains</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.stack_by_id" href="#gwadama.datasets.BaseInjected.stack_by_id">stack_by_id</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.whiten" href="#gwadama.datasets.BaseInjected.whiten">whiten</a></code></li>
 </ul>
 </li>
@@ -6795,11 +8303,14 @@ Numpy's default RandomGenerator.</dd>
 <li><code><a title="gwadama.datasets.BaseInjected.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtest_array" href="#gwadama.datasets.BaseInjected.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtrain_array" href="#gwadama.datasets.BaseInjected.get_xtrain_array">get_xtrain_array</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.get_ytest_array" href="#gwadama.datasets.BaseInjected.get_ytest_array">get_ytest_array</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.get_ytrain_array" href="#gwadama.datasets.BaseInjected.get_ytrain_array">get_ytrain_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.items" href="#gwadama.datasets.Base.items">items</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.keys" href="#gwadama.datasets.Base.keys">keys</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.psd" href="#gwadama.datasets.BaseInjected.psd">psd</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.resample" href="#gwadama.datasets.Base.resample">resample</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.shrink_strains" href="#gwadama.datasets.Base.shrink_strains">shrink_strains</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.stack_by_id" href="#gwadama.datasets.BaseInjected.stack_by_id">stack_by_id</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.whiten" href="#gwadama.datasets.BaseInjected.whiten">whiten</a></code></li>
 </ul>
 </li>
@@ -6807,7 +8318,7 @@ Numpy's default RandomGenerator.</dd>
 </dd>
 <dt id="gwadama.datasets.SyntheticWaves"><code class="flex name class">
 <span>class <span class="ident">SyntheticWaves</span></span>
-<span>(</span><span>*, classes: list[str], n_waves_per_class: int, wave_parameters_limits: dict, max_length: int, peak_time_max_length: float, amp_threshold: float, tukey_alpha: float, sample_rate: int, train_size: int | float, random_seed: int = None)</span>
+<span>(</span><span>*, classes: dict, n_waves_per_class: int, wave_parameters_limits: dict, max_length: int, peak_time_max_length: float, amp_threshold: float, tukey_alpha: float, sample_rate: int, train_size: int | float, random_seed: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class for building synthetically generated wavforms and background noise.</p>
@@ -6821,8 +8332,8 @@ RD: Ring-Down.
 </code></pre>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>classes</code></strong> :&ensp;<code>list[str]</code></dt>
-<dd>List of labels, one per class (category).</dd>
+<dt><strong><code>classes</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dict of strings and their integer labels, one per class (category).</dd>
 <dt><strong><code>strains</code></strong> :&ensp;<code>dict {class: {key: gw_strains} }</code></dt>
 <dd>Strains stored as a nested dictionary, with each strain in an
 independent array to provide more flexibility with data of a wide
@@ -6924,8 +8435,8 @@ with the flag <code>stratified=True</code>.</dd>
 
     Attributes
     ----------
-    classes : list[str]
-        List of labels, one per class (category).
+    classes : dict
+        Dict of strings and their integer labels, one per class (category).
     
     strains : dict {class: {key: gw_strains} }
         Strains stored as a nested dictionary, with each strain in an
@@ -6964,7 +8475,7 @@ with the flag <code>stratified=True</code>.</dd>
 
     def __init__(self,
                  *,
-                 classes: list[str],
+                 classes: dict,
                  n_waves_per_class: int,
                  wave_parameters_limits: dict,
                  max_length: int,
@@ -7022,6 +8533,7 @@ with the flag <code>stratified=True</code>.</dd>
         random_seed : int, optional.
         
         &#34;&#34;&#34;
+        self._check_classes_dict(self.classes)
         self.classes = classes
         self.n_waves_per_class = n_waves_per_class
         self.sample_rate = sample_rate
@@ -7241,10 +8753,13 @@ with the flag <code>stratified=True</code>.</dd>
 <li><code><a title="gwadama.datasets.Base.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtest_array" href="#gwadama.datasets.Base.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtrain_array" href="#gwadama.datasets.Base.get_xtrain_array">get_xtrain_array</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_ytest_array" href="#gwadama.datasets.Base.get_ytest_array">get_ytest_array</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_ytrain_array" href="#gwadama.datasets.Base.get_ytrain_array">get_ytrain_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.items" href="#gwadama.datasets.Base.items">items</a></code></li>
 <li><code><a title="gwadama.datasets.Base.keys" href="#gwadama.datasets.Base.keys">keys</a></code></li>
 <li><code><a title="gwadama.datasets.Base.resample" href="#gwadama.datasets.Base.resample">resample</a></code></li>
 <li><code><a title="gwadama.datasets.Base.shrink_strains" href="#gwadama.datasets.Base.shrink_strains">shrink_strains</a></code></li>
+<li><code><a title="gwadama.datasets.Base.stack_by_id" href="#gwadama.datasets.Base.stack_by_id">stack_by_id</a></code></li>
 <li><code><a title="gwadama.datasets.Base.whiten" href="#gwadama.datasets.Base.whiten">whiten</a></code></li>
 </ul>
 </li>
@@ -7276,10 +8791,13 @@ with the flag <code>stratified=True</code>.</dd>
 <li><code><a title="gwadama.datasets.Base.get_times" href="#gwadama.datasets.Base.get_times">get_times</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtest_array" href="#gwadama.datasets.Base.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.get_xtrain_array" href="#gwadama.datasets.Base.get_xtrain_array">get_xtrain_array</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_ytest_array" href="#gwadama.datasets.Base.get_ytest_array">get_ytest_array</a></code></li>
+<li><code><a title="gwadama.datasets.Base.get_ytrain_array" href="#gwadama.datasets.Base.get_ytrain_array">get_ytrain_array</a></code></li>
 <li><code><a title="gwadama.datasets.Base.items" href="#gwadama.datasets.Base.items">items</a></code></li>
 <li><code><a title="gwadama.datasets.Base.keys" href="#gwadama.datasets.Base.keys">keys</a></code></li>
 <li><code><a title="gwadama.datasets.Base.resample" href="#gwadama.datasets.Base.resample">resample</a></code></li>
 <li><code><a title="gwadama.datasets.Base.shrink_strains" href="#gwadama.datasets.Base.shrink_strains">shrink_strains</a></code></li>
+<li><code><a title="gwadama.datasets.Base.stack_by_id" href="#gwadama.datasets.Base.stack_by_id">stack_by_id</a></code></li>
 <li><code><a title="gwadama.datasets.Base.whiten" href="#gwadama.datasets.Base.whiten">whiten</a></code></li>
 </ul>
 </li>
@@ -7291,7 +8809,10 @@ with the flag <code>stratified=True</code>.</dd>
 <li><code><a title="gwadama.datasets.BaseInjected.gen_injections" href="#gwadama.datasets.BaseInjected.gen_injections">gen_injections</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtest_array" href="#gwadama.datasets.BaseInjected.get_xtest_array">get_xtest_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.get_xtrain_array" href="#gwadama.datasets.BaseInjected.get_xtrain_array">get_xtrain_array</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.get_ytest_array" href="#gwadama.datasets.BaseInjected.get_ytest_array">get_ytest_array</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.get_ytrain_array" href="#gwadama.datasets.BaseInjected.get_ytrain_array">get_ytrain_array</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.psd" href="#gwadama.datasets.BaseInjected.psd">psd</a></code></li>
+<li><code><a title="gwadama.datasets.BaseInjected.stack_by_id" href="#gwadama.datasets.BaseInjected.stack_by_id">stack_by_id</a></code></li>
 <li><code><a title="gwadama.datasets.BaseInjected.whiten" href="#gwadama.datasets.BaseInjected.whiten">whiten</a></code></li>
 </ul>
 </li>
