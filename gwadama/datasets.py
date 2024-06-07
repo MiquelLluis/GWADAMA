@@ -782,7 +782,7 @@ class Base:
                 filtered_labels.append(label)
                 filtered_ids.append(id)
                 filtered_indices.append(i)
-            i += 1
+                i += 1  # Indices w.r.t. the FILTERED set!!!
         
         filtered_labels = np.array(filtered_labels)
         filtered_ids = np.array(filtered_ids)
@@ -800,7 +800,8 @@ class Base:
         """Stack an subset of strains by their ID into a Numpy array.
 
         Stack an arbitrary selection of strains by their original ID into a
-        zero-padded 2d-array.
+        zero-padded 2d-array. The resulting order is the same as the order of
+        that in 'id_list'.
 
         Parameters
         ----------
@@ -835,6 +836,10 @@ class Base:
 
         # Filter out those not in the 'id_list'.
         strains = dictools.filter_nested_dict(strains, lambda k: k in id_list, layer=0)
+        assert len(strains) == len(id_list)
+
+        # Sort them to match the order in 'id_list'.
+        strains = {id: strains[id] for id in id_list}
 
         strains = dictools.flatten_nested_dict(strains)
         stacked_signals, lengths = dictools.dict_to_stacked_array(strains, target_length=length)
@@ -1670,7 +1675,12 @@ class BaseInjected(Base):
         """
         return self._stack_subset(self.Xtest, length, classes, snr, with_metadata)
 
-    def _stack_subset(self, strains, length, classes, snr, with_metadata):
+    def _stack_subset(self,
+                      strains: dict,
+                      length:  int = None,
+                      classes: str | list = 'all',
+                      snr: int | list | str = 'all',
+                      with_metadata: bool = False):
         """Stack a subset of strains into a zero-padded 2d-array.
 
         This is a helper function for 'get_xtrain_array' and 'get_xtest_array'.
@@ -1679,7 +1689,7 @@ class BaseInjected(Base):
         ----------
         strains : dict
             A dictionary containing the strains to be stacked.
-            The keys are the IDs of the strains.
+            The keys of the first layer are the IDs of the strains.
 
         length : int, optional
             The target length of the stacked array. If None, the longest signal
@@ -1731,18 +1741,18 @@ class BaseInjected(Base):
             If the value of 'classes' or 'snr' is not valid.
 
         """
-        if isinstance(classes, (str, list)):
+        if isinstance(classes, (str, list)) and classes != 'all':
             if isinstance(classes, str):
                 classes = [classes]
 
             # NOTE: Here there is no 'class' layer, therefore it must be
-            # traced back from the ID.
-            def filter_(id):
+            # traced back from the ID, and filtered over this same layer.
+            def filter_class(id):
                 clas = self.find_class(id)
                 return clas in classes
-            strains = dictools.filter_nested_dict(strains, filter_, layer=0)
+            strains = dictools.filter_nested_dict(strains, filter_class, layer=0)
 
-        else:
+        elif classes != 'all':
             raise TypeError("the type of 'classes' is not valid")
 
 
@@ -1755,8 +1765,11 @@ class BaseInjected(Base):
             strains = dictools.filter_nested_dict(strains, lambda k: k in snr, layer=1)
 
         # If `snr == 'all'`, no filter is applied over 'strains'.
-        elif snr != 'all':
+        elif isinstance(snr, str) and snr != 'all':
             raise ValueError("the value of 'snr' is not valid")
+        
+        else:
+            raise TypeError("the type of 'snr' is not valid")
         
 
         strains = dictools.flatten_nested_dict(strains)
@@ -1915,7 +1928,7 @@ class BaseInjected(Base):
 
         n_filtered = len(filtered_labels)
 
-        # Then convert the indices to include the total number of SNR repetitions.
+        # Then convert the indices to include the TOTAL number of SNR repetitions.
         for i in range(0, n_filtered, n_snr_total):
             i_old = filtered_indices[i]
             i_new0 = i_old * n_snr_total
@@ -1938,7 +1951,10 @@ class BaseInjected(Base):
             return filtered_labels, filtered_indices
         return filtered_labels
 
-    def stack_by_id(self, id_list: list, length: int, snr_included):
+    def stack_by_id(self,
+                    id_list: list,
+                    length: int = None,
+                    snr_included: int | list[int] | str = 'all'):
         """Stack a subset of strains by ID into a zero-padded 2d-array.
 
         This may allow (for example) to group up strains by their original ID
@@ -1954,7 +1970,7 @@ class BaseInjected(Base):
             The target length of the stacked array. If None, the longest signal
             determines the length.
 
-        snr_included : int | list[int] | str
+        snr_included : int | list[int] | str, optional
             The SNR injections to include in the stack. If more than one are
             selected, they are stacked zipped as follows:
             
