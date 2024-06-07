@@ -173,6 +173,10 @@ def dict_to_stacked_array(dict_: dict, target_length: int = None) -> tuple[np.nd
     for i, array in enumerate(dict_.values()):
         l = len(array)
         pad = target_length - l
+        if pad < 0:
+            raise ValueError(
+                "given 'target_length' is smaller than the longest array inside 'dict_'"
+            )
         stacked_arrays[i] = np.pad(array, (0, pad))
         lengths.append(l)
     
@@ -265,6 +269,10 @@ def filter_nested_dict(dict_, condition, layer) -> dict:
     -------
     : dict
         Filtered version of the nested dictionary.
+
+    Caveats
+    -------
+    - The filtering does not alter the order of kept elements in 'dict_'.
 
     """
     def filter_layer(dictionary, current_layer):
