@@ -69,7 +69,7 @@ def _get_value_from_nested_dict(dict_, keys: list):
     return value
 
 
-def _set_value_to_nested_dict(dict_, keys, value):
+def set_value_to_nested_dict(dict_, keys, value):
         """Set a value to an arbitrarily-depth nested dictionary.
 
         Parameters
@@ -87,7 +87,7 @@ def _set_value_to_nested_dict(dict_, keys, value):
         key = keys[0]
         element = dict_[key]
         if isinstance(element, dict):
-            _set_value_to_nested_dict(element, keys[1:], value)
+            set_value_to_nested_dict(element, keys[1:], value)
         else:
             dict_[key] = value
 
