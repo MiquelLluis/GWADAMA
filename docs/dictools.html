@@ -97,7 +97,7 @@ def _get_value_from_nested_dict(dict_, keys: list):
     return value
 
 
-def _set_value_to_nested_dict(dict_, keys, value):
+def set_value_to_nested_dict(dict_, keys, value):
         &#34;&#34;&#34;Set a value to an arbitrarily-depth nested dictionary.
 
         Parameters
@@ -115,7 +115,7 @@ def _set_value_to_nested_dict(dict_, keys, value):
         key = keys[0]
         element = dict_[key]
         if isinstance(element, dict):
-            _set_value_to_nested_dict(element, keys[1:], value)
+            set_value_to_nested_dict(element, keys[1:], value)
         else:
             dict_[key] = value
 
@@ -555,6 +555,48 @@ element at each layer.</p></div>
     return depth</code></pre>
 </details>
 </dd>
+<dt id="gwadama.dictools.set_value_to_nested_dict"><code class="name flex">
+<span>def <span class="ident">set_value_to_nested_dict</span></span>(<span>dict_, keys, value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set a value to an arbitrarily-depth nested dictionary.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dict_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Nested dictionary.</dd>
+<dt><strong><code>keys</code></strong> :&ensp;<code>iterable</code></dt>
+<dd>Sequence of keys necessary to get to the element inside the nested
+dictionary.</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_value_to_nested_dict(dict_, keys, value):
+        &#34;&#34;&#34;Set a value to an arbitrarily-depth nested dictionary.
+
+        Parameters
+        ----------
+        dict_: dict
+            Nested dictionary.
+
+        keys: iterable
+            Sequence of keys necessary to get to the element inside the nested
+            dictionary.
+
+        value: Any
+
+        &#34;&#34;&#34;
+        key = keys[0]
+        element = dict_[key]
+        if isinstance(element, dict):
+            set_value_to_nested_dict(element, keys[1:], value)
+        else:
+            dict_[key] = value</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -577,6 +619,7 @@ element at each layer.</p></div>
 <li><code><a title="gwadama.dictools.filter_nested_dict" href="#gwadama.dictools.filter_nested_dict">filter_nested_dict</a></code></li>
 <li><code><a title="gwadama.dictools.flatten_nested_dict" href="#gwadama.dictools.flatten_nested_dict">flatten_nested_dict</a></code></li>
 <li><code><a title="gwadama.dictools.get_depth" href="#gwadama.dictools.get_depth">get_depth</a></code></li>
+<li><code><a title="gwadama.dictools.set_value_to_nested_dict" href="#gwadama.dictools.set_value_to_nested_dict">set_value_to_nested_dict</a></code></li>
 </ul>
 </li>
 </ul>

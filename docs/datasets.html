@@ -286,7 +286,7 @@ class Base:
             length = len(strain)
             t_end = (length - 1) / self.sample_rate
             time = np.linspace(0, t_end, length)
-            dictools._set_value_to_nested_dict(times, keys, time)
+            dictools.set_value_to_nested_dict(times, keys, time)
         
         return times
 
@@ -466,12 +466,12 @@ class Base:
             # Same shrinking limits for all possible strains below ID layer.
             start, end = limits_d[id]
             strain = strain[start:end]
-            dictools._set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
+            dictools.set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
 
             if self._track_times:
                 times = self.get_times(clas, id, *keys)
                 times = times[start:end]
-                dictools._set_value_to_nested_dict(self.times, [clas,id,*keys], times)
+                dictools.set_value_to_nested_dict(self.times, [clas,id,*keys], times)
 
         self.max_length = self._find_max_length()
 
@@ -512,8 +512,8 @@ class Base:
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
-            dictools._set_value_to_nested_dict(self.strains, keys, strain_resampled)
-            dictools._set_value_to_nested_dict(self.times, keys, time_resampled)
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_resampled)
+            dictools.set_value_to_nested_dict(self.times, keys, time_resampled)
             
             if verbose:
                 print(
@@ -553,7 +553,7 @@ class Base:
                 highpass=highpass, pad=pad, normed=normed
             )
             # Update strains attribute.
-            dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
         self.whitened = True
         self.whiten_params = {
@@ -1112,6 +1112,7 @@ class BaseInjected(Base):
 
         detector : str
             GW detector name.
+            Not used, just for identification.
 
         noise_length : int
             Length of the background noise array to be generated for later use.
@@ -1341,7 +1342,7 @@ class BaseInjected(Base):
         &#34;&#34;&#34;
         strains_dict = dictools._replicate_structure_nested_dict(self.strains_clean)
         for indices in dictools._unroll_nested_dictionary_keys(strains_dict):
-            dictools._set_value_to_nested_dict(strains_dict, indices, {})
+            dictools.set_value_to_nested_dict(strains_dict, indices, {})
 
         return strains_dict
     
@@ -1567,7 +1568,7 @@ class BaseInjected(Base):
                 highpass=highpass, flength=flength
             )
             # Update strains attribute.
-            dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
         # Shrink time arrays accordingly.
         if self._track_times:
@@ -1583,7 +1584,7 @@ class BaseInjected(Base):
                 times_i = tat.shrink_time_array(times_i, unpad[snr0])
                 for snr in self.snr_list:
                     keys_all = keys + [snr]
-                    dictools._set_value_to_nested_dict(self.times, keys_all, times_i)
+                    dictools.set_value_to_nested_dict(self.times, keys_all, times_i)
         
         self.whitened = True
         
@@ -2711,18 +2712,19 @@ class CoReWaves(Base):
             self._update_train_test_subsets()
 
     def project(self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float):
-        &#34;&#34;&#34;Project strains into the ET detector at specified coordinates.
+        &#34;&#34;&#34;Project strains into the chosen detector at specified coordinates.
+
+        Project strains into the chosen detector at specified coordinates,
+        using Bilby.
 
         This collapses the polarization layer in &#39;strains&#39; and &#39;times&#39; to a
         single strain.
-        Only one arm of the detector can be chosen.
         The times are rebuilt taking as a reference point the merger (t = 0).
         
         Parameters
         ----------
         detector : str
             Name of the ET arm in Bilby for InterferometerList().
-            Possibilities are &#39;ET1&#39;, &#39;ET2&#39;, and &#39;ET3&#39;.
         
         ra, dec : float
             Sky position in equatorial coordinates.
@@ -2732,6 +2734,11 @@ class CoReWaves(Base):
         
         psi : float
             Polarization angle.
+
+        Caveats
+        -------
+        - The detector&#39;s name must exist in Bilby&#39;s InterferometerList().
+        - Only one arm can be chosen.
         
         &#34;&#34;&#34;
         project_pars = dict(ra=ra, dec=dec, geocent_time=geo_time, psi=psi)
@@ -2740,7 +2747,7 @@ class CoReWaves(Base):
             hc = self.strains[clas][id_][&#39;cross&#39;]
             
             # Drop the polarization layer.
-            strain = detectors.project_et(
+            strain = detectors.project(
                 hp, hc, parameters=project_pars, sf=self.sample_rate, 
                 nfft=2*self.sample_rate, detector=detector
             )
@@ -3330,7 +3337,7 @@ extra depth layer.</li>
             length = len(strain)
             t_end = (length - 1) / self.sample_rate
             time = np.linspace(0, t_end, length)
-            dictools._set_value_to_nested_dict(times, keys, time)
+            dictools.set_value_to_nested_dict(times, keys, time)
         
         return times
 
@@ -3510,12 +3517,12 @@ extra depth layer.</li>
             # Same shrinking limits for all possible strains below ID layer.
             start, end = limits_d[id]
             strain = strain[start:end]
-            dictools._set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
+            dictools.set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
 
             if self._track_times:
                 times = self.get_times(clas, id, *keys)
                 times = times[start:end]
-                dictools._set_value_to_nested_dict(self.times, [clas,id,*keys], times)
+                dictools.set_value_to_nested_dict(self.times, [clas,id,*keys], times)
 
         self.max_length = self._find_max_length()
 
@@ -3556,8 +3563,8 @@ extra depth layer.</li>
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
-            dictools._set_value_to_nested_dict(self.strains, keys, strain_resampled)
-            dictools._set_value_to_nested_dict(self.times, keys, time_resampled)
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_resampled)
+            dictools.set_value_to_nested_dict(self.times, keys, time_resampled)
             
             if verbose:
                 print(
@@ -3597,7 +3604,7 @@ extra depth layer.</li>
                 highpass=highpass, pad=pad, normed=normed
             )
             # Update strains attribute.
-            dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
         self.whitened = True
         self.whiten_params = {
@@ -4574,8 +4581,8 @@ generate the time arrays previous to the resampling.</p>
         strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
             strain, time, sample_rate, full_output=True
         )
-        dictools._set_value_to_nested_dict(self.strains, keys, strain_resampled)
-        dictools._set_value_to_nested_dict(self.times, keys, time_resampled)
+        dictools.set_value_to_nested_dict(self.strains, keys, strain_resampled)
+        dictools.set_value_to_nested_dict(self.times, keys, time_resampled)
         
         if verbose:
             print(
@@ -4642,12 +4649,12 @@ accordingly.</p>
         # Same shrinking limits for all possible strains below ID layer.
         start, end = limits_d[id]
         strain = strain[start:end]
-        dictools._set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
+        dictools.set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
 
         if self._track_times:
             times = self.get_times(clas, id, *keys)
             times = times[start:end]
-            dictools._set_value_to_nested_dict(self.times, [clas,id,*keys], times)
+            dictools.set_value_to_nested_dict(self.times, [clas,id,*keys], times)
 
     self.max_length = self._find_max_length()</code></pre>
 </details>
@@ -4781,7 +4788,7 @@ their initial size. This is useful to remove the vignetting effect.</p>
             highpass=highpass, pad=pad, normed=normed
         )
         # Update strains attribute.
-        dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
+        dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
     
     self.whitened = True
     self.whiten_params = {
@@ -5001,7 +5008,8 @@ psd[1] = psd_samples</code>.</p>
 <p>NOTE: It is also used to compute the 'asd' attribute (ASD).</p>
 </dd>
 <dt><strong><code>detector</code></strong> :&ensp;<code>str</code></dt>
-<dd>GW detector name.</dd>
+<dd>GW detector name.
+Not used, just for identification.</dd>
 <dt><strong><code>noise_length</code></strong> :&ensp;<code>int</code></dt>
 <dd>Length of the background noise array to be generated for later use.
 It should be at least longer than the longest signal expected to be
@@ -5268,6 +5276,7 @@ Numpy's default RandomGenerator.</dd>
 
         detector : str
             GW detector name.
+            Not used, just for identification.
 
         noise_length : int
             Length of the background noise array to be generated for later use.
@@ -5497,7 +5506,7 @@ Numpy's default RandomGenerator.</dd>
         &#34;&#34;&#34;
         strains_dict = dictools._replicate_structure_nested_dict(self.strains_clean)
         for indices in dictools._unroll_nested_dictionary_keys(strains_dict):
-            dictools._set_value_to_nested_dict(strains_dict, indices, {})
+            dictools.set_value_to_nested_dict(strains_dict, indices, {})
 
         return strains_dict
     
@@ -5723,7 +5732,7 @@ Numpy's default RandomGenerator.</dd>
                 highpass=highpass, flength=flength
             )
             # Update strains attribute.
-            dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
         # Shrink time arrays accordingly.
         if self._track_times:
@@ -5739,7 +5748,7 @@ Numpy's default RandomGenerator.</dd>
                 times_i = tat.shrink_time_array(times_i, unpad[snr0])
                 for snr in self.snr_list:
                     keys_all = keys + [snr]
-                    dictools._set_value_to_nested_dict(self.times, keys_all, times_i)
+                    dictools.set_value_to_nested_dict(self.times, keys_all, times_i)
         
         self.whitened = True
         
@@ -7044,7 +7053,7 @@ performing the whitening.</p></div>
             highpass=highpass, flength=flength
         )
         # Update strains attribute.
-        dictools._set_value_to_nested_dict(self.strains, keys, strain_w)
+        dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
     
     # Shrink time arrays accordingly.
     if self._track_times:
@@ -7060,7 +7069,7 @@ performing the whitening.</p></div>
             times_i = tat.shrink_time_array(times_i, unpad[snr0])
             for snr in self.snr_list:
                 keys_all = keys + [snr]
-                dictools._set_value_to_nested_dict(self.times, keys_all, times_i)
+                dictools.set_value_to_nested_dict(self.times, keys_all, times_i)
     
     self.whitened = True
     
@@ -7496,18 +7505,19 @@ cropping range as value. The range is given as a tuple of the form
             self._update_train_test_subsets()
 
     def project(self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float):
-        &#34;&#34;&#34;Project strains into the ET detector at specified coordinates.
+        &#34;&#34;&#34;Project strains into the chosen detector at specified coordinates.
+
+        Project strains into the chosen detector at specified coordinates,
+        using Bilby.
 
         This collapses the polarization layer in &#39;strains&#39; and &#39;times&#39; to a
         single strain.
-        Only one arm of the detector can be chosen.
         The times are rebuilt taking as a reference point the merger (t = 0).
         
         Parameters
         ----------
         detector : str
             Name of the ET arm in Bilby for InterferometerList().
-            Possibilities are &#39;ET1&#39;, &#39;ET2&#39;, and &#39;ET3&#39;.
         
         ra, dec : float
             Sky position in equatorial coordinates.
@@ -7517,6 +7527,11 @@ cropping range as value. The range is given as a tuple of the form
         
         psi : float
             Polarization angle.
+
+        Caveats
+        -------
+        - The detector&#39;s name must exist in Bilby&#39;s InterferometerList().
+        - Only one arm can be chosen.
         
         &#34;&#34;&#34;
         project_pars = dict(ra=ra, dec=dec, geocent_time=geo_time, psi=psi)
@@ -7525,7 +7540,7 @@ cropping range as value. The range is given as a tuple of the form
             hc = self.strains[clas][id_][&#39;cross&#39;]
             
             # Drop the polarization layer.
-            strain = detectors.project_et(
+            strain = detectors.project(
                 hp, hc, parameters=project_pars, sf=self.sample_rate, 
                 nfft=2*self.sample_rate, detector=detector
             )
@@ -7732,40 +7747,46 @@ of the system and the source distance.</p>
 <span>def <span class="ident">project</span></span>(<span>self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Project strains into the ET detector at specified coordinates.</p>
+<div class="desc"><p>Project strains into the chosen detector at specified coordinates.</p>
+<p>Project strains into the chosen detector at specified coordinates,
+using Bilby.</p>
 <p>This collapses the polarization layer in 'strains' and 'times' to a
 single strain.
-Only one arm of the detector can be chosen.
 The times are rebuilt taking as a reference point the merger (t = 0).</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>detector</code></strong> :&ensp;<code>str</code></dt>
-<dd>Name of the ET arm in Bilby for InterferometerList().
-Possibilities are 'ET1', 'ET2', and 'ET3'.</dd>
+<dd>Name of the ET arm in Bilby for InterferometerList().</dd>
 <dt><strong><code>ra</code></strong>, <strong><code>dec</code></strong> :&ensp;<code>float</code></dt>
 <dd>Sky position in equatorial coordinates.</dd>
 <dt><strong><code>geo_time</code></strong> :&ensp;<code>int | float</code></dt>
 <dd>Time of injection in GPS.</dd>
 <dt><strong><code>psi</code></strong> :&ensp;<code>float</code></dt>
 <dd>Polarization angle.</dd>
-</dl></div>
+</dl>
+<h2 id="caveats">Caveats</h2>
+<ul>
+<li>The detector's name must exist in Bilby's InterferometerList().</li>
+<li>Only one arm can be chosen.</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def project(self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float):
-    &#34;&#34;&#34;Project strains into the ET detector at specified coordinates.
+    &#34;&#34;&#34;Project strains into the chosen detector at specified coordinates.
+
+    Project strains into the chosen detector at specified coordinates,
+    using Bilby.
 
     This collapses the polarization layer in &#39;strains&#39; and &#39;times&#39; to a
     single strain.
-    Only one arm of the detector can be chosen.
     The times are rebuilt taking as a reference point the merger (t = 0).
     
     Parameters
     ----------
     detector : str
         Name of the ET arm in Bilby for InterferometerList().
-        Possibilities are &#39;ET1&#39;, &#39;ET2&#39;, and &#39;ET3&#39;.
     
     ra, dec : float
         Sky position in equatorial coordinates.
@@ -7775,6 +7796,11 @@ Possibilities are 'ET1', 'ET2', and 'ET3'.</dd>
     
     psi : float
         Polarization angle.
+
+    Caveats
+    -------
+    - The detector&#39;s name must exist in Bilby&#39;s InterferometerList().
+    - Only one arm can be chosen.
     
     &#34;&#34;&#34;
     project_pars = dict(ra=ra, dec=dec, geocent_time=geo_time, psi=psi)
@@ -7783,7 +7809,7 @@ Possibilities are 'ET1', 'ET2', and 'ET3'.</dd>
         hc = self.strains[clas][id_][&#39;cross&#39;]
         
         # Drop the polarization layer.
-        strain = detectors.project_et(
+        strain = detectors.project(
             hp, hc, parameters=project_pars, sf=self.sample_rate, 
             nfft=2*self.sample_rate, detector=detector
         )
@@ -8216,7 +8242,8 @@ psd[1] = psd_samples</code>.</p>
 <p>NOTE: It is also used to compute the 'asd' attribute (ASD).</p>
 </dd>
 <dt><strong><code>detector</code></strong> :&ensp;<code>str</code></dt>
-<dd>GW detector name.</dd>
+<dd>GW detector name.
+Not used, just for identification.</dd>
 <dt><strong><code>noise_length</code></strong> :&ensp;<code>int</code></dt>
 <dd>Length of the background noise array to be generated for later use.
 It should be at least longer than the longest signal expected to be

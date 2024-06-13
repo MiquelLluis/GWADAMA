@@ -33,12 +33,16 @@ from clawdia.estimators import find_merger
 
 
 
-def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
-               sf: int, nfft: int, detector=&#39;all&#39;) -&gt; np.ndarray:
-    &#34;&#34;&#34;Project strain modes in ET.
+def project(h_plus: np.ndarray, h_cros: np.ndarray,
+            *,
+            parameters: dict,
+            sf: int,
+            nfft: int,
+            detector: str) -&gt; np.ndarray:
+    &#34;&#34;&#34;Project strain modes in a GW detector.
     
-    Project the input GW modes in the sky as detected by the 3rd generation
-    Einstein Telescope (ET) detector in the proposed configuration.
+    Project the input GW modes in the sky as detected by the specified
+    detector using Bilby.
     
     PARAMETERS
     ----------
@@ -65,13 +69,13 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
     nfft : int
         Length of the FFT window.
     
-    detector : str, optional
-        If &#39;all&#39;, return the projection in all three detectors of ET.
-        Otherwise, specify a single detector of ET: ET1, ET2, ET3.
+    detector : str
+        GW detector into which the modes will be projected.
+        Must exist in Bilby&#39;s InterferometerList().
     
     RETURNS
     -------
-    strains_et: NDArray
+    strains_projected: NDArray
         Strain(s) projected. If only one detector specified, it is a 1d-array.
         Otherwise, a 2d-array with shape (3, strain).
 
@@ -84,10 +88,7 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
       2% of the beginning and the end of the signal will be damped.
         
     &#34;&#34;&#34;
-    et_list = bilby.gw.detector.InterferometerList([&#39;ET&#39;])
-    if detector != &#39;all&#39;:
-        i = {&#39;ET1&#39;: 0, &#39;ET2&#39;: 1, &#39;ET3&#39;: 2}[detector]
-        et_list = et_list[i]
+    ifo = bilby.gw.detector.InterferometerList([detector])[0]
 
     l_input = len(h_plus)
     assert l_input &lt;= nfft
@@ -108,39 +109,22 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
         &#39;cross&#39;: np.fft.rfft(h_cros_padded)
     }
 
-    # Project the GW in ET.
+    # Project the GW
+    strains_projected = ifo.get_detector_response(
+        waveform_polarizations,
+        parameters,
+        frequencies=frequencies
+    )
+    strains_projected = np.fft.irfft(strains_projected)
 
-    if detector == &#39;all&#39;:
-        strains_et = np.empty((3, l_input), dtype=float)
-        for i, eti in enumerate(et_list):
-            strain_eti = eti.get_detector_response(
-                waveform_polarizations,
-                parameters,
-                frequencies=frequencies
-            )
-            strain_eti = np.fft.irfft(strain_eti)
-
-            # Get back the original length and position of the GW.
-            i_merger_et = find_merger(strain_eti)
-            i0 = i_merger_et - i_merger_pad + pad_l
-            i1 = i0 + l_input
-            strains_et[i] = strain_eti[i0:i1]
-    else:
-        strains_et = et_list.get_detector_response(
-            waveform_polarizations,
-            parameters,
-            frequencies=frequencies
-        )
-        strains_et = np.fft.irfft(strains_et)
-
-        # Get back the original length and position of the GW.
-        i_merger_et = find_merger(strains_et)
-        i0 = i_merger_et - i_merger_pad + pad_l
-        i1 = i0 + l_input
-        strains_et = strains_et[i0:i1]
+    # Get back the original length and position of the GW.
+    i_merger = find_merger(strains_projected)
+    i0 = i_merger - i_merger_pad + pad_l
+    i1 = i0 + l_input
+    strains_projected = strains_projected[i0:i1]
 
 
-    return strains_et</code></pre>
+    return strains_projected</code></pre>
 </details>
 </section>
 <section>
@@ -150,13 +134,13 @@ def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="gwadama.detectors.project_et"><code class="name flex">
-<span>def <span class="ident">project_et</span></span>(<span>h_plus: numpy.ndarray, h_cros: numpy.ndarray, *, parameters: dict, sf: int, nfft: int, detector='all') -> numpy.ndarray</span>
+<dt id="gwadama.detectors.project"><code class="name flex">
+<span>def <span class="ident">project</span></span>(<span>h_plus: numpy.ndarray, h_cros: numpy.ndarray, *, parameters: dict, sf: int, nfft: int, detector: str) -> numpy.ndarray</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Project strain modes in ET.</p>
-<p>Project the input GW modes in the sky as detected by the 3rd generation
-Einstein Telescope (ET) detector in the proposed configuration.</p>
+<div class="desc"><p>Project strain modes in a GW detector.</p>
+<p>Project the input GW modes in the sky as detected by the specified
+detector using Bilby.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>h_plus</code></strong>, <strong><code>h_cros</code></strong> :&ensp;<code>NDArray</code></dt>
@@ -177,13 +161,13 @@ psi: 0
 <dd>Sample rate of the waveform.</dd>
 <dt><strong><code>nfft</code></strong> :&ensp;<code>int</code></dt>
 <dd>Length of the FFT window.</dd>
-<dt><strong><code>detector</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>If 'all', return the projection in all three detectors of ET.
-Otherwise, specify a single detector of ET: ET1, ET2, ET3.</dd>
+<dt><strong><code>detector</code></strong> :&ensp;<code>str</code></dt>
+<dd>GW detector into which the modes will be projected.
+Must exist in Bilby's InterferometerList().</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>strains_et</code></strong> :&ensp;<code>NDArray</code></dt>
+<dt><strong><code>strains_projected</code></strong> :&ensp;<code>NDArray</code></dt>
 <dd>Strain(s) projected. If only one detector specified, it is a 1d-array.
 Otherwise, a 2d-array with shape (3, strain).</dd>
 </dl>
@@ -199,12 +183,16 @@ initial length of the strains has to be taken into account since around
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def project_et(h_plus: np.ndarray, h_cros: np.ndarray, *, parameters: dict,
-               sf: int, nfft: int, detector=&#39;all&#39;) -&gt; np.ndarray:
-    &#34;&#34;&#34;Project strain modes in ET.
+<pre><code class="python">def project(h_plus: np.ndarray, h_cros: np.ndarray,
+            *,
+            parameters: dict,
+            sf: int,
+            nfft: int,
+            detector: str) -&gt; np.ndarray:
+    &#34;&#34;&#34;Project strain modes in a GW detector.
     
-    Project the input GW modes in the sky as detected by the 3rd generation
-    Einstein Telescope (ET) detector in the proposed configuration.
+    Project the input GW modes in the sky as detected by the specified
+    detector using Bilby.
     
     PARAMETERS
     ----------
@@ -231,13 +219,13 @@ initial length of the strains has to be taken into account since around
     nfft : int
         Length of the FFT window.
     
-    detector : str, optional
-        If &#39;all&#39;, return the projection in all three detectors of ET.
-        Otherwise, specify a single detector of ET: ET1, ET2, ET3.
+    detector : str
+        GW detector into which the modes will be projected.
+        Must exist in Bilby&#39;s InterferometerList().
     
     RETURNS
     -------
-    strains_et: NDArray
+    strains_projected: NDArray
         Strain(s) projected. If only one detector specified, it is a 1d-array.
         Otherwise, a 2d-array with shape (3, strain).
 
@@ -250,10 +238,7 @@ initial length of the strains has to be taken into account since around
       2% of the beginning and the end of the signal will be damped.
         
     &#34;&#34;&#34;
-    et_list = bilby.gw.detector.InterferometerList([&#39;ET&#39;])
-    if detector != &#39;all&#39;:
-        i = {&#39;ET1&#39;: 0, &#39;ET2&#39;: 1, &#39;ET3&#39;: 2}[detector]
-        et_list = et_list[i]
+    ifo = bilby.gw.detector.InterferometerList([detector])[0]
 
     l_input = len(h_plus)
     assert l_input &lt;= nfft
@@ -274,39 +259,22 @@ initial length of the strains has to be taken into account since around
         &#39;cross&#39;: np.fft.rfft(h_cros_padded)
     }
 
-    # Project the GW in ET.
+    # Project the GW
+    strains_projected = ifo.get_detector_response(
+        waveform_polarizations,
+        parameters,
+        frequencies=frequencies
+    )
+    strains_projected = np.fft.irfft(strains_projected)
 
-    if detector == &#39;all&#39;:
-        strains_et = np.empty((3, l_input), dtype=float)
-        for i, eti in enumerate(et_list):
-            strain_eti = eti.get_detector_response(
-                waveform_polarizations,
-                parameters,
-                frequencies=frequencies
-            )
-            strain_eti = np.fft.irfft(strain_eti)
-
-            # Get back the original length and position of the GW.
-            i_merger_et = find_merger(strain_eti)
-            i0 = i_merger_et - i_merger_pad + pad_l
-            i1 = i0 + l_input
-            strains_et[i] = strain_eti[i0:i1]
-    else:
-        strains_et = et_list.get_detector_response(
-            waveform_polarizations,
-            parameters,
-            frequencies=frequencies
-        )
-        strains_et = np.fft.irfft(strains_et)
-
-        # Get back the original length and position of the GW.
-        i_merger_et = find_merger(strains_et)
-        i0 = i_merger_et - i_merger_pad + pad_l
-        i1 = i0 + l_input
-        strains_et = strains_et[i0:i1]
+    # Get back the original length and position of the GW.
+    i_merger = find_merger(strains_projected)
+    i0 = i_merger - i_merger_pad + pad_l
+    i1 = i0 + l_input
+    strains_projected = strains_projected[i0:i1]
 
 
-    return strains_et</code></pre>
+    return strains_projected</code></pre>
 </details>
 </dd>
 </dl>
@@ -327,7 +295,7 @@ initial length of the strains has to be taken into account since around
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="gwadama.detectors.project_et" href="#gwadama.detectors.project_et">project_et</a></code></li>
+<li><code><a title="gwadama.detectors.project" href="#gwadama.detectors.project">project</a></code></li>
 </ul>
 </li>
 </ul>
