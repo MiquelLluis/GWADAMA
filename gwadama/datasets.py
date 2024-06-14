@@ -1411,7 +1411,7 @@ class BaseInjected(Base):
             # Strain injections
             for snr_ in snr_list:
                 if randomize_noise:
-                    pos0 = rng.integers(0, self.noise_length - len(strain_clean_padded))
+                    pos0 = rng.integers(0, len(self.noise) - len(strain_clean_padded))
                 else:
                     pos0 = 0
 
