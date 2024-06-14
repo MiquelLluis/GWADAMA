@@ -875,20 +875,6 @@ class BaseInjected(Base):
     be added between the 'Id' and 'SNR' layer, since the SNR is the final
     realization of any variations made of a given (Class, Id) signal.
 
-    This class does not store time arrays; it is assumed all are sampled at
-    a constant rate, and their time reference are expected to be tracked by
-    the parent Class(Base) instance.
-
-    TODO:
-    
-    - Generalize to any number of extra nested levels. For example the
-      injection method rn only works with 3 levels. I need an extra step to
-      iterate over any number of intermediate levels between ID and SNR. This
-      will be necessary at the very least for working with polarizations.
-    
-    - Track the injection GPS times? To be able to reconstruct the associated
-      times of each GW.
-
 
     Attributes
     ----------
