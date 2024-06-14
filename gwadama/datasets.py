@@ -1305,7 +1305,11 @@ class BaseInjected(Base):
         """
         return dictools._get_value_from_nested_dict(self.times, indices)
     
-    def gen_injections(self, snr: int|float|list, pad: int = 0):
+    def gen_injections(self,
+                       snr: int|float|list,
+                       pad: int = 0,
+                       randomize_noise: bool = False,
+                       random_seed: int = None):
         """Inject all strains in simulated noise with the given SNR values.
 
         
@@ -1329,6 +1333,22 @@ class BaseInjected(Base):
         pad : int
             Number of zeros to pad the signal at both ends before the
             injection.
+
+        randomize_noise : bool
+            If True, the noise segment is randomly chosen before the injection.
+            This can be used to avoid having the same noise injected for all
+            clean strains.
+            False by default.
+            
+            NOTE: To avoid the possibility of repeating the same noise section
+            in different injections, the noise realization must be reasonably
+            large, e.g:
+                
+                `noise_length > n_clean_strains * self.max_length * len(snr)`
+        
+        random_seed : int, optional
+            Random seed for the noise realization.
+            Only used when randomize_noise is True.
         
         Notes
         -----
@@ -1336,7 +1356,7 @@ class BaseInjected(Base):
           pad the signal in order to avoid the window vignetting produced by
           the whitening itself. This pad will be cropped afterwards.
         
-        - New injections are stored at the 'strains' atrribute, with the pad
+        - New injections are stored in the 'strains' atrribute, with the pad
           associated to all the injections performed at once. Even when
           whitening is also performed right after the injections.
         
@@ -1369,6 +1389,9 @@ class BaseInjected(Base):
             if self._track_times:
                 # Redo the dictionary structure to include the SNR layer.
                 times_new = self._init_strains_dict()
+
+        if randomize_noise:
+            rng = np.random.default_rng(random_seed)
         
         for clas, id_ in dictools._unroll_nested_dictionary_keys(self.strains_clean):
             gw_clean = self.strains_clean[clas][id_]
@@ -1387,10 +1410,15 @@ class BaseInjected(Base):
             
             # Strain injections
             for snr_ in snr_list:
+                if randomize_noise:
+                    pos0 = rng.integers(0, self.noise_length - len(strain_clean_padded))
+                else:
+                    pos0 = 0
+
                 # 'pad' is added to 'snr_offset' to compensate for the padding
                 # which has not been updated in the 'metadata' yet.
                 injected = self._inject(
-                    strain_clean_padded, snr_, id=id_, snr_offset=pad
+                    strain_clean_padded, snr_, id=id_, snr_offset=pad, pos=pos0
                 )
                 if self.whitened:
                     injected = fat.whiten(
@@ -1425,7 +1453,11 @@ class BaseInjected(Base):
         if self.Xtrain is not None:
             self._update_train_test_subsets()
     
-    def _inject(self, strain: np.ndarray, snr: int|float, **_) -> np.ndarray:
+    def _inject(self,
+                strain: np.ndarray,
+                snr: int | float,
+                pos: int = 0,
+                **_) -> np.ndarray:
         """Inject 'strain' at 'snr' into noise using the 'self.noise' instance.
 
         NOTE: This is writen as an independent method to allow for other
@@ -1439,6 +1471,10 @@ class BaseInjected(Base):
         
         snr : int | float
             Signal to noise ratio.
+
+        pos : int, optional
+            Index position in the noise array where to inject the signal.
+            0 by default.
         
         Returns
         -------
@@ -1446,7 +1482,7 @@ class BaseInjected(Base):
             Injected signal.
         
         """
-        injected, _ = self.noise.inject(strain, snr=snr)
+        injected, _ = self.noise.inject(strain, snr=snr, pos=pos)
 
         return injected
     
@@ -2901,8 +2937,58 @@ class InjectedCoReWaves(BaseInjected):
             times = next(iter(self.times[clas][id_].values()))
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
-    def gen_injections(self, snr: int | float | list, pad: int = 0):
-        super().gen_injections(snr, pad)
+    def gen_injections(self,
+                       snr: int|float|list,
+                       pad: int = 0,
+                       randomize_noise: bool = False,
+                       random_seed: int = None):
+        """Inject all strains in simulated noise with the given SNR values.
+
+        See 'BaseInjected.gen_injections' for more details.
+        
+        Parameters
+        ----------
+        snr : int | float | list
+        
+        pad : int
+            Number of zeros to pad the signal at both ends before the
+            injection.
+
+        randomize_noise : bool
+            If True, the noise segment is randomly chosen before the injection.
+            This can be used to avoid having the same noise injected for all
+            clean strains.
+            False by default.
+            
+            NOTE: To avoid the possibility of repeating the same noise section
+            in different injections, the noise realization must be reasonably
+            large, e.g:
+                
+                `noise_length > n_clean_strains * self.max_length * len(snr)`
+        
+        random_seed : int, optional
+            Random seed for the noise realization.
+            Only used when randomize_noise is True.
+        
+        Notes
+        -----
+        - If whitening is intended to be applied afterwards it is useful to
+          pad the signal in order to avoid the window vignetting produced by
+          the whitening itself. This pad will be cropped afterwards.
+        
+        - New injections are stored in the 'strains' atrribute, with the pad
+          associated to all the injections performed at once. Even when
+          whitening is also performed right after the injections.
+        
+        Raises
+        ------
+        ValueError
+            Once injections have been performed at a certain SNR value, there
+            cannot be injected again at the same value. Trying it will trigger
+            this exception.
+        
+        """
+        super().gen_injections(snr, pad, randomize_noise, random_seed)
 
         self._update_merger_positions()
     
@@ -2911,7 +2997,8 @@ class InjectedCoReWaves(BaseInjected):
                 snr: int | float,
                 *,
                 id: str,
-                snr_offset: int) -> np.ndarray:
+                snr_offset: int,
+                pos: int = 0) -> np.ndarray:
         """Inject a strain at 'snr' into noise using 'self.noise' instance.
 
         Parameters
@@ -2928,6 +3015,10 @@ class InjectedCoReWaves(BaseInjected):
         snr_offset : int
             Offset (w.r.t. the merger) added to the start of the range for
             computing the SNR.
+
+        pos : int, optional
+            Index position in the noise array where to inject the signal.
+            0 by default.
         
         Returns
         -------
@@ -2936,8 +3027,8 @@ class InjectedCoReWaves(BaseInjected):
         
         NOTES
         -----
-        - The SNR is computed over the Ring-Down only, starting from the
-          position of the merger.
+        - The SNR is computed over the Post-Merger only.
+
         - The metadata is expected to reflect the original state of the strains
           previous to any padding performed right before calling this function,
           which may be done to avoid the vignette effect.
@@ -2949,7 +3040,7 @@ class InjectedCoReWaves(BaseInjected):
 
         i0 = merger_pos + snr_offset
         i1 = (original_length - merger_pos) + snr_offset
-        injected, scale = self.noise.inject(strain, snr=snr, snr_lim=(i0, i1))
+        injected, scale = self.noise.inject(strain, snr=snr, snr_lim=(i0, i1), pos=pos)
 
         # Compute the equivalent SNR over the entire waveform.
         self.whole_snr[id][snr] = self.noise.snr(strain*scale)
@@ -2957,6 +3048,17 @@ class InjectedCoReWaves(BaseInjected):
         return injected
     
     def whiten(self):
+        """Whiten injected strains.
+        
+        Calling this method performs the whitening of all injected strains.
+        Strains are later cut to their original size before adding the pad,
+        to remove the vigneting.
+        
+        NOTE: This is an irreversible action; if the original injections need
+        to be preserved it is advised to make a copy of the instance before
+        performing the whitening.
+        
+        """
         super().whiten()
 
         self._update_merger_positions()
