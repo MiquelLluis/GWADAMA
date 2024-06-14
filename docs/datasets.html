@@ -914,20 +914,6 @@ class BaseInjected(Base):
     be added between the &#39;Id&#39; and &#39;SNR&#39; layer, since the SNR is the final
     realization of any variations made of a given (Class, Id) signal.
 
-    This class does not store time arrays; it is assumed all are sampled at
-    a constant rate, and their time reference are expected to be tracked by
-    the parent Class(Base) instance.
-
-    TODO:
-    
-    - Generalize to any number of extra nested levels. For example the
-      injection method rn only works with 3 levels. I need an extra step to
-      iterate over any number of intermediate levels between ID and SNR. This
-      will be necessary at the very least for working with polarizations.
-    
-    - Track the injection GPS times? To be able to reconstruct the associated
-      times of each GW.
-
 
     Attributes
     ----------
@@ -4831,22 +4817,6 @@ initialized from an instance of any Class(Base) instance (clean dataset).</p>
 same original strains from the upper identifier level. However they should
 be added between the 'Id' and 'SNR' layer, since the SNR is the final
 realization of any variations made of a given (Class, Id) signal.</p>
-<p>This class does not store time arrays; it is assumed all are sampled at
-a constant rate, and their time reference are expected to be tracked by
-the parent Class(Base) instance.</p>
-<p>TODO:</p>
-<ul>
-<li>
-<p>Generalize to any number of extra nested levels. For example the
-injection method rn only works with 3 levels. I need an extra step to
-iterate over any number of intermediate levels between ID and SNR. This
-will be necessary at the very least for working with polarizations.</p>
-</li>
-<li>
-<p>Track the injection GPS times? To be able to reconstruct the associated
-times of each GW.</p>
-</li>
-</ul>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>classes</code></strong> :&ensp;<code>list[str]</code></dt>
@@ -5077,20 +5047,6 @@ Numpy's default RandomGenerator.</dd>
     same original strains from the upper identifier level. However they should
     be added between the &#39;Id&#39; and &#39;SNR&#39; layer, since the SNR is the final
     realization of any variations made of a given (Class, Id) signal.
-
-    This class does not store time arrays; it is assumed all are sampled at
-    a constant rate, and their time reference are expected to be tracked by
-    the parent Class(Base) instance.
-
-    TODO:
-    
-    - Generalize to any number of extra nested levels. For example the
-      injection method rn only works with 3 levels. I need an extra step to
-      iterate over any number of intermediate levels between ID and SNR. This
-      will be necessary at the very least for working with polarizations.
-    
-    - Track the injection GPS times? To be able to reconstruct the associated
-      times of each GW.
 
 
     Attributes
