@@ -1445,7 +1445,7 @@ class BaseInjected(Base):
                     self.strains[clas][id_][snr_] = injected
                 else:
                     dictools.set_value_to_nested_dict(
-                        self.strains, injected, [clas, id_, snr_, rep],
+                        self.strains, [clas, id_, snr_, rep], injected,
                         add_missing_keys=True
                     )
             
@@ -1461,7 +1461,7 @@ class BaseInjected(Base):
                         times_new[clas][id_][snr_] = times_i
                     else:
                         dictools.set_value_to_nested_dict(
-                            times_new, times_i, [clas, id_, snr_, rep],
+                            times_new, [clas, id_, snr_, rep], times_i,
                             add_missing_keys=True
                         )
         
