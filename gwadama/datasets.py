@@ -1478,6 +1478,9 @@ class BaseInjected(Base):
             self.pad[snr_] = pad
 
         self.injections_per_snr = injections_per_snr
+        if injections_per_snr > 1:
+            # Make sure the depth attribute is updated.
+            self._dict_depth = dictools.get_depth(self.strains)
         
         # Side-effect attributes updated.
         self.max_length = self._find_max_length()
