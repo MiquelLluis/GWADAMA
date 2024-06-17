@@ -2977,7 +2977,7 @@ class InjectedCoReWaves(BaseInjected):
         """
         for clas, id_ in self.keys(max_depth=2):
             # Same time array for all SNR variations.
-            times = next(iter(self.times[clas][id_].values()))
+            times = dictools.get_next_item(self.times[clas][id_])
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
     def gen_injections(self,
