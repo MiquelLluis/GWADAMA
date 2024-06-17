@@ -1403,8 +1403,9 @@ class BaseInjected(Base):
             # NOTE: The noise realization is already generated without
             # frequency components lower than the cutoff (they are set to
             # 0 during the random sampling).
-            strain_clean_padded = self.noise.highpass_filter(
-                strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order
+            strain_clean_padded = fat.highpass_filter(
+                strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order,
+                sample_rate=self.sample_rate
             )
 
             

@@ -8,6 +8,8 @@ Frequency analysis toolkit.
 from gwpy.frequencyseries import FrequencySeries
 from gwpy.timeseries import TimeSeries
 import numpy as np
+import scipy as sp
+
 
 
 def whiten(strain: np.ndarray,
@@ -98,3 +100,56 @@ def whiten(strain: np.ndarray,
         strain_w /= np.max(np.abs(strain_w))
 
     return strain_w
+
+
+
+# def highpass_filter(signal: np.ndarray,
+#                     f_cut: int | float,
+#                     f_width: int | float,
+#                     sample_rate: int) -> np.ndarray:
+#     """Apply a forward-backward digital highpass filter.
+
+#     Apply a forward-backward digital highpass filter to 'signal' CENTERED
+#     at frequency 'f_cut' with a transition band of 'f_width'.
+
+#     It enforces the (single) filter to allow only loss of 2 dB at passband
+#     (`f_cut + f_width/2` Hz) and a minimum filter of 20 dB at stopband
+#     (`f_cut - f_width/2` Hz).
+    
+#     REFERENCES
+#     ----------
+#     Order selection: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.buttord.html
+#     Design: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
+#     Filter: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
+
+#     """
+#     f_pass = f_cut + f_width/2
+#     f_stop = f_cut - f_width/2
+#     N, wn = sp.signal.buttord(wp=f_pass, ws=f_stop, gpass=2, gstop=16, fs=self.sample_rate)
+#     sos = sp.signal.butter(N, wn, btype='highpass', fs=sample_rate, output='sos')
+#     filtered = sp.signal.sosfiltfilt(sos, signal)
+
+#     return filtered
+
+
+
+def highpass_filter(signal: np.ndarray,
+                    *,
+                    f_cut: int | float,
+                    f_order: int | float,
+                    sample_rate: int) -> np.ndarray:
+    """Apply a forward-backward digital highpass filter.
+
+    Apply a forward-backward digital highpass filter to 'signal'
+    at frequency 'f_cut' with an order of 'f_order'.
+    
+    REFERENCES
+    ----------
+    Design: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
+    Filter: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
+
+    """
+    sos = sp.signal.butter(f_order, f_cut, btype='highpass', fs=sample_rate, output='sos')
+    filtered = sp.signal.sosfiltfilt(sos, signal)
+
+    return filtered
