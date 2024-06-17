@@ -1349,6 +1349,12 @@ class BaseInjected(Base):
         random_seed : int, optional
             Random seed for the noise realization.
             Only used when randomize_noise is True.
+
+        injections_per_snr : int
+            Number of injections per SNR value. Defaults to 1.
+
+            This is useful to minimize the statistical impact of the noise
+            when performing injections at a sensitive (low) SNR.
         
         Notes
         -----
@@ -1599,17 +1605,17 @@ class BaseInjected(Base):
             determines the length.
 
         classes : str | list[str]
-            Classes which to include in the stack.
+            Whitelist of classes to include in the stack.
             All classes are included by default.
 
         snr : int | list[int] | str
-            SNR injections which to include in the stack. If more than one are
-            selected, they are stacked zipped as follows:
+            Whitelist of SNR injections to include in the stack. If more than
+            one are selected, they are stacked zipped as follows:
             
             ```
             eos0 id0 snr0
             eos0 id0 snr1
-                 ...
+                ...
             ```
             
             All injections are included by default.
@@ -1660,17 +1666,17 @@ class BaseInjected(Base):
             determines the length.
 
         classes : str | list[str]
-            Classes which to include in the stack.
+            Whitelist of classes to include in the stack.
             All classes are included by default.
 
         snr : int | list[int] | str
-            SNR injections which to include in the stack. If more than one are
-            selected, they are stacked zipped as follows:
+            Whitelist of SNR injections to include in the stack. If more than
+            one are selected, they are stacked zipped as follows:
             
             ```
             eos0 id0 snr0
             eos0 id0 snr1
-                 ...
+                ...
             ```
             
             All injections are included by default.
@@ -1705,7 +1711,7 @@ class BaseInjected(Base):
                       classes: str | list = 'all',
                       snr: int | list | str = 'all',
                       with_metadata: bool = False):
-        """Stack a subset of strains into a zero-padded 2d-array.
+        """Stack 'strains' into a zero-padded 2d-array.
 
         This is a helper function for 'get_xtrain_array' and 'get_xtest_array'.
 
@@ -1720,12 +1726,12 @@ class BaseInjected(Base):
             determines the length.
 
         classes : str | list[str]
-            The classes to include in the stack.
+            Whitelist of classes to include in the stack.
             All classes are included by default.
 
         snr : int | list[int] | str
-            The SNR injections to include in the stack. If more than one are
-            selected, they are stacked zipped as follows:
+            Whitelist of SNR injections to include in the stack. If more than
+            one are selected, they are stacked zipped as follows:
             
             ```
             eos0 id0 snr0
@@ -1816,11 +1822,11 @@ class BaseInjected(Base):
         Parameters
         ----------
         classes : str | list[str] | 'all'
-            The classes to include in the labels.
+            Whitelist of classes to include in the labels.
             All classes are included by default.
         
         snr : int | list[int] | str
-            The SNR injections to include in the labels.
+            Whitelist of SNR injections to include in the labels.
             All injections are included by default.
 
         with_id : bool
@@ -1855,11 +1861,11 @@ class BaseInjected(Base):
         Parameters
         ----------
         classes : str | list[str] | 'all'
-            The classes to include in the labels.
+            Whitelist of classes to include in the labels.
             All classes are included by default.
         
         snr : int | list[int] | str
-            The SNR injections to include in the labels.
+            Whitelist of SNR injections to include in the labels.
             All injections are included by default.
 
         with_id : bool
@@ -1888,7 +1894,7 @@ class BaseInjected(Base):
         )
     
     def _filter_labels(self, labels, labels_id, classes, snr, with_id=False, with_index=False):
-        """Filter labels based on 'classes' and 'snr'.
+        """Filter 'labels' based on 'classes' and 'snr'.
 
         This is a helper function for 'get_ytrain_array' and 'get_ytest_array'.
         
@@ -1901,11 +1907,11 @@ class BaseInjected(Base):
             IDs associated to the labels.
         
         classes : str | list[str] | 'all'
-            The classes to include in the labels.
+            Whitelist of classes to include in the labels.
             All classes are included by default.
         
         snr : int | list[int] | str
-            The SNR injections to include in the labels.
+            Whitelist of SNR injections to include in the labels.
             All injections are included by default.
 
         with_id : bool
