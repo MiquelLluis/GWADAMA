@@ -69,7 +69,7 @@ def _get_value_from_nested_dict(dict_, keys: list):
     return value
 
 
-def set_value_to_nested_dict(dict_, keys, value):
+def set_value_to_nested_dict(dict_, keys, value, add_missing_keys=False):
         """Set a value to an arbitrarily-depth nested dictionary.
 
         Parameters
@@ -83,13 +83,24 @@ def set_value_to_nested_dict(dict_, keys, value):
 
         value: Any
 
+        add_missing_keys: bool
+            If True, missing keys (layers) will be added to the nested
+            dictionary.
+            
+            CAUTION: if `add_missing_keys=True`, no KeyError will be raised.
+
         """
-        key = keys[0]
-        element = dict_[key]
-        if isinstance(element, dict):
-            set_value_to_nested_dict(element, keys[1:], value)
-        else:
-            dict_[key] = value
+        for key in keys[:-1]:
+            if key not in dict_:
+                if add_missing_keys:
+                    dict_[key] = {}
+                else:
+                    raise ValueError(
+                        "the nested dictionary shape does not match with the input key sequence"
+                    )
+            
+            dict_ = dict_[key]
+        dict_[keys[-1]] = value
 
 
 def _replicate_structure_nested_dict(input_dict: dict) -> dict:
