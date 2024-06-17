@@ -1957,7 +1957,7 @@ class BaseInjected(Base):
             Indices associated to the filtered labels.
 
         """
-        # First get labels and IDs filtered by 'classes'.
+        # Get labels and IDs filtered by 'classes'.
         filtered_labels, filtered_ids, filtered_indices = super()._filter_labels(
             labels, labels_id, classes, with_id=True, with_index=True
         )
@@ -1972,27 +1972,42 @@ class BaseInjected(Base):
         
         n_snr_total = len(self.snr_list)
 
-        # Next repeat all by the total number of SNR values.
+        # Repeat all by the total number of SNR values.
         filtered_labels = np.repeat(filtered_labels, n_snr_total)
         filtered_ids = np.repeat(filtered_ids, n_snr_total)
         filtered_indices = np.repeat(filtered_indices, n_snr_total)
 
         n_filtered = len(filtered_labels)
 
-        # Then convert the indices to include the TOTAL number of SNR repetitions.
+        # Convert the indices to include the TOTAL number of SNR repetitions.
         for i in range(0, n_filtered, n_snr_total):
             i_old = filtered_indices[i]
             i_new0 = i_old * n_snr_total
             i_new1 = i_new0 + n_snr_total
             filtered_indices[i:i+n_snr_total] = np.arange(i_new0, i_new1)
 
+        # Filter out those not present in the 'snr' list.
         if snr != 'all':
-            # Finally filter out those not present in the 'snr' list.
             mask = np.isin(self.snr_list, snr)
             mask = np.tile(mask, n_filtered//n_snr_total)
             filtered_labels = filtered_labels[mask]
             filtered_ids = filtered_ids[mask]
             filtered_indices = filtered_indices[mask]
+
+        # Repeat labels and IDs by 'injections_per_snr', and extend the indices
+        # accordingly.
+        if self.injections_per_snr > 1:
+            n_reps = self.injections_per_snr
+            filtered_labels = np.repeat(filtered_labels, n_reps)
+            filtered_ids = np.repeat(filtered_ids, n_reps)
+            filtered_indices = np.repeat(filtered_indices, n_reps)
+            # Convert the indices to also include the TOTAL number of
+            # repetitions per SNR.
+            for i in range(0, len(filtered_indices), n_reps):
+                i_old = filtered_indices[i]
+                i_new0 = i_old * n_reps
+                i_new1 = i_new0 + n_reps
+                filtered_indices[i:i+n_reps] = np.arange(i_new0, i_new1)
 
         if with_id and with_index:
             return filtered_labels, filtered_ids, filtered_indices
