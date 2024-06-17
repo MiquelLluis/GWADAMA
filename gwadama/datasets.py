@@ -2984,7 +2984,8 @@ class InjectedCoReWaves(BaseInjected):
                        snr: int|float|list,
                        pad: int = 0,
                        randomize_noise: bool = False,
-                       random_seed: int = None):
+                       random_seed: int = None,
+                       injections_per_snr: int = 1):
         """Inject all strains in simulated noise with the given SNR values.
 
         See 'BaseInjected.gen_injections' for more details.
@@ -3012,6 +3013,10 @@ class InjectedCoReWaves(BaseInjected):
         random_seed : int, optional
             Random seed for the noise realization.
             Only used when randomize_noise is True.
+
+        injections_per_snr : int
+            Number of injections per SNR value.
+            1 by default.
         
         Notes
         -----
@@ -3031,7 +3036,10 @@ class InjectedCoReWaves(BaseInjected):
             this exception.
         
         """
-        super().gen_injections(snr, pad, randomize_noise, random_seed)
+        super().gen_injections(
+            snr, pad=pad, randomize_noise=randomize_noise,
+            random_seed=random_seed, injections_per_snr=injections_per_snr
+        )
 
         self._update_merger_positions()
     
