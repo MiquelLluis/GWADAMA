@@ -2710,7 +2710,7 @@ class CoReWaves(Base):
             # If more layers are present, only get the first instance of times
             # since all will be the same.
             if isinstance(times, dict):
-                times = dictools._get_next_item(times)
+                times = dictools.get_next_item(times)
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
     def resample(self, sample_rate, verbose=False) -> None:

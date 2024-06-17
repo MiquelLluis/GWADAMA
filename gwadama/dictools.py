@@ -296,7 +296,7 @@ def filter_nested_dict(dict_, condition, layer) -> dict:
     return filter_layer(dict_, 0)
 
 
-def _get_next_item(dict_):
+def get_next_item(dict_):
     """Get the next item in a nested dictionary.
 
     Returns
@@ -315,5 +315,5 @@ def _get_next_item(dict_):
         return None
 
     if isinstance(value, dict):
-        return _get_next_item(value)
+        return get_next_item(value)
     return value
