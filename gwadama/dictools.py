@@ -61,6 +61,26 @@ def __unroll_nested_dictionary_keys(dict_: dict,
 
 
 def get_value_from_nested_dict(dict_, keys: list):
+    """Get a value from an arbitrarily-depth nested dictionary.
+    
+    Parameters
+    ----------
+    dict_: dict
+        Nested dictionary.
+    
+    keys: list
+        Sequence of keys necessary to get to the element inside the nested
+        dictionary.
+    
+    Returns
+    -------
+    : Any
+        Value of the element inside the nested dictionary.
+    
+    """
+    if not isinstance(dict_, dict):
+        raise TypeError("'dict_' must be a dictionary")
+
     value = dict_
     for key in keys:
         if not isinstance((value:=value[key]), dict) and not hasattr(value, '__iter__'):
