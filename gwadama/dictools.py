@@ -123,6 +123,59 @@ def set_value_to_nested_dict(dict_, keys, value, add_missing_keys=False):
         dict_[keys[-1]] = value
 
 
+def fill(dict_: dict, value, keys=None, deepcopy=False):
+    """Fill an arbitrarily-depth nested dictionary with a value.
+
+    Fill an arbitrarily-depth nested dictionary below the coordinates 'keys'
+    with the value 'value'.
+
+    The filling is performed inplace.
+
+    Parameters
+    ----------
+    dict_: dict
+        Nested dictionary.
+
+    value: Any
+
+    keys: iterable, optional
+        Starting layers from where to fill the dictionary, if only a subset
+        of the whole 'dict_' is desired to be filled.
+
+    deepcopy: bool
+        If True, each instance of 'value' will be a copy. By default all
+        elements reference the same 'value'.
+
+    """
+    if keys is not None:
+        # Get to the target layer.
+        for key in keys:
+            dict_ = dict_[key]
+
+    __fill(dict_, value, deepcopy=deepcopy)
+
+
+def __fill(dict_: dict, value, deepcopy=False):
+    """Fill an arbitrarily-depth nested dictionary with a value.
+
+    This is the recursive function. Use the main function.
+
+    """
+    for key in dict_:
+        if isinstance(dict_[key], dict):
+            __fill(dict_[key], value, deepcopy=deepcopy)
+        else:
+            if deepcopy:
+                try:
+                    dict_[key] = value.copy()
+                except AttributeError:
+                    from copy import deepcopy
+                    dict_[key] = deepcopy(value)
+            else:
+                dict_[key] = value
+
+
+
 def _replicate_structure_nested_dict(dict_: dict) -> dict:
     """Create a new nested dictionary with the same structure as the input.
 
