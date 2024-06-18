@@ -22,6 +22,7 @@ import pandas as pd
 import scipy as sp
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 from sklearn.model_selection import train_test_split
+from tqdm.auto import tqdm
 
 from . import ioo
 from . import detectors
@@ -490,7 +491,8 @@ class Base:
                pad: int = 0,
                highpass: int = None,
                flength: float = None,
-               normed: bool = False) -> None:
+               normed: bool = False,
+               verbose=False) -> None:
         """Whiten the strains.
         
         Calling this method performs the whitening of all strains.
@@ -509,7 +511,8 @@ class Base:
         
         self.nonwhiten_strains = deepcopy(self.strains)
         
-        for *keys, strain in self.items():
+        loop_aux = tqdm(self.items()) if verbose else self.items()
+        for *keys, strain in loop_aux:
             strain_w = fat.whiten(
                 strain, asd=asd_array, sample_rate=self.sample_rate, flength=flength,
                 highpass=highpass, pad=pad, normed=normed
@@ -1551,7 +1554,7 @@ class BaseInjected(Base):
             if verbose:
                 print("Strain exported to", file)
     
-    def whiten(self):
+    def whiten(self, verbose=False):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
@@ -1575,7 +1578,8 @@ class BaseInjected(Base):
         unpad = self.whiten_params['unpad']
         highpass = self.whiten_params['highpass']
         
-        for *keys, strain in self.items():
+        loop_aux = tqdm(self.items()) if verbose else self.items()
+        for *keys, strain in loop_aux:
             snr = keys[2]  # Shape of self.strains dict-> (class, id, snr[, rep])
 
             strain_w = fat.whiten(
@@ -3102,7 +3106,7 @@ class InjectedCoReWaves(BaseInjected):
 
         return injected
     
-    def whiten(self):
+    def whiten(self, verbose=False):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
@@ -3114,6 +3118,6 @@ class InjectedCoReWaves(BaseInjected):
         performing the whitening.
         
         """
-        super().whiten()
+        super().whiten(verbose=verbose)
 
         self._update_merger_positions()
