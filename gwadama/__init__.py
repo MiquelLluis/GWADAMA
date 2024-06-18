@@ -2,16 +2,16 @@
 
 Gravitational Wave Dataset Management.
 
-Collection of ad-hoc classes and functions intended to automate all
-dataset-related operations:
+Collection of ad-hoc classes and functions intended to automate
+gravitational-wave data-related operations:
 
-- Wave generation
+- Wave generation.
 
-- Data input
+- Data input.
 
-- Train/Test splitting
+- Train/Test splitting (smart index tracking for Cross-Validation tasks).
 
-- Injections
+- Injections.
 
 - Pre-processing (normalization, resampling, whitening, filtering, ...)
 
@@ -21,19 +21,29 @@ dataset-related operations:
 DEPENDENCIES
 ------------
 
-- bilby
+- bilby (2.3.0)
 
 - clawdia
 
-- gwpy
+- gwpy (3.0.7)
 
-- sklearn
+- numpy (1.25.0)
 
-- watpy
+- pandas (2.0.3)
+
+- scipy (1.11.1)
+
+- sklearn (1.2.2)
+
+- tqdm (4.66.1)
+
+- watpy (0.1.1)
+
+In parenthesis are the version numbers they've been tested with.
 
 """
 from .datasets import *
 from .ioo import CoReManager
 from . import synthetic
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
