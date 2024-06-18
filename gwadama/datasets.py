@@ -513,7 +513,7 @@ class Base:
         
         self.nonwhiten_strains = deepcopy(self.strains)
         
-        loop_aux = tqdm(self.items()) if verbose else self.items()
+        loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
             strain_w = fat.whiten(
                 strain, asd=asd_array, sample_rate=self.sample_rate, flength=flength,
@@ -1580,7 +1580,7 @@ class BaseInjected(Base):
         unpad = self.whiten_params['unpad']
         highpass = self.whiten_params['highpass']
         
-        loop_aux = tqdm(self.items()) if verbose else self.items()
+        loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
             snr = keys[2]  # Shape of self.strains dict-> (class, id, snr[, rep])
 
