@@ -36,6 +36,8 @@ Frequency analysis toolkit.
 from gwpy.frequencyseries import FrequencySeries
 from gwpy.timeseries import TimeSeries
 import numpy as np
+import scipy as sp
+
 
 
 def whiten(strain: np.ndarray,
@@ -125,7 +127,60 @@ def whiten(strain: np.ndarray,
     if normed:
         strain_w /= np.max(np.abs(strain_w))
 
-    return strain_w</code></pre>
+    return strain_w
+
+
+
+# def highpass_filter(signal: np.ndarray,
+#                     f_cut: int | float,
+#                     f_width: int | float,
+#                     sample_rate: int) -&gt; np.ndarray:
+#     &#34;&#34;&#34;Apply a forward-backward digital highpass filter.
+
+#     Apply a forward-backward digital highpass filter to &#39;signal&#39; CENTERED
+#     at frequency &#39;f_cut&#39; with a transition band of &#39;f_width&#39;.
+
+#     It enforces the (single) filter to allow only loss of 2 dB at passband
+#     (`f_cut + f_width/2` Hz) and a minimum filter of 20 dB at stopband
+#     (`f_cut - f_width/2` Hz).
+    
+#     REFERENCES
+#     ----------
+#     Order selection: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.buttord.html
+#     Design: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
+#     Filter: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
+
+#     &#34;&#34;&#34;
+#     f_pass = f_cut + f_width/2
+#     f_stop = f_cut - f_width/2
+#     N, wn = sp.signal.buttord(wp=f_pass, ws=f_stop, gpass=2, gstop=16, fs=self.sample_rate)
+#     sos = sp.signal.butter(N, wn, btype=&#39;highpass&#39;, fs=sample_rate, output=&#39;sos&#39;)
+#     filtered = sp.signal.sosfiltfilt(sos, signal)
+
+#     return filtered
+
+
+
+def highpass_filter(signal: np.ndarray,
+                    *,
+                    f_cut: int | float,
+                    f_order: int | float,
+                    sample_rate: int) -&gt; np.ndarray:
+    &#34;&#34;&#34;Apply a forward-backward digital highpass filter.
+
+    Apply a forward-backward digital highpass filter to &#39;signal&#39;
+    at frequency &#39;f_cut&#39; with an order of &#39;f_order&#39;.
+    
+    REFERENCES
+    ----------
+    Design: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
+    Filter: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
+
+    &#34;&#34;&#34;
+    sos = sp.signal.butter(f_order, f_cut, btype=&#39;highpass&#39;, fs=sample_rate, output=&#39;sos&#39;)
+    filtered = sp.signal.sosfiltfilt(sos, signal)
+
+    return filtered</code></pre>
 </details>
 </section>
 <section>
@@ -135,6 +190,42 @@ def whiten(strain: np.ndarray,
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="gwadama.fat.highpass_filter"><code class="name flex">
+<span>def <span class="ident">highpass_filter</span></span>(<span>signal: numpy.ndarray, *, f_cut: int | float, f_order: int | float, sample_rate: int) -> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Apply a forward-backward digital highpass filter.</p>
+<p>Apply a forward-backward digital highpass filter to 'signal'
+at frequency 'f_cut' with an order of 'f_order'.</p>
+<h2 id="references">References</h2>
+<p>Design: <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html">https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html</a>
+Filter: <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html">https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def highpass_filter(signal: np.ndarray,
+                    *,
+                    f_cut: int | float,
+                    f_order: int | float,
+                    sample_rate: int) -&gt; np.ndarray:
+    &#34;&#34;&#34;Apply a forward-backward digital highpass filter.
+
+    Apply a forward-backward digital highpass filter to &#39;signal&#39;
+    at frequency &#39;f_cut&#39; with an order of &#39;f_order&#39;.
+    
+    REFERENCES
+    ----------
+    Design: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
+    Filter: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
+
+    &#34;&#34;&#34;
+    sos = sp.signal.butter(f_order, f_cut, btype=&#39;highpass&#39;, fs=sample_rate, output=&#39;sos&#39;)
+    filtered = sp.signal.sosfiltfilt(sos, signal)
+
+    return filtered</code></pre>
+</details>
+</dd>
 <dt id="gwadama.fat.whiten"><code class="name flex">
 <span>def <span class="ident">whiten</span></span>(<span>strain: numpy.ndarray, *, asd: numpy.ndarray, sample_rate: int, flength: int, highpass: float = None, pad: int = 0, unpad: int = 0, normed: bool = True, **kwargs) -> numpy.ndarray</span>
 </code></dt>
@@ -293,6 +384,7 @@ Extra arguments passed to gwpy.timeseries.Timeseries.whiten().</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="gwadama.fat.highpass_filter" href="#gwadama.fat.highpass_filter">highpass_filter</a></code></li>
 <li><code><a title="gwadama.fat.whiten" href="#gwadama.fat.whiten">whiten</a></code></li>
 </ul>
 </li>

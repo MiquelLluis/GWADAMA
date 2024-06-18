@@ -22,6 +22,7 @@ import pandas as pd
 import scipy as sp
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 from sklearn.model_selection import train_test_split
+from tqdm.auto import tqdm
 
 from . import ioo
 from . import detectors
@@ -194,7 +195,9 @@ class Base:
             raise ValueError("'classes' values must be unique")
     
     def __len__(self):
-        return len(self.metadata)
+        """Return the total number of strains."""
+
+        return dictools.get_number_of_elements(self.strains)
 
     def _gen_labels(self) -> dict:
         """Constructs the labels' dictionary.
@@ -272,7 +275,7 @@ class Base:
             The unrolled combination in a Python list.
         
         """
-        keys = dictools._unroll_nested_dictionary_keys(self.strains, max_depth=max_depth)
+        keys = dictools.unroll_nested_dictionary_keys(self.strains, max_depth=max_depth)
 
         return keys
 
@@ -288,6 +291,7 @@ class Base:
 
         Example of usage with an arbitrary number of keys in the nested
         dictionary of strains:
+        
         ```
         for *keys, strain in self.items():
             print(f"Number of identifiers: {len(keys)}")
@@ -346,7 +350,7 @@ class Base:
         if len(indices) != self._dict_depth:
             raise ValueError("indices must match the depth of 'self.strains'")
 
-        strain = dictools._get_value_from_nested_dict(self.strains, indices)
+        strain = dictools.get_value_from_nested_dict(self.strains, indices)
         if normalize:
             strain /= np.max(np.abs(strain))
 
@@ -394,7 +398,7 @@ class Base:
         if len(indices) != self._dict_depth:
             raise ValueError("indices must match the depth of 'self.strains'")
         
-        return dictools._get_value_from_nested_dict(self.times, indices)
+        return dictools.get_value_from_nested_dict(self.times, indices)
 
     def shrink_strains(self, limits: tuple | dict) -> None:
         """Shrink strains to a specific interval.
@@ -469,7 +473,7 @@ class Base:
             self._track_times = True
 
         for *keys, strain in self.items():
-            time = dictools._get_value_from_nested_dict(self.times, keys)
+            time = dictools.get_value_from_nested_dict(self.times, keys)
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
@@ -489,7 +493,8 @@ class Base:
                pad: int = 0,
                highpass: int = None,
                flength: float = None,
-               normed: bool = False) -> None:
+               normed: bool = False,
+               verbose=False) -> None:
         """Whiten the strains.
         
         Calling this method performs the whitening of all strains.
@@ -508,7 +513,8 @@ class Base:
         
         self.nonwhiten_strains = deepcopy(self.strains)
         
-        for *keys, strain in self.items():
+        loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
+        for *keys, strain in loop_aux:
             strain_w = fat.whiten(
                 strain, asd=asd_array, sample_rate=self.sample_rate, flength=flength,
                 highpass=highpass, pad=pad, normed=normed
@@ -870,10 +876,9 @@ class BaseInjected(Base):
           power spectral density of reference (e.g. the sensitivity of a GW
           detector).
     
-    Extra depths can be added, and will be thought of as modifications of the
-    same original strains from the upper identifier level. However they should
-    be added between the 'Id' and 'SNR' layer, since the SNR is the final
-    realization of any variations made of a given (Class, Id) signal.
+    An extra depth can be added below, and will be treated as multiple
+    injections at the same SNR value. This is usfeul for example to make
+    injections at multiple noise realizations.
 
 
     Attributes
@@ -905,6 +910,8 @@ class BaseInjected(Base):
         NOTE: These strains should be not modified. If new clean strains are
         needed, create a new clean dataset instance first, and then initialise
         this class with it.
+
+        TODO: Accept extra layers in the clean_strains dictionary.
     
     strains : dict[dict]
         Injected trains stored as a nested dictionary, with each strain in an
@@ -919,12 +926,10 @@ class BaseInjected(Base):
         - The 'id' is a unique identifier for each strain, and must exist in
           the index of the 'metadata' (DataFrame) attribute.
         
-        - Extra depths can be added as variations of each strain, such as
-          polarizations. However they should be added between the 'id' and
-          the 'snr' layer!
-        
         - The 'snr' key is an integer indicating the signal-to-noise ratio of
           the injection.
+
+        - A fourth depth can be added below as additional injections per SNR.
         
     labels : dict
         Indices of the class of each wave ID, inherited from a clean
@@ -967,16 +972,20 @@ class BaseInjected(Base):
         Numerical representation of the Amplitude Spectral Density (ASD) of the
         detector's sensitivity.
 
-    noise : gwadama.ioo.NonwhiteGaussianNoise
+    noise : gwadama.synthetic.NonwhiteGaussianNoise
         Background noise instance from NonwhiteGaussianNoise.
 
     snr_list : list
+        List of SNR values at which each signal has been injected.
 
     pad : dict
         Padding introduced at each SNR injection, used in case the strains will
         be whitened after, to remove the vigneting at edges.
         It is associated to SNR values because the only implemented way to
         pad the signals is during the signal injection.
+
+    injections_per_snr : int
+        Number of injections per SNR value.
     
     whitened : bool
         Flat indicating whether the dataset has been whitened. Initially will
@@ -1136,6 +1145,7 @@ class BaseInjected(Base):
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
         self.pad = {}  # {snr: pad}
+        self.injections_per_snr = 1  # Default value.
         self.whitened = False  # Switched to True after calling self.whiten().
         self.whiten_params = whiten_params
         # NOTE: I designed this while building the InjectedCoReWaves class, so
@@ -1284,11 +1294,11 @@ class BaseInjected(Base):
         """Initializes the nested dictionary of strains.
         
         Initializes the nested dictionary of strains following the hierarchy
-        in the clean strains attribute, and adding the (lowest) SNR layer.
+        in the clean strains attribute, and adding the SNR layer.
         
         """
         strains_dict = dictools._replicate_structure_nested_dict(self.strains_clean)
-        for indices in dictools._unroll_nested_dictionary_keys(strains_dict):
+        for indices in dictools.unroll_nested_dictionary_keys(strains_dict):
             dictools.set_value_to_nested_dict(strains_dict, indices, {})
 
         return strains_dict
@@ -1303,13 +1313,15 @@ class BaseInjected(Base):
         the changes will be reflected inside the 'times' attribute.
         
         """
-        return dictools._get_value_from_nested_dict(self.times, indices)
+        return dictools.get_value_from_nested_dict(self.times, indices)
     
     def gen_injections(self,
                        snr: int|float|list,
                        pad: int = 0,
                        randomize_noise: bool = False,
-                       random_seed: int = None):
+                       random_seed: int = None,
+                       injections_per_snr: int = 1,
+                       verbose=False):
         """Inject all strains in simulated noise with the given SNR values.
 
         
@@ -1349,6 +1361,12 @@ class BaseInjected(Base):
         random_seed : int, optional
             Random seed for the noise realization.
             Only used when randomize_noise is True.
+
+        injections_per_snr : int
+            Number of injections per SNR value. Defaults to 1.
+
+            This is useful to minimize the statistical impact of the noise
+            when performing injections at a sensitive (low) SNR.
         
         Notes
         -----
@@ -1393,7 +1411,17 @@ class BaseInjected(Base):
         if randomize_noise:
             rng = np.random.default_rng(random_seed)
         
-        for clas, id_ in dictools._unroll_nested_dictionary_keys(self.strains_clean):
+        if verbose:
+            n_injections = (
+                dictools.get_number_of_elements(self.strains_clean)
+                * len(snr_list)
+                * injections_per_snr
+            )
+            pbar = tqdm(total=n_injections)
+
+
+
+        for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_clean):
             gw_clean = self.strains_clean[clas][id_]
             strain_clean_padded = np.pad(gw_clean, pad)
             # NOTE: Do not update the metadata nor times with this pad in case
@@ -1403,13 +1431,14 @@ class BaseInjected(Base):
             # NOTE: The noise realization is already generated without
             # frequency components lower than the cutoff (they are set to
             # 0 during the random sampling).
-            strain_clean_padded = self.noise.highpass_filter(
-                strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order
+            strain_clean_padded = fat.highpass_filter(
+                strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order,
+                sample_rate=self.sample_rate
             )
 
-            
             # Strain injections
-            for snr_ in snr_list:
+            for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
+                
                 if randomize_noise:
                     pos0 = rng.integers(0, len(self.noise) - len(strain_clean_padded))
                 else:
@@ -1426,7 +1455,16 @@ class BaseInjected(Base):
                         # Parameters for GWpy's whiten() function:
                         highpass=self.freq_cutoff, flength=self.flength
                     )
-                self.strains[clas][id_][snr_] = injected
+                if injections_per_snr == 1:
+                    self.strains[clas][id_][snr_] = injected
+                else:
+                    dictools.set_value_to_nested_dict(
+                        self.strains, [clas, id_, snr_, rep], injected,
+                        add_missing_keys=True
+                    )
+
+                if verbose:
+                    pbar.update()
             
             # Time arrays:
             # - All SNR entries pointing to the SAME time array.
@@ -1435,18 +1473,34 @@ class BaseInjected(Base):
                 times_i = self.get_times(clas, id_)
                 if pad > 0 and not self.whitened:
                     times_i = tat.pad_time_array(times_i, pad)
-                for snr_ in snr_list:
-                    times_new[clas][id_][snr_] = times_i
+                for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
+                    if injections_per_snr == 1:
+                        times_new[clas][id_][snr_] = times_i
+                    else:
+                        dictools.set_value_to_nested_dict(
+                            times_new, [clas, id_, snr_, rep], times_i,
+                            add_missing_keys=True
+                        )
         
+
+
+        if verbose:
+            pbar.close()
+
         if self._track_times:
             self.times = times_new
-        
-        # Record new SNR values and related padding.
-        # NOTE: Even if whitening is applied (and hence the length unaltered)
-        # pad values are still registered, just in case.
+
         self.snr_list += snr_list
+
         for snr_ in snr_list:
+            # NOTE: Even if whitening is applied (and hence the length unaltered)
+            # pad values are still registered, just in case.
             self.pad[snr_] = pad
+
+        self.injections_per_snr = injections_per_snr
+        if injections_per_snr > 1:
+            # Make sure the depth attribute is updated.
+            self._dict_depth = dictools.get_depth(self.strains)
         
         # Side-effect attributes updated.
         self.max_length = self._find_max_length()
@@ -1516,7 +1570,7 @@ class BaseInjected(Base):
             if verbose:
                 print("Strain exported to", file)
     
-    def whiten(self):
+    def whiten(self, verbose=False):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
@@ -1540,12 +1594,10 @@ class BaseInjected(Base):
         unpad = self.whiten_params['unpad']
         highpass = self.whiten_params['highpass']
         
-        for *keys, strain in self.items():
-            snr = keys[-1]  # Shape of self.strains dict-> {class: {id: {snr: strain}}}
+        loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
+        for *keys, strain in loop_aux:
+            snr = keys[2]  # Shape of self.strains dict-> (class, id, snr[, rep])
 
-            # NOTE: I designed this while building the InjectedCoReWaves class,
-            # so chances are the parameters here are not passed in the most
-            # generalized way.
             strain_w = fat.whiten(
                 strain, asd=asd_array, pad=pad, unpad=unpad[snr], sample_rate=self.sample_rate,
                 highpass=highpass, flength=flength
@@ -1555,19 +1607,20 @@ class BaseInjected(Base):
         
         # Shrink time arrays accordingly.
         if self._track_times:
-            key_layers = dictools._unroll_nested_dictionary_keys(
-                self.strains,
-                max_depth=self._dict_depth-1  # same signal at different SNR has same time points.
+            clas_id_snr_layers = dictools.unroll_nested_dictionary_keys(
+                self.times,
+                max_depth=3
             )
-            for keys in key_layers:
-                # Since all time arrays below SNR layer are the same, get the first one:
-                times_i = dictools._get_value_from_nested_dict(self.times, keys)
-                snr0 = next(iter(times_i.keys()))
-                times_i = times_i[snr0]
-                times_i = tat.shrink_time_array(times_i, unpad[snr0])
-                for snr in self.snr_list:
-                    keys_all = keys + [snr]
-                    dictools.set_value_to_nested_dict(self.times, keys_all, times_i)
+            for clas_id_snr in clas_id_snr_layers:
+                # Since all time arrays below SNR layer are the same,
+                # get the first one, shrink it to its corresponding SNR-unpad,
+                # and set it to all subsequent layers.
+                snr = clas_id_snr[2]
+                times_sublayer = self.get_times(*clas_id_snr)
+                time = dictools.get_next_item(times_sublayer)
+                time = tat.shrink_time_array(time, unpad[snr])
+                dictools.fill(times_sublayer, time, deepcopy=False)
+
         
         self.whitened = True
         
@@ -1598,17 +1651,17 @@ class BaseInjected(Base):
             determines the length.
 
         classes : str | list[str]
-            Classes which to include in the stack.
+            Whitelist of classes to include in the stack.
             All classes are included by default.
 
         snr : int | list[int] | str
-            SNR injections which to include in the stack. If more than one are
-            selected, they are stacked zipped as follows:
+            Whitelist of SNR injections to include in the stack. If more than
+            one are selected, they are stacked zipped as follows:
             
             ```
             eos0 id0 snr0
             eos0 id0 snr1
-                 ...
+                ...
             ```
             
             All injections are included by default.
@@ -1659,17 +1712,17 @@ class BaseInjected(Base):
             determines the length.
 
         classes : str | list[str]
-            Classes which to include in the stack.
+            Whitelist of classes to include in the stack.
             All classes are included by default.
 
         snr : int | list[int] | str
-            SNR injections which to include in the stack. If more than one are
-            selected, they are stacked zipped as follows:
+            Whitelist of SNR injections to include in the stack. If more than
+            one are selected, they are stacked zipped as follows:
             
             ```
             eos0 id0 snr0
             eos0 id0 snr1
-                 ...
+                ...
             ```
             
             All injections are included by default.
@@ -1704,7 +1757,7 @@ class BaseInjected(Base):
                       classes: str | list = 'all',
                       snr: int | list | str = 'all',
                       with_metadata: bool = False):
-        """Stack a subset of strains into a zero-padded 2d-array.
+        """Stack 'strains' into a zero-padded 2d-array.
 
         This is a helper function for 'get_xtrain_array' and 'get_xtest_array'.
 
@@ -1719,12 +1772,12 @@ class BaseInjected(Base):
             determines the length.
 
         classes : str | list[str]
-            The classes to include in the stack.
+            Whitelist of classes to include in the stack.
             All classes are included by default.
 
         snr : int | list[int] | str
-            The SNR injections to include in the stack. If more than one are
-            selected, they are stacked zipped as follows:
+            Whitelist of SNR injections to include in the stack. If more than
+            one are selected, they are stacked zipped as follows:
             
             ```
             eos0 id0 snr0
@@ -1802,9 +1855,11 @@ class BaseInjected(Base):
         if with_metadata:
             id_list = [k[0] for k in strains]
             snr_list = [k[1] for k in strains]
-            metadata = self.metadata.loc[id_list]
+            rep_list = [k[2] for k in strains]
+            metadata = self.metadata.loc[id_list]  # sorts and makes all necessary copies.
             metadata.reset_index(inplace=True, names='id')
             metadata.insert(1, 'snr', snr_list)  # after 'id'.
+            metadata.insert(2, 'rep', rep_list)  # after 'snr'.
             
             return stacked_signals, lengths, metadata
         return stacked_signals, lengths
@@ -1815,11 +1870,11 @@ class BaseInjected(Base):
         Parameters
         ----------
         classes : str | list[str] | 'all'
-            The classes to include in the labels.
+            Whitelist of classes to include in the labels.
             All classes are included by default.
         
         snr : int | list[int] | str
-            The SNR injections to include in the labels.
+            Whitelist of SNR injections to include in the labels.
             All injections are included by default.
 
         with_id : bool
@@ -1854,11 +1909,11 @@ class BaseInjected(Base):
         Parameters
         ----------
         classes : str | list[str] | 'all'
-            The classes to include in the labels.
+            Whitelist of classes to include in the labels.
             All classes are included by default.
         
         snr : int | list[int] | str
-            The SNR injections to include in the labels.
+            Whitelist of SNR injections to include in the labels.
             All injections are included by default.
 
         with_id : bool
@@ -1887,7 +1942,7 @@ class BaseInjected(Base):
         )
     
     def _filter_labels(self, labels, labels_id, classes, snr, with_id=False, with_index=False):
-        """Filter labels based on 'classes' and 'snr'.
+        """Filter 'labels' based on 'classes' and 'snr'.
 
         This is a helper function for 'get_ytrain_array' and 'get_ytest_array'.
         
@@ -1900,11 +1955,11 @@ class BaseInjected(Base):
             IDs associated to the labels.
         
         classes : str | list[str] | 'all'
-            The classes to include in the labels.
+            Whitelist of classes to include in the labels.
             All classes are included by default.
         
         snr : int | list[int] | str
-            The SNR injections to include in the labels.
+            Whitelist of SNR injections to include in the labels.
             All injections are included by default.
 
         with_id : bool
@@ -1929,7 +1984,7 @@ class BaseInjected(Base):
             Indices associated to the filtered labels.
 
         """
-        # First get labels and IDs filtered by 'classes'.
+        # Get labels and IDs filtered by 'classes'.
         filtered_labels, filtered_ids, filtered_indices = super()._filter_labels(
             labels, labels_id, classes, with_id=True, with_index=True
         )
@@ -1944,27 +1999,42 @@ class BaseInjected(Base):
         
         n_snr_total = len(self.snr_list)
 
-        # Next repeat all by the total number of SNR values.
+        # Repeat all by the total number of SNR values.
         filtered_labels = np.repeat(filtered_labels, n_snr_total)
         filtered_ids = np.repeat(filtered_ids, n_snr_total)
         filtered_indices = np.repeat(filtered_indices, n_snr_total)
 
         n_filtered = len(filtered_labels)
 
-        # Then convert the indices to include the TOTAL number of SNR repetitions.
+        # Convert the indices to include the TOTAL number of SNR repetitions.
         for i in range(0, n_filtered, n_snr_total):
             i_old = filtered_indices[i]
             i_new0 = i_old * n_snr_total
             i_new1 = i_new0 + n_snr_total
             filtered_indices[i:i+n_snr_total] = np.arange(i_new0, i_new1)
 
+        # Filter out those not present in the 'snr' list.
         if snr != 'all':
-            # Finally filter out those not present in the 'snr' list.
             mask = np.isin(self.snr_list, snr)
             mask = np.tile(mask, n_filtered//n_snr_total)
             filtered_labels = filtered_labels[mask]
             filtered_ids = filtered_ids[mask]
             filtered_indices = filtered_indices[mask]
+
+        # Repeat labels and IDs by 'injections_per_snr', and extend the indices
+        # accordingly.
+        if self.injections_per_snr > 1:
+            n_reps = self.injections_per_snr
+            filtered_labels = np.repeat(filtered_labels, n_reps)
+            filtered_ids = np.repeat(filtered_ids, n_reps)
+            filtered_indices = np.repeat(filtered_indices, n_reps)
+            # Convert the indices to also include the TOTAL number of
+            # repetitions per SNR.
+            for i in range(0, len(filtered_indices), n_reps):
+                i_old = filtered_indices[i]
+                i_new0 = i_old * n_reps
+                i_new1 = i_new0 + n_reps
+                filtered_indices[i:i+n_reps] = np.arange(i_new0, i_new1)
 
         if with_id and with_index:
             return filtered_labels, filtered_ids, filtered_indices
@@ -2667,7 +2737,7 @@ class CoReWaves(Base):
             # If more layers are present, only get the first instance of times
             # since all will be the same.
             if isinstance(times, dict):
-                times = dictools._get_next_item(times)
+                times = dictools.get_next_item(times)
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
     def resample(self, sample_rate, verbose=False) -> None:
@@ -2934,14 +3004,16 @@ class InjectedCoReWaves(BaseInjected):
         """
         for clas, id_ in self.keys(max_depth=2):
             # Same time array for all SNR variations.
-            times = next(iter(self.times[clas][id_].values()))
+            times = dictools.get_next_item(self.times[clas][id_])
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
     def gen_injections(self,
                        snr: int|float|list,
                        pad: int = 0,
                        randomize_noise: bool = False,
-                       random_seed: int = None):
+                       random_seed: int = None,
+                       injections_per_snr: int = 1,
+                       verbose=False):
         """Inject all strains in simulated noise with the given SNR values.
 
         See 'BaseInjected.gen_injections' for more details.
@@ -2969,6 +3041,10 @@ class InjectedCoReWaves(BaseInjected):
         random_seed : int, optional
             Random seed for the noise realization.
             Only used when randomize_noise is True.
+
+        injections_per_snr : int
+            Number of injections per SNR value.
+            1 by default.
         
         Notes
         -----
@@ -2988,7 +3064,11 @@ class InjectedCoReWaves(BaseInjected):
             this exception.
         
         """
-        super().gen_injections(snr, pad, randomize_noise, random_seed)
+        super().gen_injections(
+            snr, pad=pad, randomize_noise=randomize_noise,
+            random_seed=random_seed, injections_per_snr=injections_per_snr,
+            verbose=verbose
+        )
 
         self._update_merger_positions()
     
@@ -3047,7 +3127,7 @@ class InjectedCoReWaves(BaseInjected):
 
         return injected
     
-    def whiten(self):
+    def whiten(self, verbose=False):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
@@ -3059,6 +3139,6 @@ class InjectedCoReWaves(BaseInjected):
         performing the whitening.
         
         """
-        super().whiten()
+        super().whiten(verbose=verbose)
 
         self._update_merger_positions()
