@@ -195,7 +195,9 @@ class Base:
             raise ValueError("'classes' values must be unique")
     
     def __len__(self):
-        return len(self.metadata)
+        """Return the total number of strains."""
+
+        return dictools.get_number_of_elements(self.strains)
 
     def _gen_labels(self) -> dict:
         """Constructs the labels' dictionary.
