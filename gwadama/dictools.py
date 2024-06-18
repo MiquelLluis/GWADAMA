@@ -6,7 +6,7 @@ Collection of utility functions related to nested Python dictionaries.
 import numpy as np
 
 
-def unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> list:
+def unroll_nested_dictionary_keys(dict_: dict, max_depth: int = None) -> list:
     """Returns a list of all combinations of keys inside a nested dictionary.
     
     Useful to iterate over all keys of a nested dictionary without having to
@@ -19,7 +19,7 @@ def unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> li
     
     max_depth: int, optional
         If specified, it is the number of layers to dig in to at most in
-        the nested 'strains' dictionary.
+        the nested dictionary.
         If only the first layer is desired (no recursion at all), `max_depth=1`.
     
     Returns
@@ -28,10 +28,10 @@ def unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> li
         Unrolled combinations of all keys of the nested dictionary.
     
     """
-    return __unroll_nested_dictionary_keys(dictionary, max_depth=max_depth)
+    return __unroll_nested_dictionary_keys(dict_, max_depth=max_depth)
 
 
-def __unroll_nested_dictionary_keys(dictionary: dict,
+def __unroll_nested_dictionary_keys(dict_: dict,
                                     *,
                                     max_depth: int,
                                     current_keys: list = None,
@@ -46,7 +46,7 @@ def __unroll_nested_dictionary_keys(dictionary: dict,
 
     unrolled_keys = []
 
-    for key, value in dictionary.items():
+    for key, value in dict_.items():
         new_keys = current_keys + [key]
 
         if isinstance(value, dict) and (max_depth is None or current_depth < max_depth):
@@ -103,17 +103,17 @@ def set_value_to_nested_dict(dict_, keys, value, add_missing_keys=False):
         dict_[keys[-1]] = value
 
 
-def _replicate_structure_nested_dict(input_dict: dict) -> dict:
+def _replicate_structure_nested_dict(dict_: dict) -> dict:
     """Create a new nested dictionary with the same structure as the input.
 
     Values of the new dictionary are set to None.
 
     """
-    if not isinstance(input_dict, dict):
+    if not isinstance(dict_, dict):
         return None
 
     replicated_dict = {}
-    for key, value in input_dict.items():
+    for key, value in dict_.items():
         if isinstance(value, dict):
             replicated_dict[key] = _replicate_structure_nested_dict(value)
         else:
@@ -236,14 +236,14 @@ def flatten_nested_dict(dict_: dict) -> dict:
     return __flatten_nested_dict(dict_)
 
 
-def __flatten_nested_dict(dict_in, parent_keys=()):
+def __flatten_nested_dict(dict_, parent_keys=()):
     """Flatten recursively 'dict_in'.
     
     Here is where the actual flattening happens, using recursion.
     
     """
     flattened_dict = {}
-    for k, v in dict_in.items():
+    for k, v in dict_.items():
         key = parent_keys + (k,)
         if isinstance(v, dict):
             flattened_dict.update(__flatten_nested_dict(v, parent_keys=key))
