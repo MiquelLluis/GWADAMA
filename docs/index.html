@@ -22,20 +22,20 @@
 <section id="section-intro">
 <p>GWADAMA</p>
 <p>Gravitational Wave Dataset Management.</p>
-<p>Collection of ad-hoc classes and functions intended to automate all
-dataset-related operations:</p>
+<p>Collection of ad-hoc classes and functions intended to automate
+gravitational-wave data-related operations:</p>
 <ul>
 <li>
-<p>Wave generation</p>
+<p>Wave generation.</p>
 </li>
 <li>
-<p>Data input</p>
+<p>Data input.</p>
 </li>
 <li>
-<p>Train/Test splitting</p>
+<p>Train/Test splitting (smart index tracking for Cross-Validation tasks).</p>
 </li>
 <li>
-<p>Injections</p>
+<p>Injections.</p>
 </li>
 <li>
 <p>Pre-processing (normalization, resampling, whitening, filtering, &hellip;)</p>
@@ -47,21 +47,34 @@ dataset-related operations:</p>
 <h2 id="dependencies">Dependencies</h2>
 <ul>
 <li>
-<p>bilby</p>
+<p>bilby (2.3.0)</p>
 </li>
 <li>
 <p>clawdia</p>
 </li>
 <li>
-<p>gwpy</p>
+<p>gwpy (3.0.7)</p>
 </li>
 <li>
-<p>sklearn</p>
+<p>numpy (1.25.0)</p>
 </li>
 <li>
-<p>watpy</p>
+<p>pandas (2.0.3)</p>
+</li>
+<li>
+<p>scipy (1.11.1)</p>
+</li>
+<li>
+<p>sklearn (1.2.2)</p>
+</li>
+<li>
+<p>tqdm (4.66.1)</p>
+</li>
+<li>
+<p>watpy (0.1.1)</p>
 </li>
 </ul>
+<p>In parenthesis are the version numbers they've been tested with.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -70,16 +83,16 @@ dataset-related operations:</p>
 
 Gravitational Wave Dataset Management.
 
-Collection of ad-hoc classes and functions intended to automate all
-dataset-related operations:
+Collection of ad-hoc classes and functions intended to automate
+gravitational-wave data-related operations:
 
-- Wave generation
+- Wave generation.
 
-- Data input
+- Data input.
 
-- Train/Test splitting
+- Train/Test splitting (smart index tracking for Cross-Validation tasks).
 
-- Injections
+- Injections.
 
 - Pre-processing (normalization, resampling, whitening, filtering, ...)
 
@@ -89,22 +102,32 @@ dataset-related operations:
 DEPENDENCIES
 ------------
 
-- bilby
+- bilby (2.3.0)
 
 - clawdia
 
-- gwpy
+- gwpy (3.0.7)
 
-- sklearn
+- numpy (1.25.0)
 
-- watpy
+- pandas (2.0.3)
+
+- scipy (1.11.1)
+
+- sklearn (1.2.2)
+
+- tqdm (4.66.1)
+
+- watpy (0.1.1)
+
+In parenthesis are the version numbers they&#39;ve been tested with.
 
 &#34;&#34;&#34;
 from .datasets import *
 from .ioo import CoReManager
 from . import synthetic
 
-__version__ = &#34;0.1.0&#34;</code></pre>
+__version__ = &#34;0.1.1&#34;</code></pre>
 </details>
 </section>
 <section>
