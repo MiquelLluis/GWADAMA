@@ -60,7 +60,7 @@ def __unroll_nested_dictionary_keys(dict_: dict,
     return unrolled_keys
 
 
-def _get_value_from_nested_dict(dict_, keys: list):
+def get_value_from_nested_dict(dict_, keys: list):
     value = dict_
     for key in keys:
         if not isinstance((value:=value[key]), dict) and not hasattr(value, '__iter__'):

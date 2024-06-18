@@ -350,7 +350,7 @@ class Base:
         if len(indices) != self._dict_depth:
             raise ValueError("indices must match the depth of 'self.strains'")
 
-        strain = dictools._get_value_from_nested_dict(self.strains, indices)
+        strain = dictools.get_value_from_nested_dict(self.strains, indices)
         if normalize:
             strain /= np.max(np.abs(strain))
 
@@ -398,7 +398,7 @@ class Base:
         if len(indices) != self._dict_depth:
             raise ValueError("indices must match the depth of 'self.strains'")
         
-        return dictools._get_value_from_nested_dict(self.times, indices)
+        return dictools.get_value_from_nested_dict(self.times, indices)
 
     def shrink_strains(self, limits: tuple | dict) -> None:
         """Shrink strains to a specific interval.
@@ -473,7 +473,7 @@ class Base:
             self._track_times = True
 
         for *keys, strain in self.items():
-            time = dictools._get_value_from_nested_dict(self.times, keys)
+            time = dictools.get_value_from_nested_dict(self.times, keys)
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
@@ -1313,7 +1313,7 @@ class BaseInjected(Base):
         the changes will be reflected inside the 'times' attribute.
         
         """
-        return dictools._get_value_from_nested_dict(self.times, indices)
+        return dictools.get_value_from_nested_dict(self.times, indices)
     
     def gen_injections(self,
                        snr: int|float|list,
