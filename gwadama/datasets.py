@@ -1855,9 +1855,11 @@ class BaseInjected(Base):
         if with_metadata:
             id_list = [k[0] for k in strains]
             snr_list = [k[1] for k in strains]
-            metadata = self.metadata.loc[id_list]
+            rep_list = [k[2] for k in strains]
+            metadata = self.metadata.loc[id_list]  # sorts and makes all necessary copies.
             metadata.reset_index(inplace=True, names='id')
             metadata.insert(1, 'snr', snr_list)  # after 'id'.
+            metadata.insert(2, 'rep', rep_list)  # after 'snr'.
             
             return stacked_signals, lengths, metadata
         return stacked_signals, lengths
