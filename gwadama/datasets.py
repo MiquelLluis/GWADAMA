@@ -1593,19 +1593,20 @@ class BaseInjected(Base):
         
         # Shrink time arrays accordingly.
         if self._track_times:
-            key_layers = dictools.unroll_nested_dictionary_keys(
-                self.strains,
-                max_depth=self._dict_depth-1  # same signal at different SNR has same time points.   # TODO
+            clas_id_snr_layers = dictools.unroll_nested_dictionary_keys(
+                self.times,
+                max_depth=3
             )
-            for keys in key_layers:
-                # Since all time arrays below SNR layer are the same, get the first one:
-                times_i = dictools._get_value_from_nested_dict(self.times, keys)
-                snr0 = next(iter(times_i.keys()))
-                times_i = times_i[snr0]
-                times_i = tat.shrink_time_array(times_i, unpad[snr0])
-                for snr in self.snr_list:
-                    keys_all = keys + [snr]
-                    dictools.set_value_to_nested_dict(self.times, keys_all, times_i)
+            for clas_id_snr in clas_id_snr_layers:
+                # Since all time arrays below SNR layer are the same,
+                # get the first one, shrink it to its corresponding SNR-unpad,
+                # and set it to all subsequent layers.
+                snr = clas_id_snr[2]
+                times_sublayer = self.get_times(*clas_id_snr)
+                time = dictools.get_next_item(times_sublayer)
+                time = tat.shrink_time_array(time, unpad[snr])
+                dictools.fill(times_sublayer, time, deepcopy=False)
+
         
         self.whitened = True
         
