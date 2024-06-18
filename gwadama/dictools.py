@@ -317,3 +317,30 @@ def get_next_item(dict_):
     if isinstance(value, dict):
         return get_next_item(value)
     return value
+
+
+def get_number_of_elements(dict_):
+    """Get the number of elements in a nested dictionary.
+
+    Parameters
+    ----------
+    dict_ : dict
+        Nested dictionary.
+
+    Returns
+    -------
+    number : int
+        Number of elements in the nested dictionary.
+
+    """
+    if not isinstance(dict_, dict):
+        raise TypeError("'dict_' must be a dictionary")
+
+    number = 0
+    for value in dict_.values():
+        if isinstance(value, dict):
+            number += get_number_of_elements(value)
+        else:
+            number += 1
+    
+    return number
