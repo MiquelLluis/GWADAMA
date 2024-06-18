@@ -34,7 +34,7 @@ Collection of utility functions related to nested Python dictionaries.
 import numpy as np
 
 
-def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -&gt; list:
+def unroll_nested_dictionary_keys(dict_: dict, max_depth: int = None) -&gt; list:
     &#34;&#34;&#34;Returns a list of all combinations of keys inside a nested dictionary.
     
     Useful to iterate over all keys of a nested dictionary without having to
@@ -47,7 +47,7 @@ def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -&gt
     
     max_depth: int, optional
         If specified, it is the number of layers to dig in to at most in
-        the nested &#39;strains&#39; dictionary.
+        the nested dictionary.
         If only the first layer is desired (no recursion at all), `max_depth=1`.
     
     Returns
@@ -56,10 +56,10 @@ def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -&gt
         Unrolled combinations of all keys of the nested dictionary.
     
     &#34;&#34;&#34;
-    return __unroll_nested_dictionary_keys(dictionary, max_depth=max_depth)
+    return __unroll_nested_dictionary_keys(dict_, max_depth=max_depth)
 
 
-def __unroll_nested_dictionary_keys(dictionary: dict,
+def __unroll_nested_dictionary_keys(dict_: dict,
                                     *,
                                     max_depth: int,
                                     current_keys: list = None,
@@ -74,7 +74,7 @@ def __unroll_nested_dictionary_keys(dictionary: dict,
 
     unrolled_keys = []
 
-    for key, value in dictionary.items():
+    for key, value in dict_.items():
         new_keys = current_keys + [key]
 
         if isinstance(value, dict) and (max_depth is None or current_depth &lt; max_depth):
@@ -88,7 +88,27 @@ def __unroll_nested_dictionary_keys(dictionary: dict,
     return unrolled_keys
 
 
-def _get_value_from_nested_dict(dict_, keys: list):
+def get_value_from_nested_dict(dict_, keys: list):
+    &#34;&#34;&#34;Get a value from an arbitrarily-depth nested dictionary.
+    
+    Parameters
+    ----------
+    dict_: dict
+        Nested dictionary.
+    
+    keys: list
+        Sequence of keys necessary to get to the element inside the nested
+        dictionary.
+    
+    Returns
+    -------
+    : Any
+        Value of the element inside the nested dictionary.
+    
+    &#34;&#34;&#34;
+    if not isinstance(dict_, dict):
+        raise TypeError(&#34;&#39;dict_&#39; must be a dictionary&#34;)
+
     value = dict_
     for key in keys:
         if not isinstance((value:=value[key]), dict) and not hasattr(value, &#39;__iter__&#39;):
@@ -97,7 +117,7 @@ def _get_value_from_nested_dict(dict_, keys: list):
     return value
 
 
-def set_value_to_nested_dict(dict_, keys, value):
+def set_value_to_nested_dict(dict_, keys, value, add_missing_keys=False):
         &#34;&#34;&#34;Set a value to an arbitrarily-depth nested dictionary.
 
         Parameters
@@ -111,26 +131,90 @@ def set_value_to_nested_dict(dict_, keys, value):
 
         value: Any
 
+        add_missing_keys: bool
+            If True, missing keys (layers) will be added to the nested
+            dictionary.
+            
+            CAUTION: if `add_missing_keys=True`, no KeyError will be raised.
+
         &#34;&#34;&#34;
-        key = keys[0]
-        element = dict_[key]
-        if isinstance(element, dict):
-            set_value_to_nested_dict(element, keys[1:], value)
+        for key in keys[:-1]:
+            if key not in dict_:
+                if add_missing_keys:
+                    dict_[key] = {}
+                else:
+                    raise ValueError(
+                        &#34;the nested dictionary shape does not match with the input key sequence&#34;
+                    )
+            
+            dict_ = dict_[key]
+        dict_[keys[-1]] = value
+
+
+def fill(dict_: dict, value, keys=None, deepcopy=False):
+    &#34;&#34;&#34;Fill an arbitrarily-depth nested dictionary with a value.
+
+    Fill an arbitrarily-depth nested dictionary below the coordinates &#39;keys&#39;
+    with the value &#39;value&#39;.
+
+    The filling is performed inplace.
+
+    Parameters
+    ----------
+    dict_: dict
+        Nested dictionary.
+
+    value: Any
+
+    keys: iterable, optional
+        Starting layers from where to fill the dictionary, if only a subset
+        of the whole &#39;dict_&#39; is desired to be filled.
+
+    deepcopy: bool
+        If True, each instance of &#39;value&#39; will be a copy. By default all
+        elements reference the same &#39;value&#39;.
+
+    &#34;&#34;&#34;
+    if keys is not None:
+        # Get to the target layer.
+        for key in keys:
+            dict_ = dict_[key]
+
+    __fill(dict_, value, deepcopy=deepcopy)
+
+
+def __fill(dict_: dict, value, deepcopy=False):
+    &#34;&#34;&#34;Fill an arbitrarily-depth nested dictionary with a value.
+
+    This is the recursive function. Use the main function.
+
+    &#34;&#34;&#34;
+    for key in dict_:
+        if isinstance(dict_[key], dict):
+            __fill(dict_[key], value, deepcopy=deepcopy)
         else:
-            dict_[key] = value
+            if deepcopy:
+                try:
+                    dict_[key] = value.copy()
+                except AttributeError:
+                    from copy import deepcopy
+                    dict_[key] = deepcopy(value)
+            else:
+                dict_[key] = value
 
 
-def _replicate_structure_nested_dict(input_dict: dict) -&gt; dict:
+
+def _replicate_structure_nested_dict(dict_: dict) -&gt; dict:
     &#34;&#34;&#34;Create a new nested dictionary with the same structure as the input.
 
     Values of the new dictionary are set to None.
 
     &#34;&#34;&#34;
-    if not isinstance(input_dict, dict):
+    if not isinstance(dict_, dict):
         return None
 
     replicated_dict = {}
-    for key, value in input_dict.items():
+    for key, value in dict_.items():
         if isinstance(value, dict):
             replicated_dict[key] = _replicate_structure_nested_dict(value)
         else:
@@ -253,14 +337,14 @@ def flatten_nested_dict(dict_: dict) -&gt; dict:
     return __flatten_nested_dict(dict_)
 
 
-def __flatten_nested_dict(dict_in, parent_keys=()):
+def __flatten_nested_dict(dict_, parent_keys=()):
     &#34;&#34;&#34;Flatten recursively &#39;dict_in&#39;.
     
     Here is where the actual flattening happens, using recursion.
     
     &#34;&#34;&#34;
     flattened_dict = {}
-    for k, v in dict_in.items():
+    for k, v in dict_.items():
         key = parent_keys + (k,)
         if isinstance(v, dict):
             flattened_dict.update(__flatten_nested_dict(v, parent_keys=key))
@@ -313,7 +397,7 @@ def filter_nested_dict(dict_, condition, layer) -&gt; dict:
     return filter_layer(dict_, 0)
 
 
-def _get_next_item(dict_):
+def get_next_item(dict_):
     &#34;&#34;&#34;Get the next item in a nested dictionary.
 
     Returns
@@ -332,8 +416,35 @@ def _get_next_item(dict_):
         return None
 
     if isinstance(value, dict):
-        return _get_next_item(value)
-    return value</code></pre>
+        return get_next_item(value)
+    return value
+
+
+def get_number_of_elements(dict_):
+    &#34;&#34;&#34;Get the number of elements in a nested dictionary.
+
+    Parameters
+    ----------
+    dict_ : dict
+        Nested dictionary.
+
+    Returns
+    -------
+    number : int
+        Number of elements in the nested dictionary.
+
+    &#34;&#34;&#34;
+    if not isinstance(dict_, dict):
+        raise TypeError(&#34;&#39;dict_&#39; must be a dictionary&#34;)
+
+    number = 0
+    for value in dict_.values():
+        if isinstance(value, dict):
+            number += get_number_of_elements(value)
+        else:
+            number += 1
+    
+    return number</code></pre>
 </details>
 </section>
 <section>
@@ -426,6 +537,63 @@ first axis of 'stacked_arrays'.</dd>
         lengths.append(l)
     
     return stacked_arrays, lengths</code></pre>
+</details>
+</dd>
+<dt id="gwadama.dictools.fill"><code class="name flex">
+<span>def <span class="ident">fill</span></span>(<span>dict_: dict, value, keys=None, deepcopy=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fill an arbitrarily-depth nested dictionary with a value.</p>
+<p>Fill an arbitrarily-depth nested dictionary below the coordinates 'keys'
+with the value 'value'.</p>
+<p>The filling is performed inplace.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dict_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Nested dictionary.</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>keys</code></strong> :&ensp;<code>iterable</code>, optional</dt>
+<dd>Starting layers from where to fill the dictionary, if only a subset
+of the whole 'dict_' is desired to be filled.</dd>
+<dt><strong><code>deepcopy</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If True, each instance of 'value' will be a copy. By default all
+elements reference the same 'value'.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fill(dict_: dict, value, keys=None, deepcopy=False):
+    &#34;&#34;&#34;Fill an arbitrarily-depth nested dictionary with a value.
+
+    Fill an arbitrarily-depth nested dictionary below the coordinates &#39;keys&#39;
+    with the value &#39;value&#39;.
+
+    The filling is performed inplace.
+
+    Parameters
+    ----------
+    dict_: dict
+        Nested dictionary.
+
+    value: Any
+
+    keys: iterable, optional
+        Starting layers from where to fill the dictionary, if only a subset
+        of the whole &#39;dict_&#39; is desired to be filled.
+
+    deepcopy: bool
+        If True, each instance of &#39;value&#39; will be a copy. By default all
+        elements reference the same &#39;value&#39;.
+
+    &#34;&#34;&#34;
+    if keys is not None:
+        # Get to the target layer.
+        for key in keys:
+            dict_ = dict_[key]
+
+    __fill(dict_, value, deepcopy=deepcopy)</code></pre>
 </details>
 </dd>
 <dt id="gwadama.dictools.filter_nested_dict"><code class="name flex">
@@ -555,8 +723,142 @@ element at each layer.</p></div>
     return depth</code></pre>
 </details>
 </dd>
+<dt id="gwadama.dictools.get_next_item"><code class="name flex">
+<span>def <span class="ident">get_next_item</span></span>(<span>dict_)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the next item in a nested dictionary.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>Value of the next item in the dictionary.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_next_item(dict_):
+    &#34;&#34;&#34;Get the next item in a nested dictionary.
+
+    Returns
+    -------
+    value : Any
+        Value of the next item in the dictionary.
+
+    &#34;&#34;&#34;
+    if not isinstance(dict_, dict):
+        raise TypeError(&#34;&#39;dict_&#39; must be a dictionary&#34;)
+
+    try:
+        value = next(iter(dict_.values()))
+    except StopIteration:
+        # Empty dictionary.
+        return None
+
+    if isinstance(value, dict):
+        return get_next_item(value)
+    return value</code></pre>
+</details>
+</dd>
+<dt id="gwadama.dictools.get_number_of_elements"><code class="name flex">
+<span>def <span class="ident">get_number_of_elements</span></span>(<span>dict_)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the number of elements in a nested dictionary.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dict_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Nested dictionary.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>number</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of elements in the nested dictionary.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_number_of_elements(dict_):
+    &#34;&#34;&#34;Get the number of elements in a nested dictionary.
+
+    Parameters
+    ----------
+    dict_ : dict
+        Nested dictionary.
+
+    Returns
+    -------
+    number : int
+        Number of elements in the nested dictionary.
+
+    &#34;&#34;&#34;
+    if not isinstance(dict_, dict):
+        raise TypeError(&#34;&#39;dict_&#39; must be a dictionary&#34;)
+
+    number = 0
+    for value in dict_.values():
+        if isinstance(value, dict):
+            number += get_number_of_elements(value)
+        else:
+            number += 1
+    
+    return number</code></pre>
+</details>
+</dd>
+<dt id="gwadama.dictools.get_value_from_nested_dict"><code class="name flex">
+<span>def <span class="ident">get_value_from_nested_dict</span></span>(<span>dict_, keys: list)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a value from an arbitrarily-depth nested dictionary.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dict_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Nested dictionary.</dd>
+<dt><strong><code>keys</code></strong> :&ensp;<code>list</code></dt>
+<dd>Sequence of keys necessary to get to the element inside the nested
+dictionary.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dd>Any
+Value of the element inside the nested dictionary.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_value_from_nested_dict(dict_, keys: list):
+    &#34;&#34;&#34;Get a value from an arbitrarily-depth nested dictionary.
+    
+    Parameters
+    ----------
+    dict_: dict
+        Nested dictionary.
+    
+    keys: list
+        Sequence of keys necessary to get to the element inside the nested
+        dictionary.
+    
+    Returns
+    -------
+    : Any
+        Value of the element inside the nested dictionary.
+    
+    &#34;&#34;&#34;
+    if not isinstance(dict_, dict):
+        raise TypeError(&#34;&#39;dict_&#39; must be a dictionary&#34;)
+
+    value = dict_
+    for key in keys:
+        if not isinstance((value:=value[key]), dict) and not hasattr(value, &#39;__iter__&#39;):
+            raise ValueError(&#34;the nested dictionary shape does not match with the input key sequence&#34;)
+
+    return value</code></pre>
+</details>
+</dd>
 <dt id="gwadama.dictools.set_value_to_nested_dict"><code class="name flex">
-<span>def <span class="ident">set_value_to_nested_dict</span></span>(<span>dict_, keys, value)</span>
+<span>def <span class="ident">set_value_to_nested_dict</span></span>(<span>dict_, keys, value, add_missing_keys=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set a value to an arbitrarily-depth nested dictionary.</p>
@@ -569,12 +871,18 @@ element at each layer.</p></div>
 dictionary.</dd>
 <dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
 <dd>&nbsp;</dd>
+<dt><strong><code>add_missing_keys</code></strong> :&ensp;<code>bool</code></dt>
+<dd>
+<p>If True, missing keys (layers) will be added to the nested
+dictionary.</p>
+<p>CAUTION: if <code>add_missing_keys=True</code>, no KeyError will be raised.</p>
+</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_value_to_nested_dict(dict_, keys, value):
+<pre><code class="python">def set_value_to_nested_dict(dict_, keys, value, add_missing_keys=False):
         &#34;&#34;&#34;Set a value to an arbitrarily-depth nested dictionary.
 
         Parameters
@@ -588,13 +896,74 @@ dictionary.</dd>
 
         value: Any
 
+        add_missing_keys: bool
+            If True, missing keys (layers) will be added to the nested
+            dictionary.
+            
+            CAUTION: if `add_missing_keys=True`, no KeyError will be raised.
+
         &#34;&#34;&#34;
-        key = keys[0]
-        element = dict_[key]
-        if isinstance(element, dict):
-            set_value_to_nested_dict(element, keys[1:], value)
-        else:
-            dict_[key] = value</code></pre>
+        for key in keys[:-1]:
+            if key not in dict_:
+                if add_missing_keys:
+                    dict_[key] = {}
+                else:
+                    raise ValueError(
+                        &#34;the nested dictionary shape does not match with the input key sequence&#34;
+                    )
+            
+            dict_ = dict_[key]
+        dict_[keys[-1]] = value</code></pre>
+</details>
+</dd>
+<dt id="gwadama.dictools.unroll_nested_dictionary_keys"><code class="name flex">
+<span>def <span class="ident">unroll_nested_dictionary_keys</span></span>(<span>dict_: dict, max_depth: int = None) -> list</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a list of all combinations of keys inside a nested dictionary.</p>
+<p>Useful to iterate over all keys of a nested dictionary without having to
+use multiple loops.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>dictionary</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Nested dictionary.</dd>
+<dt><strong><code>max_depth</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>If specified, it is the number of layers to dig in to at most in
+the nested dictionary.
+If only the first layer is desired (no recursion at all), <code>max_depth=1</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dd>list
+Unrolled combinations of all keys of the nested dictionary.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unroll_nested_dictionary_keys(dict_: dict, max_depth: int = None) -&gt; list:
+    &#34;&#34;&#34;Returns a list of all combinations of keys inside a nested dictionary.
+    
+    Useful to iterate over all keys of a nested dictionary without having to
+    use multiple loops.
+
+    Parameters
+    ----------
+    dictionary: dict
+        Nested dictionary.
+    
+    max_depth: int, optional
+        If specified, it is the number of layers to dig in to at most in
+        the nested dictionary.
+        If only the first layer is desired (no recursion at all), `max_depth=1`.
+    
+    Returns
+    -------
+    : list
+        Unrolled combinations of all keys of the nested dictionary.
+    
+    &#34;&#34;&#34;
+    return __unroll_nested_dictionary_keys(dict_, max_depth=max_depth)</code></pre>
 </details>
 </dd>
 </dl>
@@ -616,10 +985,15 @@ dictionary.</dd>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="gwadama.dictools.dict_to_stacked_array" href="#gwadama.dictools.dict_to_stacked_array">dict_to_stacked_array</a></code></li>
+<li><code><a title="gwadama.dictools.fill" href="#gwadama.dictools.fill">fill</a></code></li>
 <li><code><a title="gwadama.dictools.filter_nested_dict" href="#gwadama.dictools.filter_nested_dict">filter_nested_dict</a></code></li>
 <li><code><a title="gwadama.dictools.flatten_nested_dict" href="#gwadama.dictools.flatten_nested_dict">flatten_nested_dict</a></code></li>
 <li><code><a title="gwadama.dictools.get_depth" href="#gwadama.dictools.get_depth">get_depth</a></code></li>
+<li><code><a title="gwadama.dictools.get_next_item" href="#gwadama.dictools.get_next_item">get_next_item</a></code></li>
+<li><code><a title="gwadama.dictools.get_number_of_elements" href="#gwadama.dictools.get_number_of_elements">get_number_of_elements</a></code></li>
+<li><code><a title="gwadama.dictools.get_value_from_nested_dict" href="#gwadama.dictools.get_value_from_nested_dict">get_value_from_nested_dict</a></code></li>
 <li><code><a title="gwadama.dictools.set_value_to_nested_dict" href="#gwadama.dictools.set_value_to_nested_dict">set_value_to_nested_dict</a></code></li>
+<li><code><a title="gwadama.dictools.unroll_nested_dictionary_keys" href="#gwadama.dictools.unroll_nested_dictionary_keys">unroll_nested_dictionary_keys</a></code></li>
 </ul>
 </li>
 </ul>

@@ -6,7 +6,7 @@ Collection of utility functions related to nested Python dictionaries.
 import numpy as np
 
 
-def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> list:
+def unroll_nested_dictionary_keys(dict_: dict, max_depth: int = None) -> list:
     """Returns a list of all combinations of keys inside a nested dictionary.
     
     Useful to iterate over all keys of a nested dictionary without having to
@@ -19,7 +19,7 @@ def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> l
     
     max_depth: int, optional
         If specified, it is the number of layers to dig in to at most in
-        the nested 'strains' dictionary.
+        the nested dictionary.
         If only the first layer is desired (no recursion at all), `max_depth=1`.
     
     Returns
@@ -28,10 +28,10 @@ def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> l
         Unrolled combinations of all keys of the nested dictionary.
     
     """
-    return __unroll_nested_dictionary_keys(dictionary, max_depth=max_depth)
+    return __unroll_nested_dictionary_keys(dict_, max_depth=max_depth)
 
 
-def __unroll_nested_dictionary_keys(dictionary: dict,
+def __unroll_nested_dictionary_keys(dict_: dict,
                                     *,
                                     max_depth: int,
                                     current_keys: list = None,
@@ -46,7 +46,7 @@ def __unroll_nested_dictionary_keys(dictionary: dict,
 
     unrolled_keys = []
 
-    for key, value in dictionary.items():
+    for key, value in dict_.items():
         new_keys = current_keys + [key]
 
         if isinstance(value, dict) and (max_depth is None or current_depth < max_depth):
@@ -60,7 +60,27 @@ def __unroll_nested_dictionary_keys(dictionary: dict,
     return unrolled_keys
 
 
-def _get_value_from_nested_dict(dict_, keys: list):
+def get_value_from_nested_dict(dict_, keys: list):
+    """Get a value from an arbitrarily-depth nested dictionary.
+    
+    Parameters
+    ----------
+    dict_: dict
+        Nested dictionary.
+    
+    keys: list
+        Sequence of keys necessary to get to the element inside the nested
+        dictionary.
+    
+    Returns
+    -------
+    : Any
+        Value of the element inside the nested dictionary.
+    
+    """
+    if not isinstance(dict_, dict):
+        raise TypeError("'dict_' must be a dictionary")
+
     value = dict_
     for key in keys:
         if not isinstance((value:=value[key]), dict) and not hasattr(value, '__iter__'):
@@ -69,7 +89,7 @@ def _get_value_from_nested_dict(dict_, keys: list):
     return value
 
 
-def set_value_to_nested_dict(dict_, keys, value):
+def set_value_to_nested_dict(dict_, keys, value, add_missing_keys=False):
         """Set a value to an arbitrarily-depth nested dictionary.
 
         Parameters
@@ -83,26 +103,90 @@ def set_value_to_nested_dict(dict_, keys, value):
 
         value: Any
 
+        add_missing_keys: bool
+            If True, missing keys (layers) will be added to the nested
+            dictionary.
+            
+            CAUTION: if `add_missing_keys=True`, no KeyError will be raised.
+
         """
-        key = keys[0]
-        element = dict_[key]
-        if isinstance(element, dict):
-            set_value_to_nested_dict(element, keys[1:], value)
+        for key in keys[:-1]:
+            if key not in dict_:
+                if add_missing_keys:
+                    dict_[key] = {}
+                else:
+                    raise ValueError(
+                        "the nested dictionary shape does not match with the input key sequence"
+                    )
+            
+            dict_ = dict_[key]
+        dict_[keys[-1]] = value
+
+
+def fill(dict_: dict, value, keys=None, deepcopy=False):
+    """Fill an arbitrarily-depth nested dictionary with a value.
+
+    Fill an arbitrarily-depth nested dictionary below the coordinates 'keys'
+    with the value 'value'.
+
+    The filling is performed inplace.
+
+    Parameters
+    ----------
+    dict_: dict
+        Nested dictionary.
+
+    value: Any
+
+    keys: iterable, optional
+        Starting layers from where to fill the dictionary, if only a subset
+        of the whole 'dict_' is desired to be filled.
+
+    deepcopy: bool
+        If True, each instance of 'value' will be a copy. By default all
+        elements reference the same 'value'.
+
+    """
+    if keys is not None:
+        # Get to the target layer.
+        for key in keys:
+            dict_ = dict_[key]
+
+    __fill(dict_, value, deepcopy=deepcopy)
+
+
+def __fill(dict_: dict, value, deepcopy=False):
+    """Fill an arbitrarily-depth nested dictionary with a value.
+
+    This is the recursive function. Use the main function.
+
+    """
+    for key in dict_:
+        if isinstance(dict_[key], dict):
+            __fill(dict_[key], value, deepcopy=deepcopy)
         else:
-            dict_[key] = value
+            if deepcopy:
+                try:
+                    dict_[key] = value.copy()
+                except AttributeError:
+                    from copy import deepcopy
+                    dict_[key] = deepcopy(value)
+            else:
+                dict_[key] = value
 
 
-def _replicate_structure_nested_dict(input_dict: dict) -> dict:
+
+def _replicate_structure_nested_dict(dict_: dict) -> dict:
     """Create a new nested dictionary with the same structure as the input.
 
     Values of the new dictionary are set to None.
 
     """
-    if not isinstance(input_dict, dict):
+    if not isinstance(dict_, dict):
         return None
 
     replicated_dict = {}
-    for key, value in input_dict.items():
+    for key, value in dict_.items():
         if isinstance(value, dict):
             replicated_dict[key] = _replicate_structure_nested_dict(value)
         else:
@@ -225,14 +309,14 @@ def flatten_nested_dict(dict_: dict) -> dict:
     return __flatten_nested_dict(dict_)
 
 
-def __flatten_nested_dict(dict_in, parent_keys=()):
+def __flatten_nested_dict(dict_, parent_keys=()):
     """Flatten recursively 'dict_in'.
     
     Here is where the actual flattening happens, using recursion.
     
     """
     flattened_dict = {}
-    for k, v in dict_in.items():
+    for k, v in dict_.items():
         key = parent_keys + (k,)
         if isinstance(v, dict):
             flattened_dict.update(__flatten_nested_dict(v, parent_keys=key))
@@ -285,7 +369,7 @@ def filter_nested_dict(dict_, condition, layer) -> dict:
     return filter_layer(dict_, 0)
 
 
-def _get_next_item(dict_):
+def get_next_item(dict_):
     """Get the next item in a nested dictionary.
 
     Returns
@@ -304,5 +388,32 @@ def _get_next_item(dict_):
         return None
 
     if isinstance(value, dict):
-        return _get_next_item(value)
+        return get_next_item(value)
     return value
+
+
+def get_number_of_elements(dict_):
+    """Get the number of elements in a nested dictionary.
+
+    Parameters
+    ----------
+    dict_ : dict
+        Nested dictionary.
+
+    Returns
+    -------
+    number : int
+        Number of elements in the nested dictionary.
+
+    """
+    if not isinstance(dict_, dict):
+        raise TypeError("'dict_' must be a dictionary")
+
+    number = 0
+    for value in dict_.values():
+        if isinstance(value, dict):
+            number += get_number_of_elements(value)
+        else:
+            number += 1
+    
+    return number
