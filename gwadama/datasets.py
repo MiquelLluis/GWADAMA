@@ -1320,7 +1320,8 @@ class BaseInjected(Base):
                        pad: int = 0,
                        randomize_noise: bool = False,
                        random_seed: int = None,
-                       injections_per_snr: int = 1):
+                       injections_per_snr: int = 1,
+                       verbose=False):
         """Inject all strains in simulated noise with the given SNR values.
 
         
@@ -1410,6 +1411,14 @@ class BaseInjected(Base):
         if randomize_noise:
             rng = np.random.default_rng(random_seed)
         
+        if verbose:
+            n_injections = (
+                dictools.get_number_of_elements(self.strains_clean)
+                * len(snr_list)
+                * injections_per_snr
+            )
+            pbar = tqdm(total=n_injections)
+
 
 
         for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_clean):
@@ -1427,7 +1436,6 @@ class BaseInjected(Base):
                 sample_rate=self.sample_rate
             )
 
-            
             # Strain injections
             for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
                 
@@ -1454,6 +1462,9 @@ class BaseInjected(Base):
                         self.strains, [clas, id_, snr_, rep], injected,
                         add_missing_keys=True
                     )
+
+                if verbose:
+                    pbar.update()
             
             # Time arrays:
             # - All SNR entries pointing to the SAME time array.
@@ -1472,6 +1483,9 @@ class BaseInjected(Base):
                         )
         
 
+
+        if verbose:
+            pbar.close()
 
         if self._track_times:
             self.times = times_new
@@ -2996,7 +3010,8 @@ class InjectedCoReWaves(BaseInjected):
                        pad: int = 0,
                        randomize_noise: bool = False,
                        random_seed: int = None,
-                       injections_per_snr: int = 1):
+                       injections_per_snr: int = 1,
+                       verbose=False):
         """Inject all strains in simulated noise with the given SNR values.
 
         See 'BaseInjected.gen_injections' for more details.
@@ -3049,7 +3064,8 @@ class InjectedCoReWaves(BaseInjected):
         """
         super().gen_injections(
             snr, pad=pad, randomize_noise=randomize_noise,
-            random_seed=random_seed, injections_per_snr=injections_per_snr
+            random_seed=random_seed, injections_per_snr=injections_per_snr,
+            verbose=verbose
         )
 
         self._update_merger_positions()
