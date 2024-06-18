@@ -272,7 +272,7 @@ class Base:
             The unrolled combination in a Python list.
         
         """
-        keys = dictools._unroll_nested_dictionary_keys(self.strains, max_depth=max_depth)
+        keys = dictools.unroll_nested_dictionary_keys(self.strains, max_depth=max_depth)
 
         return keys
 
@@ -288,6 +288,7 @@ class Base:
 
         Example of usage with an arbitrary number of keys in the nested
         dictionary of strains:
+        
         ```
         for *keys, strain in self.items():
             print(f"Number of identifiers: {len(keys)}")
@@ -1292,7 +1293,7 @@ class BaseInjected(Base):
         
         """
         strains_dict = dictools._replicate_structure_nested_dict(self.strains_clean)
-        for indices in dictools._unroll_nested_dictionary_keys(strains_dict):
+        for indices in dictools.unroll_nested_dictionary_keys(strains_dict):
             dictools.set_value_to_nested_dict(strains_dict, indices, {})
 
         return strains_dict
@@ -1406,7 +1407,7 @@ class BaseInjected(Base):
         
 
 
-        for clas, id_ in dictools._unroll_nested_dictionary_keys(self.strains_clean):
+        for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_clean):
             gw_clean = self.strains_clean[clas][id_]
             strain_clean_padded = np.pad(gw_clean, pad)
             # NOTE: Do not update the metadata nor times with this pad in case
@@ -1586,7 +1587,7 @@ class BaseInjected(Base):
         
         # Shrink time arrays accordingly.
         if self._track_times:
-            key_layers = dictools._unroll_nested_dictionary_keys(
+            key_layers = dictools.unroll_nested_dictionary_keys(
                 self.strains,
                 max_depth=self._dict_depth-1  # same signal at different SNR has same time points.   # TODO
             )

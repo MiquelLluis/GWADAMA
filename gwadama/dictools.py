@@ -6,7 +6,7 @@ Collection of utility functions related to nested Python dictionaries.
 import numpy as np
 
 
-def _unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> list:
+def unroll_nested_dictionary_keys(dictionary: dict, max_depth: int = None) -> list:
     """Returns a list of all combinations of keys inside a nested dictionary.
     
     Useful to iterate over all keys of a nested dictionary without having to
