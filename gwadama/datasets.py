@@ -2185,7 +2185,7 @@ class SyntheticWaves(Base):
                  amp_threshold: float,
                  tukey_alpha: float,
                  sample_rate: int,
-                 train_size: int | float, 
+                 train_size: int | float = None, 
                  random_seed: int = None):
         """
         Parameters
@@ -2223,7 +2223,7 @@ class SyntheticWaves(Base):
             make sure their values end at the exact duration determined by either
             the duration parameter or the amplitude threshold.
         
-        train_size : int | float
+        train_size : int | float, optional
             If int, total number of samples to include in the train dataset.
             If float, fraction of the total samples to include in the train
             dataset.
@@ -2251,7 +2251,9 @@ class SyntheticWaves(Base):
         self._track_times = False
         self._gen_dataset()
         self.labels = self._gen_labels()
-        self.build_train_test_subsets(train_size)
+
+        if train_size is not None:
+            self.build_train_test_subsets(train_size)
 
     def _gen_metadata(self):
         """Generate random metadata associated with each waveform."""
