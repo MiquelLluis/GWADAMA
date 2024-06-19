@@ -1388,7 +1388,7 @@ class BaseInjected(Base):
         
         """
         if isinstance(snr, (int, float)):
-            snr_list = list(snr)
+            snr_list = [snr]
         elif isinstance(snr, list):
             snr_list = snr
         else:
