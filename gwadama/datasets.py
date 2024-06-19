@@ -2235,7 +2235,7 @@ class SyntheticWaves(Base):
         random_seed : int, optional.
         
         """
-        self._check_classes_dict(self.classes)
+        self._check_classes_dict(classes)
         self.classes = classes
         self.n_waves_per_class = n_waves_per_class
         self.sample_rate = sample_rate
