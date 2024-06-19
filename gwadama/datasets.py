@@ -2467,10 +2467,16 @@ class InjectedSyntheticWaves(BaseInjected):
 
         # Initialize the Train/Test subsets inheriting the indices of the input
         # clean dataset instance.
-        self.Xtrain = dictools._replicate_structure_nested_dict(clean_dataset.Xtrain)
-        self.Xtest = dictools._replicate_structure_nested_dict(clean_dataset.Xtest)
-        self.Ytrain = dictools._replicate_structure_nested_dict(clean_dataset.Ytrain)
-        self.Ytest = dictools._replicate_structure_nested_dict(clean_dataset.Ytest)
+        if clean_dataset.Xtrain is not None:
+            self.Xtrain = dictools._replicate_structure_nested_dict(clean_dataset.Xtrain)
+            self.Xtest = dictools._replicate_structure_nested_dict(clean_dataset.Xtest)
+            self.Ytrain = dictools._replicate_structure_nested_dict(clean_dataset.Ytrain)
+            self.Ytest = dictools._replicate_structure_nested_dict(clean_dataset.Ytest)
+        else:
+            self.Xtrain = None
+            self.Xtest = None
+            self.Ytrain = None
+            self.Ytest = None
 
 
 class CoReWaves(Base):
