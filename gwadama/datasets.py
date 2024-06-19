@@ -2320,33 +2320,33 @@ class SyntheticWaves(Base):
         t_max = (self.max_length - 1) / self.sample_rate
         times = np.linspace(0, t_max, self.max_length)
         
-        for i in range(len(self)):
-            params = self.metadata.loc[i].to_dict()
+        for id in range(len(self.metadata)):
+            params = self.metadata.loc[id].to_dict()
             clas = params['Class']
             match clas:
                 case 'SG':
-                    self.strains[clas][i] = synthetic.sine_gaussian_waveform(
+                    self.strains[clas][id] = synthetic.sine_gaussian_waveform(
                         times,
                         t0=self.peak_time_max_length,
-                        f0=self.metadata.at[i,'f0'],
-                        Q=self.metadata.at[i,'Q'],
-                        hrss=self.metadata.at[i,'hrss']
+                        f0=self.metadata.at[id,'f0'],
+                        Q=self.metadata.at[id,'Q'],
+                        hrss=self.metadata.at[id,'hrss']
                     )
                 case 'G':
-                    self.strains[clas][i] = synthetic.gaussian_waveform(
+                    self.strains[clas][id] = synthetic.gaussian_waveform(
                         times,
                         t0=self.peak_time_max_length,
-                        hrss=self.metadata.at[i,'hrss'],
-                        duration=self.metadata.at[i,'duration'],
+                        hrss=self.metadata.at[id,'hrss'],
+                        duration=self.metadata.at[id,'duration'],
                         amp_threshold=self.amp_threshold
                     )
                 case 'RD':
-                    self.strains[clas][i] = synthetic.ring_down_waveform(
+                    self.strains[clas][id] = synthetic.ring_down_waveform(
                         times,
                         t0=self.peak_time_max_length,
-                        f0=self.metadata.at[i,'f0'],
-                        Q=self.metadata.at[i,'Q'],
-                        hrss=self.metadata.at[i,'hrss']
+                        f0=self.metadata.at[id,'f0'],
+                        Q=self.metadata.at[id,'Q'],
+                        hrss=self.metadata.at[id,'hrss']
                     )
         
         self._dict_depth = dictools.get_depth(self.strains)
