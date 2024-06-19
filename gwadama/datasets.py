@@ -1025,10 +1025,10 @@ class BaseInjected(Base):
                  psd: np.ndarray | Callable,
                  detector: str,
                  noise_length: int,
-                 whiten_params: dict,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
-                 random_seed: int):
+                 whiten_params: dict = None,
+                 random_seed: int = None):
         """Base constructor for injected datasets.
 
         TODO: Update docstring.
@@ -1074,18 +1074,6 @@ class BaseInjected(Base):
             Length of the background noise array to be generated for later use.
             It should be at least longer than the longest signal expected to be
             injected.
-        
-        whiten_params : dict
-            Parameters of the whitening filter, with the following entries:
-            
-            - 'flength' : int
-                Length (in samples) of the time-domain FIR whitening.
-            
-            - 'highpass' : float
-                Frequency cutoff.
-            
-            - 'normed' : bool
-                Normalization applied after the whitening filter.
 
         freq_cutoff : int | float
             Frequency cutoff below which no noise bins will be generated in the
@@ -1100,7 +1088,19 @@ class BaseInjected(Base):
         flength : int
             Length (in samples) of the time-domain FIR whitening filter.
 
-        random_seed : int
+        whiten_params : dict, optional
+            Parameters of the whitening filter, with the following entries:
+            
+            - 'flength' : int
+                Length (in samples) of the time-domain FIR whitening.
+            
+            - 'highpass' : float
+                Frequency cutoff.
+            
+            - 'normed' : bool
+                Normalization applied after the whitening filter.
+
+        random_seed : int, optional
             Value passed to 'sklearn.model_selection.train_test_split' to
             generate the Train and Test subsets.
             Saved for reproducibility purposes, and also used to initialize
@@ -1150,12 +1150,13 @@ class BaseInjected(Base):
         self.whiten_params = whiten_params
         # NOTE: I designed this while building the InjectedCoReWaves class, so
         # chances are this is not general enough.
-        self.whiten_params.update({
-            'asd_array': self.asd_array,  # Referenced here again for consistency.
-            'pad': 0,  # Signals are expected to be already padded.
-            'unpad': self.pad,  # Referenced here again for consistency.
-            'highpass': self.freq_cutoff  # Referenced here again for consistency.
-        })
+        if whiten_params is not None:
+            self.whiten_params.update({
+                'asd_array': self.asd_array,  # Referenced here again for consistency.
+                'pad': 0,  # Signals are expected to be already padded.
+                'unpad': self.pad,  # Referenced here again for consistency.
+                'highpass': self.freq_cutoff  # Referenced here again for consistency.
+            })
 
         # Train/Test subset views:
         #----------------------------------------------------------------------
@@ -1584,6 +1585,9 @@ class BaseInjected(Base):
         """
         if self.whitened:
             raise RuntimeError("dataset already whitened")
+        
+        if self.whiten_params is None:
+            raise RuntimeError("missing whitening parameters")
 
         if self.strains is None:
             raise RuntimeError("no injections have been performed yet")
