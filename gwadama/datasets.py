@@ -2164,6 +2164,13 @@ class SyntheticWaves(Base):
         All parameters and data related to the strains.
         The order is the same as inside 'strains' if unrolled to a flat list
         of strains.
+
+    train_size : int | float
+            If int, total number of samples to include in the train dataset.
+            If float, fraction of the total samples to include in the train
+            dataset.
+            For more details see 'sklearn.model_selection.train_test_split'
+            with the flag `stratified=True`.
     
     units : str
         Flag indicating whether the data is in 'geometrized' or 'IS' units.
@@ -2189,7 +2196,6 @@ class SyntheticWaves(Base):
                  amp_threshold: float,
                  tukey_alpha: float,
                  sample_rate: int,
-                 train_size: int | float = None, 
                  random_seed: int = None):
         """
         Parameters
@@ -2227,13 +2233,6 @@ class SyntheticWaves(Base):
             make sure their values end at the exact duration determined by either
             the duration parameter or the amplitude threshold.
         
-        train_size : int | float, optional
-            If int, total number of samples to include in the train dataset.
-            If float, fraction of the total samples to include in the train
-            dataset.
-            For more details see 'sklearn.model_selection.train_test_split'
-            with the flag `stratified=True`.
-        
         sample_rate : int
         
         random_seed : int, optional.
@@ -2256,8 +2255,10 @@ class SyntheticWaves(Base):
         self._gen_dataset()
         self.labels = self._gen_labels()
 
-        if train_size is not None:
-            self.build_train_test_subsets(train_size)
+        self.Xtrain = None
+        self.Xtest = None
+        self.Ytrain = None
+        self.Ytest = None
 
     def _gen_metadata(self):
         """Generate random metadata associated with each waveform."""
