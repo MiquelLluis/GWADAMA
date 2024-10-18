@@ -400,6 +400,55 @@ class Base:
         
         return dictools.get_value_from_nested_dict(self.times, indices)
 
+    def pad_strains(self, padding: int | tuple | dict) -> None:
+        """
+        Pad strains with zeros on both sides.
+
+        This function pads each strain with a specific number of samples on both sides.
+        It also updates the 'max_length' attribute to reflect the new maximum length of the padded strains.
+
+        Parameters
+        ----------
+        padding : int | tuple | dict
+            The padding to apply to each strain.
+            If padding is an integer, it will be applied at both sides of all strains.
+            If padding is a tuple, it must be of the form (left_pad, right_pad) in samples.
+            If padding is a dictionary, it must be of the form {id: (left_pad, right_pad)},
+            where id is the identifier of each strain.
+
+        Notes
+        -----
+        - If time arrays are present, they are also padded accordingly.
+        """
+        if isinstance(padding, int):
+            padding_d = {id: (padding, padding) for id in self.metadata.index}
+        elif isinstance(padding, tuple):
+            padding_d = {id: padding for id in self.metadata.index}
+        elif isinstance(padding, dict):
+            padding_d = padding
+        else:
+            raise ValueError("padding must be an integer, a tuple or a dictionary")
+
+        for clas, id, *keys in self.keys():
+            strain = self.get_strain(clas, id, *keys)
+            left_pad, right_pad = padding_d[id]
+            
+            # Pad the strain
+            strain_padded = np.pad(strain, (left_pad, right_pad), mode='constant')
+            dictools.set_value_to_nested_dict(self.strains, [clas, id, *keys], strain_padded)
+
+            # Pad the corresponding time array if time tracking is enabled
+            if self._track_times:
+                times = self.get_times(clas, id, *keys)
+                time_step = (times[-1] - times[0]) / (len(times) - 1)
+                left_time_points = np.arange(times[0] - left_pad * time_step, times[0], time_step)
+                right_time_points = np.arange(times[-1] + time_step, times[-1] + (right_pad + 1) * time_step, time_step)
+                times_padded = np.concatenate([left_time_points, times, right_time_points])
+                dictools.set_value_to_nested_dict(self.times, [clas, id, *keys], times_padded)
+
+        # Update the maximum strain length attribute
+        self.max_length = self._find_max_length()
+
     def shrink_strains(self, limits: tuple | dict) -> None:
         """Shrink strains to a specific interval.
 
