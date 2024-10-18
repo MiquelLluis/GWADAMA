@@ -2712,6 +2712,7 @@ class CoReWaves(Base):
         mass: list[float] = []
         mass_ratio: list[float] = []
         eccentricity: list[float] = []
+        lambda_tidal: list[float] = []  # Tidal deformability
         mass_starA: list[float] = []
         mass_starB: list[float] = []
         spin_starA: list[float] = []
@@ -2762,6 +2763,7 @@ class CoReWaves(Base):
                 mass.append(md['id_mass'])
                 mass_ratio.append(md['id_mass_ratio'])
                 eccentricity.append(md['id_eccentricity'])
+                lambda_tidal.append(md['id_Lambda'])
                 mass_starA.append(md['id_mass_starA'])
                 mass_starB.append(md['id_mass_starB'])
                 spin_starA.append(md['id_spin_starA'])
@@ -2770,7 +2772,8 @@ class CoReWaves(Base):
         
         metadata = pd.DataFrame(
             data=dict(
-                mass=mass, mass_ratio=mass_ratio, eccentricity=eccentricity,
+                mass=mass, mass_ratio=mass_ratio,
+                eccentricity=eccentricity, lambda_tidal=lambda_tidal,
                 mass_starA=mass_starA, mass_starB=mass_starB,
                 spin_starA=spin_starA, spin_starB=spin_starB,
                 merger_pos=merger_pos
