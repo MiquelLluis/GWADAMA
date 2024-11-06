@@ -522,12 +522,12 @@ class Base:
             self._track_times = True
 
         for *keys, strain in self.items():
-            time = dictools.get_value_from_nested_dict(self.times, keys)
+            time = dictools.get_value_from_nested_dict(times, keys)
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
             dictools.set_value_to_nested_dict(self.strains, keys, strain_resampled)
-            dictools.set_value_to_nested_dict(self.times, keys, time_resampled)
+            dictools.set_value_to_nested_dict(times, keys, time_resampled)
             
             if verbose:
                 print(
