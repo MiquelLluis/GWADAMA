@@ -662,18 +662,24 @@ class Base:
         self.Xtrain, self.Ytrain = self._build_subset_strains(id_train)
         self.Xtest, self.Ytest = self._build_subset_strains(id_test)
     
-    def get_xtrain_array(self, length=None):
+    def get_xtrain_array(self, length=None, classes='all'):
         """Get the train subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the train subset into an homogeneous numpy array
         whose length (axis=1) is determined by either 'length' or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
 
+        Optionally, classes can be filtered by specifying which to include with
+        the `classes` parameter.
+
         Parameters
         ----------
         length : int, optional
             Target length of the 'train_array'. If None, the longest signal
             determines the length.
+
+        classes : str | List[str], optional
+            Specify which classes to include. Include 'all' by default.
 
         Returns
         -------
@@ -685,18 +691,32 @@ class Base:
             first axis of 'train_array'.
 
         """
-        return dictools.dict_to_stacked_array(self.Xtrain, target_length=length)
+        train_subset = self.Xtrain.copy()
+
+        if classes != 'all':
+            class_labels = [self.classes[c] for c in classes]
+            for class_int, id in zip(self.Ytrain, list(train_subset.keys())):
+                if class_int not in class_labels:
+                    del train_subset[id]
+
+        return dictools.dict_to_stacked_array(train_subset, target_length=length)
     
-    def get_xtest_array(self, length=None):
+    def get_xtest_array(self, length=None, classes='all'):
         """Get the test subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the test subset into an homogeneous numpy array
         whose length (axis=1) is determined by either 'length' or, if None, by
         the longest strain in the subset. The remaining space is zeroed.
 
+        Optionally, classes can be filtered by specifying which to include with
+        the `classes` parameter.
+
         Parameters
         ----------
         length : int, optional
+
+        classes : str | List[str], optional
+            Specify which classes to include. Include 'all' by default.
 
         Returns
         -------
@@ -708,7 +728,15 @@ class Base:
             first axis of 'test_array'.
 
         """
-        return dictools.dict_to_stacked_array(self.Xtest, target_length=length)
+        test_subset = self.Xtest.copy()
+
+        if classes != 'all':
+            class_labels = [self.classes[c] for c in classes]
+            for class_int, id in zip(self.Ytest, list(test_subset.keys())):
+                if class_int not in class_labels:
+                    del test_subset[id]
+
+        return dictools.dict_to_stacked_array(test_subset, target_length=length)
     
     def get_ytrain_array(self, classes='all', with_id=False, with_index=False):
         """Get the filtered training labels.
