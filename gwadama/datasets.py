@@ -1830,7 +1830,8 @@ class BaseInjected(Base):
             with its entries in the same order as the 'test_array'.
         
         """
-        return self._stack_subset(self.Xtest, length, classes, snr, with_metadata)
+        return self._stack_subset(self.Xtest, length=length, classes=classes,
+                                  snr=snr, with_metadata=with_metadata)
 
     def _stack_subset(self,
                       strains: dict,
@@ -1922,8 +1923,11 @@ class BaseInjected(Base):
             strains = dictools.filter_nested_dict(strains, lambda k: k in snr, layer=1)
 
         # If `snr == 'all'`, no filter is applied over 'strains'.
-        elif isinstance(snr, str) and snr != 'all':
-            raise ValueError("the value of 'snr' is not valid")
+        elif isinstance(snr, str):
+            if snr != 'all':
+                raise ValueError("the value of 'snr' is not valid")
+            else:
+                pass
         
         else:
             raise TypeError("the type of 'snr' is not valid")
