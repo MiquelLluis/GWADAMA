@@ -25,8 +25,8 @@ def whiten(strain: np.ndarray,
     """Whiten a single strain signal.
 
     Whiten a strain using the input amplitude spectral density 'asd',
-    and shrinking signals afterwarwds to 'l_window' to account for the vignet
-    effect introduced by the windowing.
+    and shrinking signals afterwarwds to 'l_window' to account for the edge
+    effects introduced by the windowing.
 
     Parameters
     ----------
@@ -50,7 +50,7 @@ def whiten(strain: np.ndarray,
     
     pad : int, optional
         Marging at each side of the strain to add (zero-pad) in order to avoid
-        vigneting. The corrupted area at each side is `0.5 * fduration` in
+        edge effects. The corrupted area at each side is `0.5 * fduration` in
         GWpy's whiten().
         Will be cropped afterwards, thus no samples are added at the end of
         the call to this function.
