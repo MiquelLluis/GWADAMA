@@ -1,5 +1,5 @@
-gwadama.synthetic module
-========================
+gwadama.synthetic
+=================
 
 .. automodule:: gwadama.synthetic
    :members:

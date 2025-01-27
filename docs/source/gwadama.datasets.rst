@@ -1,5 +1,5 @@
-gwadama.datasets module
-=======================
+gwadama.datasets
+================
 
 .. automodule:: gwadama.datasets
    :members:

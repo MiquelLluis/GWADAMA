@@ -1,5 +1,5 @@
-gwadama.tat module
-==================
+gwadama.tat
+===========
 
 .. automodule:: gwadama.tat
    :members:

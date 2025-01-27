@@ -1,5 +1,5 @@
-gwadama.detectors module
-========================
+gwadama.detectors
+=================
 
 .. automodule:: gwadama.detectors
    :members:

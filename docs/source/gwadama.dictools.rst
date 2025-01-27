@@ -1,5 +1,5 @@
-gwadama.dictools module
-=======================
+gwadama.dictools
+================
 
 .. automodule:: gwadama.dictools
    :members:

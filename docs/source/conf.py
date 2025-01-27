@@ -24,7 +24,6 @@ extensions = [
 
 autosummary_generate = True
 autosummary_imported_members = True  # Include members imported from other modules
-
 autodoc_default_options = {
     "members": True,
     "undoc-members": False,
@@ -51,6 +50,9 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+html_css_files = [
+    'custom.css',
+]
 
 
 # Add explicit anchors to methods and class members
@@ -59,8 +61,8 @@ autodoc_default_flags = ['members', 'show-inheritance']
 
 
 html_theme_options = {
-  "secondary_sidebar_items": ["page-toc", "sourcelink"],
-  "show_toc_level": 2,
+    "secondary_sidebar_items": ["page-toc", "sourcelink"],
+    "show_toc_level": 2,
 }
 
-toc_object_entries_show_depth = 3
+# toc_object_entries_show_depth = 3

@@ -1,5 +1,5 @@
-gwadama.fat module
-==================
+gwadama.fat
+===========
 
 .. automodule:: gwadama.fat
    :members:

@@ -1,0 +1,4 @@
+/* Adjust left sidebar (primary sidebar) width */
+.bd-sidebar-primary {
+    width: 20%;  /* Default is ~300px, reduce or increase as needed */
+}

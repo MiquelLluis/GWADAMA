@@ -1,5 +1,5 @@
-gwadama.ioo module
-==================
+gwadama.ioo
+===========
 
 .. automodule:: gwadama.ioo
    :members:

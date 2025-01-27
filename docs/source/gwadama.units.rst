@@ -1,5 +1,5 @@
-gwadama.units module
-====================
+gwadama.units
+=============
 
 .. automodule:: gwadama.units
    :members:
