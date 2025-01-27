@@ -1,0 +1,705 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>gwadama.ioo &#8212; GWADAMA 0.2.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6e061ff1" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.ioo';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">GWADAMA 0.2.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="gwadama.datasets.html">gwadama.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.detectors.html">gwadama.detectors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">gwadama.ioo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama.ioo</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-gwadama.ioo">
+<span id="gwadama-ioo"></span><h1>gwadama.ioo<a class="headerlink" href="#module-gwadama.ioo" title="Link to this heading">#</a></h1>
+<p>Input &amp; Output Operations</p>
+<p>Everything related to input data retrieval and output files.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gwadama.ioo.</span></span><span class="sig-name descname"><span class="pre">CoReManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manage easily usual tasks of Watpy’s CoRe_db instances.</p>
+<p>Ad-hoc manager to automate and make easier usual tasks in Watpy, including
+metadata and strain downloads, and spatial projection.</p>
+<dl class="field-list">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>cdb</strong><span class="classifier">watpy.coredb.coredb.CoRe_db</span></dt><dd><p>Instance of CoRe_db from which everything is managed.</p>
+</dd>
+<dt><strong>db_path</strong><span class="classifier">Path</span></dt><dd><p>Folder where is or will be stored CoRe database.
+Refer to ‘watpy.coredb.coredb.CoRe_db’ for more details.</p>
+</dd>
+<dt><strong>eos</strong><span class="classifier">set</span></dt><dd><p>All EOS found available.</p>
+</dd>
+<dt><strong>metadata</strong><span class="classifier">DataFrame</span></dt><dd><p>Metadata from all simulations in ‘cdb’ collected in a single DF.</p>
+</dd>
+<dt><strong>downloaded</strong><span class="classifier">dict</span></dt><dd><p>3-Level dictionary containing the path to existing strains (saved as
+TXT files), their eccentricity and radius of extraction.
+Tree-format:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>txt_files[simkey][run] = {</dt><dd><p>‘file’: ‘path/to/file.txt’,
+‘eccentricity’: ecc,
+‘r_extraction’: rext</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>NOTE: ONLY KEEPS 1 RUN PER SIMULATION FOR NOW</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.ioo.CoReManager.cast_to_float" title="gwadama.ioo.CoReManager.cast_to_float"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cast_to_float</span></code></a>(string)</p></td>
+<td><p>Cast a string to float, considering '' also a NaN.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.ioo.CoReManager.count_runs" title="gwadama.ioo.CoReManager.count_runs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">count_runs</span></code></a>([filters])</p></td>
+<td><p>Count total number of runs in the database.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.ioo.CoReManager.download_mode22" title="gwadama.ioo.CoReManager.download_mode22"><code class="xref py py-obj docutils literal notranslate"><span class="pre">download_mode22</span></code></a>(simkeys[, keep_h5, ...])</p></td>
+<td><p>Download ONLY the optimum strains Rh_22.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.ioo.CoReManager.gen_strain" title="gwadama.ioo.CoReManager.gen_strain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_strain</span></code></a>(skey, distance, inclination, phi)</p></td>
+<td><p>Build strain from time-domain mode 22 in mass rescaled, geom.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity" title="gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_runkey_lowest_eccentricity</span></code></a>(skey)</p></td>
+<td><p>Find the run with the lowest eccentricity for a given simulation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.ioo.CoReManager.load_sim" title="gwadama.ioo.CoReManager.load_sim"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_sim</span></code></a>(skey)</p></td>
+<td><p>Load a previously downloaded gw simulation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.ioo.CoReManager.sw_Y22" title="gwadama.ioo.CoReManager.sw_Y22"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sw_Y22</span></code></a>(i, phi)</p></td>
+<td><p>Spin-weighted spherical harmonic mode lm = 22.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>filter_by</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>filter_multiple</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>show</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the manager.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>db_path</strong><span class="classifier">str</span></dt><dd><p>Folder where is or will be stored CoRe database.
+Refer to ‘watpy.coredb.coredb.CoRe_db’ for more details.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.cast_to_float">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cast_to_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.cast_to_float"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.cast_to_float" title="Link to this definition">#</a></dt>
+<dd><p>Cast a string to float, considering ‘’ also a NaN.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.count_runs">
+<span class="sig-name descname"><span class="pre">count_runs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.count_runs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.count_runs" title="Link to this definition">#</a></dt>
+<dd><p>Count total number of runs in the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filters</strong><span class="classifier">list of lists</span></dt><dd><p>Format: [[key0, value0], [key1, value1], …]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.download_mode22">
+<span class="sig-name descname"><span class="pre">download_mode22</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simkeys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_h5</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lfs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.download_mode22"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.download_mode22" title="Link to this definition">#</a></dt>
+<dd><p>Download ONLY the optimum strains Rh_22.</p>
+<p>Downloads each simulation, keeps the strains with the lowest
+eccentricity and highest extraction point ‘r’ in a TXT file, updates
+the database ‘self.downloaded’, and (optional) removes the original
+HDF5 file from CoRe to free up space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>simkeys</strong><span class="classifier">list</span></dt><dd><p>List of simulation keys (‘db_keys’ in watpy) to download.</p>
+</dd>
+<dt><strong>keep_h5</strong><span class="classifier">bool</span></dt><dd><p>If False (default) removes the HDF5 file downloaded by watpy.</p>
+</dd>
+<dt><strong>overwrite</strong><span class="classifier">bool</span></dt><dd><p>If False (default) and a certain simulation in ‘simkeys’ is already
+present in ‘self.downloaded’, skip it. Otherwise downloads
+everything again.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If True (default), print which simulations are downloaded and which
+are skipped.</p>
+</dd>
+<dt><strong>prot, lfs</strong></dt><dd><p>Refer to ‘watpy.coredb.coredb.CoRe_db.sync’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.fields_float">
+<span class="sig-name descname"><span class="pre">fields_float</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['id_mass',</span> <span class="pre">'id_rest_mass',</span> <span class="pre">'id_mass_ratio',</span> <span class="pre">'id_ADM_mass',</span> <span class="pre">'id_ADM_angularmomentum',</span> <span class="pre">'id_gw_frequency_Hz',</span> <span class="pre">'id_gw_frequency_Momega22',</span> <span class="pre">'id_kappa2T',</span> <span class="pre">'id_Lambda',</span> <span class="pre">'id_eccentricity',</span> <span class="pre">'id_mass_starA',</span> <span class="pre">'id_rest_mass_starA',</span> <span class="pre">'id_mass_starB',</span> <span class="pre">'id_rest_mass_starB']</span></em><a class="headerlink" href="#gwadama.ioo.CoReManager.fields_float" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.filter_by">
+<span class="sig-name descname"><span class="pre">filter_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.filter_by"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.filter_by" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.filter_multiple">
+<span class="sig-name descname"><span class="pre">filter_multiple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.filter_multiple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.filter_multiple" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.gen_strain">
+<span class="sig-name descname"><span class="pre">gen_strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skey</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inclination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.gen_strain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.gen_strain" title="Link to this definition">#</a></dt>
+<dd><p>Build strain from time-domain mode 22 in mass rescaled, geom. units.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity">
+<span class="sig-name descname"><span class="pre">get_runkey_lowest_eccentricity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skey</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.get_runkey_lowest_eccentricity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity" title="Link to this definition">#</a></dt>
+<dd><p>Find the run with the lowest eccentricity for a given simulation.</p>
+<p>Return the key of the run and the value of its eccentricity for which
+this parameter is the lowest among all runs of the ‘skey’ simulation.</p>
+<p>If a simulation has multiple runs with the same eccentricity
+(typically all values set to 0 or NAN) it will pick the first run in
+the list.</p>
+<p>If there are one or more runs with eccentricity = NAN, the first one
+will be returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>skey</strong><span class="classifier">str</span></dt><dd><p>Key (database_key) of the simulation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>run_key</strong><span class="classifier">str</span></dt><dd><p>Key of the run.</p>
+</dd>
+<dt><strong>ecc</strong><span class="classifier">float</span></dt><dd><p>Eccentricity of the run.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.header_gw_txt">
+<span class="sig-name descname"><span class="pre">header_gw_txt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'u/M:0</span> <span class="pre">Reh/M:1</span> <span class="pre">Imh/M:2</span> <span class="pre">Redh/M:3</span> <span class="pre">Imdh/M:4</span> <span class="pre">Momega:5</span> <span class="pre">A/M:6</span> <span class="pre">phi:7</span> <span class="pre">t:8'</span></em><a class="headerlink" href="#gwadama.ioo.CoReManager.header_gw_txt" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.load_sim">
+<span class="sig-name descname"><span class="pre">load_sim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skey</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.load_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.load_sim" title="Link to this definition">#</a></dt>
+<dd><p>Load a previously downloaded gw simulation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_float</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.show" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.ioo.CoReManager.sw_Y22">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sw_Y22</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.sw_Y22"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.sw_Y22" title="Link to this definition">#</a></dt>
+<dd><p>Spin-weighted spherical harmonic mode lm = 22.</p>
+<p>Ref: Ajith et al., 2011</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.ioo.save_experiment_results">
+<span class="sig-prename descclassname"><span class="pre">gwadama.ioo.</span></span><span class="sig-name descname"><span class="pre">save_experiment_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">';'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dataframe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#save_experiment_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.save_experiment_results" title="Link to this definition">#</a></dt>
+<dd><p>Save (update) experiment results to a CSV using pandas.DataFrame.</p>
+<p>Parameters and results are saved as columns in a Pandas DataFrame, in a
+new row of an existing CSV file, or as the first row if the file does not
+exists. Each row represents an experiment.
+Parameters’ keys may change depending on the experiment; when adding a new
+key or omitting one, the corresponding place in the CSV file will be filled
+with NaN.</p>
+<p>Results are inserted at the beginning of the DataFrame’s columns, and their
+keys must not change between experiments.</p>
+<p>If there is a complex parameter structure, it is recommended to provide
+a flattened version with new and simpler keys.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>file</strong><span class="classifier">str</span></dt><dd><p>Path to the CSV file.
+If the file already exists, loads it and appends the experiment data
+to the end of the DataFrame, and updates the file.
+If the file does not exist, creates it.</p>
+</dd>
+<dt><strong>parameters</strong><span class="classifier">dict</span></dt><dd><p>Experiment settings and hyper-parameters.
+They must be registered in a flat dictionary.</p>
+</dd>
+<dt><strong>results</strong><span class="classifier">dict</span></dt><dd><p>Experiment results, tipically the LOSS overall statistics.
+For example:
+<a href="#id1"><span class="problematic" id="id2">``</span></a>`
+results = {</p>
+<blockquote>
+<div><p>‘loss max’: 0.3,
+‘loss_mean’: 0.1,
+‘loss_median’: 0.08,
+‘loss_min’: 0.001</p>
+</div></blockquote>
+<p>They will be inserted at the beginning of the DataFrame’s columns.</p>
+</dd>
+<dt><strong>sep</strong><span class="classifier">str</span></dt><dd><p>Column separator in the CSV file. ‘;’ by default.</p>
+</dd>
+<dt><strong>start_index</strong><span class="classifier">int</span></dt><dd><p>Index of the first row in the experiment (and the CSV file) when
+creating a new file. If the file already exists, this is ignored.
+0 by default.</p>
+</dd>
+<dt><strong>return_dataframe</strong><span class="classifier">bool</span></dt><dd><p>If True, return the DataFrame instance. False by default.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>df</strong><span class="classifier">pandas.DataFrame, optional</span></dt><dd><p>The pandas DataFrame instance, only returned if ‘return_dataframe’
+is True.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.ioo.save_to_hdf5">
+<span class="sig-prename descclassname"><span class="pre">gwadama.ioo.</span></span><span class="sig-name descname"><span class="pre">save_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/gwadama/ioo.html#save_to_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.save_to_hdf5" title="Link to this definition">#</a></dt>
+<dd><p>Save nested dictionary of NumPy arrays to HDF5 file with metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file: str</strong></dt><dd><p>Path to the HDF5 file.</p>
+</dd>
+<dt><strong>data: dict</strong></dt><dd><p>Nested dictionary containing NumPy arrays.</p>
+</dd>
+<dt><strong>metadata: dict</strong></dt><dd><p>Nested dictionary containing metadata for arrays.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager"><code class="docutils literal notranslate"><span class="pre">CoReManager</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.__init__"><code class="docutils literal notranslate"><span class="pre">CoReManager.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.cast_to_float"><code class="docutils literal notranslate"><span class="pre">CoReManager.cast_to_float()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.count_runs"><code class="docutils literal notranslate"><span class="pre">CoReManager.count_runs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.download_mode22"><code class="docutils literal notranslate"><span class="pre">CoReManager.download_mode22()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.fields_float"><code class="docutils literal notranslate"><span class="pre">CoReManager.fields_float</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.filter_by"><code class="docutils literal notranslate"><span class="pre">CoReManager.filter_by()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.filter_multiple"><code class="docutils literal notranslate"><span class="pre">CoReManager.filter_multiple()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.gen_strain"><code class="docutils literal notranslate"><span class="pre">CoReManager.gen_strain()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity"><code class="docutils literal notranslate"><span class="pre">CoReManager.get_runkey_lowest_eccentricity()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.header_gw_txt"><code class="docutils literal notranslate"><span class="pre">CoReManager.header_gw_txt</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.load_sim"><code class="docutils literal notranslate"><span class="pre">CoReManager.load_sim()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.show"><code class="docutils literal notranslate"><span class="pre">CoReManager.show()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.sw_Y22"><code class="docutils literal notranslate"><span class="pre">CoReManager.sw_Y22()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.save_experiment_results"><code class="docutils literal notranslate"><span class="pre">save_experiment_results()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.save_to_hdf5"><code class="docutils literal notranslate"><span class="pre">save_to_hdf5()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/gwadama.ioo.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Miquel Lluís Llorens Monteagudo.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

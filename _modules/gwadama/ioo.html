@@ -1,0 +1,983 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>gwadama.ioo &#8212; GWADAMA 0.2.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=6e061ff1" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/gwadama/ioo';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">GWADAMA 0.2.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama.ioo</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for gwadama.ioo</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Input &amp; Output Operations</span>
+
+<span class="sd">Everything related to input data retrieval and output files.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">rmtree</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">watpy</span>
+
+<span class="kn">from</span> <span class="nn">.units</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+
+<div class="viewcode-block" id="CoReManager">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager">[docs]</a>
+<span class="k">class</span> <span class="nc">CoReManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Manage easily usual tasks of Watpy&#39;s CoRe_db instances.</span>
+
+<span class="sd">    Ad-hoc manager to automate and make easier usual tasks in Watpy, including</span>
+<span class="sd">    metadata and strain downloads, and spatial projection.</span>
+
+<span class="sd">    ATTRIBUTES</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cdb : watpy.coredb.coredb.CoRe_db</span>
+<span class="sd">        Instance of CoRe_db from which everything is managed.</span>
+
+<span class="sd">    db_path : Path</span>
+<span class="sd">        Folder where is or will be stored CoRe database.</span>
+<span class="sd">        Refer to &#39;watpy.coredb.coredb.CoRe_db&#39; for more details.</span>
+
+<span class="sd">    eos : set</span>
+<span class="sd">        All EOS found available.</span>
+
+<span class="sd">    metadata : DataFrame</span>
+<span class="sd">        Metadata from all simulations in &#39;cdb&#39; collected in a single DF.</span>
+
+<span class="sd">    downloaded : dict</span>
+<span class="sd">        3-Level dictionary containing the path to existing strains (saved as</span>
+<span class="sd">        TXT files), their eccentricity and radius of extraction.</span>
+<span class="sd">        Tree-format:</span>
+<span class="sd">            txt_files[simkey][run] = {</span>
+<span class="sd">                &#39;file&#39;: &#39;path/to/file.txt&#39;,</span>
+<span class="sd">                &#39;eccentricity&#39;: ecc,</span>
+<span class="sd">                &#39;r_extraction&#39;: rext</span>
+<span class="sd">            }</span>
+<span class="sd">        NOTE: ONLY KEEPS 1 RUN PER SIMULATION FOR NOW</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fields_float</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;id_mass&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_rest_mass&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_mass_ratio&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_ADM_mass&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_ADM_angularmomentum&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_gw_frequency_Hz&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_gw_frequency_Momega22&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_kappa2T&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_Lambda&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_eccentricity&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_mass_starA&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_rest_mass_starA&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_mass_starB&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;id_rest_mass_starB&#39;</span>
+    <span class="p">]</span>
+    <span class="n">header_gw_txt</span> <span class="o">=</span> <span class="s2">&quot;u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8&quot;</span>
+
+<div class="viewcode-block" id="CoReManager.__init__">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the manager.</span>
+
+<span class="sd">        PARAMETERS</span>
+<span class="sd">        ----------</span>
+<span class="sd">        db_path : str</span>
+<span class="sd">            Folder where is or will be stored CoRe database.</span>
+<span class="sd">            Refer to &#39;watpy.coredb.coredb.CoRe_db&#39; for more details.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cdb</span> <span class="o">=</span> <span class="n">watpy</span><span class="o">.</span><span class="n">coredb</span><span class="o">.</span><span class="n">coredb</span><span class="o">.</span><span class="n">CoRe_db</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_metadata_dataframe</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eos</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;id_eos&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downloaded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_look_for_existing_strains</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CoReManager.show">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.show">[docs]</a>
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">to_float</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdb</span><span class="o">.</span><span class="n">idb</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">to_float</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.filter_by">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.filter_by">[docs]</a>
+    <span class="k">def</span> <span class="nf">filter_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="n">value</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.filter_multiple">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.filter_multiple">[docs]</a>
+    <span class="k">def</span> <span class="nf">filter_multiple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filters</span><span class="p">):</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
+            <span class="n">md</span> <span class="o">=</span> <span class="n">md</span><span class="p">[</span><span class="n">md</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">==</span> <span class="n">v</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">md</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.count_runs">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.count_runs">[docs]</a>
+    <span class="k">def</span> <span class="nf">count_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Count total number of runs in the database.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filters : list of lists</span>
+<span class="sd">            Format: [[key0, value0], [key1, value1], ...]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_multiple</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">md</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="n">runs</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">available_runs</span>
+            <span class="k">if</span> <span class="n">runs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">counts</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">runs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">counts</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.download_mode22">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.download_mode22">[docs]</a>
+    <span class="k">def</span> <span class="nf">download_mode22</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simkeys</span><span class="p">,</span> <span class="n">keep_h5</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">prot</span><span class="o">=</span><span class="s1">&#39;https&#39;</span><span class="p">,</span> <span class="n">lfs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Download ONLY the optimum strains Rh_22.</span>
+
+<span class="sd">        Downloads each simulation, keeps the strains with the lowest</span>
+<span class="sd">        eccentricity and highest extraction point &#39;r&#39; in a TXT file, updates</span>
+<span class="sd">        the database &#39;self.downloaded&#39;, and (optional) removes the original</span>
+<span class="sd">        HDF5 file from CoRe to free up space.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simkeys : list</span>
+<span class="sd">            List of simulation keys (&#39;db_keys&#39; in watpy) to download.</span>
+
+<span class="sd">        keep_h5 : bool</span>
+<span class="sd">            If False (default) removes the HDF5 file downloaded by watpy.</span>
+
+<span class="sd">        overwrite : bool</span>
+<span class="sd">            If False (default) and a certain simulation in &#39;simkeys&#39; is already</span>
+<span class="sd">            present in &#39;self.downloaded&#39;, skip it. Otherwise downloads</span>
+<span class="sd">            everything again.</span>
+
+<span class="sd">        verbose : bool</span>
+<span class="sd">            If True (default), print which simulations are downloaded and which</span>
+<span class="sd">            are skipped.</span>
+
+<span class="sd">        prot, lfs :</span>
+<span class="sd">            Refer to &#39;watpy.coredb.coredb.CoRe_db.sync&#39;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">skey</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">simkeys</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">overwrite</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">skey</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">downloaded</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">skey</span><span class="si">}</span><span class="s2"> already downloaded, skipping.&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">cdb</span><span class="o">.</span><span class="n">sync</span><span class="p">(</span><span class="n">dbkeys</span><span class="o">=</span><span class="p">[</span><span class="n">skey</span><span class="p">],</span> <span class="n">prot</span><span class="o">=</span><span class="n">prot</span><span class="p">,</span> <span class="n">lfs</span><span class="o">=</span><span class="n">lfs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="c1"># Get the gw data with lowest eccentricity and at the highest &#39;r&#39;</span>
+            <span class="c1"># of extraction.</span>
+            <span class="n">runkey</span><span class="p">,</span> <span class="n">ecc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_runkey_lowest_eccentricity</span><span class="p">(</span><span class="n">skey</span><span class="p">)</span>
+            <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdb</span><span class="o">.</span><span class="n">sim</span><span class="p">[</span><span class="n">skey</span><span class="p">]</span><span class="o">.</span><span class="n">run</span><span class="p">[</span><span class="n">runkey</span><span class="p">]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">read_dset</span><span class="p">()[</span><span class="s1">&#39;rh_22&#39;</span><span class="p">]</span>
+            <span class="n">rext_key</span><span class="p">,</span> <span class="n">rext</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_highest_r_extraction_</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">gw_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">rext_key</span><span class="p">]</span>
+
+            <span class="c1"># Save gw data as TXT.</span>
+            <span class="n">ofile</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s1">&#39;Rh_l2_m2_r</span><span class="si">{</span><span class="n">rext</span><span class="si">:</span><span class="s1">05d</span><span class="si">}</span><span class="s1">.txt&#39;</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">ofile</span><span class="p">,</span> <span class="n">gw_data</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">header_gw_txt</span><span class="p">)</span>
+
+            <span class="c1"># Update download database.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">downloaded</span><span class="p">[</span><span class="n">skey</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># ONLY 1 RUN PER SIM FOR NOW</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">downloaded</span><span class="p">[</span><span class="n">skey</span><span class="p">][</span><span class="n">runkey</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="n">ofile</span><span class="p">,</span>
+                <span class="s1">&#39;eccentricity&#39;</span><span class="p">:</span> <span class="n">ecc</span><span class="p">,</span>
+                <span class="s1">&#39;r_extraction&#39;</span><span class="p">:</span> <span class="n">rext</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_h5</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_h5_data</span><span class="p">(</span><span class="n">skey</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">skey</span><span class="si">}</span><span class="s2"> downloaded.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.load_sim">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.load_sim">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skey</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a previously downloaded gw simulation.&quot;&quot;&quot;</span>
+        
+        <span class="n">meta_sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downloaded</span><span class="p">[</span><span class="n">skey</span><span class="p">]</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">meta_sim</span><span class="o">.</span><span class="n">values</span><span class="p">()))[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span>
+        <span class="n">gw_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gw_data</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.sw_Y22">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.sw_Y22">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sw_Y22</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Spin-weighted spherical harmonic mode lm = 22.</span>
+
+<span class="sd">        Ref: Ajith et al., 2011</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        i : float</span>
+<span class="sd">            Inclination angle from the z-axis.</span>
+
+<span class="sd">        phi : float</span>
+<span class="sd">            Phase angle.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="o">/</span><span class="p">(</span><span class="mi">64</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="n">j</span><span class="o">*</span><span class="n">phi</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.gen_strain">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.gen_strain">[docs]</a>
+    <span class="k">def</span> <span class="nf">gen_strain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skey</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">inclination</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build strain from time-domain mode 22 in mass rescaled, geom. units.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        skey : str</span>
+<span class="sd">            Key (database_key) of the simulation.</span>
+
+<span class="sd">        distance : float</span>
+<span class="sd">            Distance to the source in Mpc.</span>
+<span class="sd">        </span>
+<span class="sd">        inclination, phi: float</span>
+<span class="sd">            Angle positions.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        time : ndarray(float)</span>
+<span class="sd">            Time points in seconds.</span>
+<span class="sd">        </span>
+<span class="sd">        hplus, hcross : ndarray(float)</span>
+<span class="sd">            Polarizations of the rescaled strain.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gw_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_sim</span><span class="p">(</span><span class="n">skey</span><span class="p">)</span>
+        <span class="n">mass</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">id_mass</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">skey</span><span class="p">]</span>
+        <span class="n">u_M</span> <span class="o">=</span> <span class="n">gw_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Rh</span> <span class="o">=</span> <span class="n">gw_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">gw_data</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="c1"># Convert time.</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">u_M</span> <span class="o">*</span> <span class="n">mass</span> <span class="o">*</span> <span class="n">MSUN_SEC</span>
+
+        <span class="c1"># Genearte Strain polarizations.</span>
+        <span class="n">sY22</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sw_Y22</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">inclination</span><span class="p">)</span>
+        <span class="n">amplitude_prefactor</span> <span class="o">=</span> <span class="n">mass</span> <span class="o">*</span> <span class="n">MSUN_MET</span> <span class="o">/</span> <span class="p">(</span><span class="n">distance</span> <span class="o">*</span> <span class="n">MPC_MET</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">amplitude_prefactor</span> <span class="o">*</span> <span class="n">Rh</span> <span class="o">*</span> <span class="n">sY22</span>
+        <span class="n">hplus</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">hcross</span> <span class="o">=</span> <span class="o">-</span><span class="n">h</span><span class="o">.</span><span class="n">imag</span>
+        
+        <span class="k">return</span> <span class="n">time</span><span class="p">,</span> <span class="n">hplus</span><span class="p">,</span> <span class="n">hcross</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.get_runkey_lowest_eccentricity">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.get_runkey_lowest_eccentricity">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_runkey_lowest_eccentricity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skey</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the run with the lowest eccentricity for a given simulation.</span>
+
+<span class="sd">        Return the key of the run and the value of its eccentricity for which</span>
+<span class="sd">        this parameter is the lowest among all runs of the &#39;skey&#39; simulation.</span>
+
+<span class="sd">        If a simulation has multiple runs with the same eccentricity</span>
+<span class="sd">        (typically all values set to 0 or NAN) it will pick the first run in</span>
+<span class="sd">        the list.</span>
+
+<span class="sd">        If there are one or more runs with eccentricity = NAN, the first one</span>
+<span class="sd">        will be returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        skey : str</span>
+<span class="sd">            Key (database_key) of the simulation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        run_key : str</span>
+<span class="sd">            Key of the run.</span>
+<span class="sd">        ecc : float</span>
+<span class="sd">            Eccentricity of the run.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdb</span><span class="o">.</span><span class="n">sim</span><span class="p">[</span><span class="n">skey</span><span class="p">]</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">run_key</span> <span class="o">=</span> <span class="s1">&#39;R01&#39;</span>
+        <span class="n">ecc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cast_to_float</span><span class="p">(</span><span class="n">runs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;R01&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">md</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id_eccentricity&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ecc</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">run_key</span><span class="p">,</span> <span class="n">ecc</span>
+
+        <span class="c1"># Look for the minimum eccentricity, or the first one to be NAN.</span>
+        <span class="k">for</span> <span class="n">rkey</span><span class="p">,</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ecc_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cast_to_float</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">md</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id_eccentricity&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">ecc_i</span> <span class="o">&lt;</span> <span class="n">ecc</span><span class="p">:</span>
+                <span class="n">run_key</span> <span class="o">=</span> <span class="n">rkey</span>
+                <span class="n">ecc</span> <span class="o">=</span> <span class="n">ecc_i</span>
+            <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ecc_i</span><span class="p">):</span>
+                <span class="n">run_key</span> <span class="o">=</span> <span class="n">rkey</span>
+                <span class="n">ecc</span> <span class="o">=</span> <span class="n">ecc_i</span>
+                <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">run_key</span><span class="p">,</span> <span class="n">ecc</span></div>
+
+
+<div class="viewcode-block" id="CoReManager.cast_to_float">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.CoReManager.cast_to_float">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">cast_to_float</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cast a string to float, considering &#39;&#39; also a NaN.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">string</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">n</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_clean_h5_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skey</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove HDF5 files from a downloaded &#39;skey&#39; simulation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        skey : str</span>
+<span class="sd">            Simulation key.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cdb</span><span class="o">.</span><span class="n">sim</span><span class="p">[</span><span class="n">skey</span><span class="p">]</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="c1"># Remove HDF5 files.</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*/*.h5&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+        <span class="c1"># Remove .git folder.</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="s1">&#39;.git&#39;</span>
+        <span class="n">rmtree</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_gen_metadata_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">idb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdb</span><span class="o">.</span><span class="n">idb</span>
+        <span class="n">key_list</span> <span class="o">=</span> <span class="n">idb</span><span class="o">.</span><span class="n">dbkeys</span>
+        <span class="n">metalist</span> <span class="o">=</span> <span class="p">[</span><span class="n">core_md</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">core_md</span> <span class="ow">in</span> <span class="n">idb</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">metalist</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">key_list</span><span class="p">)</span>
+        <span class="c1"># Convert data types of the selected columns:</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields_float</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;NAN&#39;</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">md</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">md</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">md</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">md</span>
+
+    <span class="k">def</span> <span class="nf">_get_highest_r_extraction_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extractions</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the key and value of &#39;r&#39; of the gw with the highest &#39;r&#39;.</span>
+
+<span class="sd">        It also includes the case when the value of &#39;r&#39; in the data is Inf</span>
+<span class="sd">        instead of a number.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        extractions : dict</span>
+<span class="sd">            Channel &#39;rh_22&#39; returned by CoRe_h5.read_dset().</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rext_key</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">extractions</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="s1">&#39;Inf&#39;</span> <span class="ow">in</span> <span class="n">rext_key</span><span class="p">:</span>
+            <span class="n">rext</span> <span class="o">=</span> <span class="mi">99999</span>  <span class="c1"># Highest number with 5 figures, to represent infinity.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rext</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rext_key</span><span class="p">[</span><span class="o">-</span><span class="mi">9</span><span class="p">:</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">rext_key</span><span class="p">,</span> <span class="n">rext</span>
+
+    <span class="k">def</span> <span class="nf">_look_for_existing_strains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Strains that were already extracted from CoRe&#39;s HDF5 files.</span>
+
+<span class="sd">        Save their paths, alongside the eccentricity and radius of extraction,</span>
+<span class="sd">        in a dictionary tree by simulation key and run.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        txt_files : dict</span>
+<span class="sd">            3-Level dictionary containing the path to existing strains</span>
+<span class="sd">            (extracted as TXT files), their eccentricity and radius of</span>
+<span class="sd">            extraction. Tree-format:</span>
+<span class="sd">                txt_files[simkey][run] = {</span>
+<span class="sd">                    &#39;file&#39;: &#39;path/to/file.txt&#39;,</span>
+<span class="sd">                    &#39;eccentricity&#39;: ecc,</span>
+<span class="sd">                    &#39;r_extraction&#39;: rext</span>
+<span class="sd">                }</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">txt_files</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;Rh*.txt&#39;</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="n">run</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">ecc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_eccentricity</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">parent</span><span class="o">/</span><span class="s1">&#39;metadata.txt&#39;</span><span class="p">)</span>
+            <span class="n">rext</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">stem</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:])</span>
+            
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">txt_files</span><span class="p">:</span>
+                <span class="n">txt_files</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            
+            <span class="c1"># If there are multiple files of the same sim and run, only keep</span>
+            <span class="c1"># the highest extraction point available.</span>
+            <span class="k">elif</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">txt_files</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">r0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">txt_files</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">run</span><span class="p">][</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">stem</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:])</span>
+                <span class="k">if</span> <span class="n">rext</span> <span class="o">&lt;</span> <span class="n">r0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+            <span class="n">txt_files</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">run</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="n">file</span><span class="p">,</span>
+                <span class="s1">&#39;eccentricity&#39;</span><span class="p">:</span> <span class="n">ecc</span><span class="p">,</span>
+                <span class="s1">&#39;r_extraction&#39;</span><span class="p">:</span> <span class="n">rext</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">txt_files</span>
+
+    <span class="k">def</span> <span class="nf">_read_eccentricity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the value of eccentricity from a metadata file.&quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;id_eccentricity&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">EOFError</span><span class="p">(</span><span class="s2">&quot;no value of eccentricity found in the file&quot;</span><span class="p">)</span>
+        <span class="n">ecc_txt</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ecc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ecc_txt</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">ecc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="k">return</span> <span class="n">ecc</span></div>
+
+
+
+<div class="viewcode-block" id="save_to_hdf5">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.save_to_hdf5">[docs]</a>
+<span class="k">def</span> <span class="nf">save_to_hdf5</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save nested dictionary of NumPy arrays to HDF5 file with metadata.</span>
+
+<span class="sd">    PARAMETERS</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file: str</span>
+<span class="sd">        Path to the HDF5 file.</span>
+
+<span class="sd">    data: dict</span>
+<span class="sd">        Nested dictionary containing NumPy arrays.</span>
+<span class="sd">    </span>
+<span class="sd">    metadata: dict</span>
+<span class="sd">        Nested dictionary containing metadata for arrays.</span>
+
+<span class="sd">   </span>
+<span class="sd">    EXAMPLE</span>
+<span class="sd">    -------</span>
+<span class="sd">    ```</span>
+<span class="sd">    data = {</span>
+<span class="sd">        &#39;group1&#39;: {</span>
+<span class="sd">            &#39;array1&#39;: np.array([1, 2, 3]),</span>
+<span class="sd">            &#39;array2&#39;: np.array([4, 5, 6])</span>
+<span class="sd">        },</span>
+<span class="sd">        &#39;group2&#39;: {</span>
+<span class="sd">            &#39;array3&#39;: np.array([7, 8, 9]),</span>
+<span class="sd">            &#39;array4&#39;: np.array([10, 11, 12])</span>
+<span class="sd">        }</span>
+<span class="sd">    }</span>
+<span class="sd">    metadata = {</span>
+<span class="sd">        &#39;group1&#39;: {</span>
+<span class="sd">            &#39;array1&#39;: {&#39;description&#39;: &#39;Example data&#39;},</span>
+<span class="sd">            &#39;array2&#39;: {&#39;description&#39;: &#39;Another example&#39;}</span>
+<span class="sd">        },</span>
+<span class="sd">        &#39;group2&#39;: {</span>
+<span class="sd">            &#39;array3&#39;: {&#39;unit&#39;: &#39;m/s^2&#39;},</span>
+<span class="sd">            &#39;array4&#39;: {&#39;unit&#39;: &#39;kg&#39;}</span>
+<span class="sd">        }</span>
+<span class="sd">    }</span>
+<span class="sd">    save_to_hdf5(&#39;output.h5&#39;, data=data, metadata=metadata)</span>
+<span class="sd">    ```</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hf</span><span class="p">:</span>
+        <span class="n">_save_to_hdf5_recursive</span><span class="p">(</span>
+            <span class="n">h5_group</span><span class="o">=</span><span class="n">hf</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span>
+        <span class="p">)</span></div>
+
+    
+
+<span class="k">def</span> <span class="nf">_save_to_hdf5_recursive</span><span class="p">(</span><span class="o">*</span><span class="p">,</span>
+                            <span class="n">h5_group</span><span class="p">:</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">,</span>
+                            <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+                            <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save nested dictionary of NumPy arrays to HDF5 group with metadata.</span>
+
+<span class="sd">    Save nested dictionary of NumPy arrays to HDF5 group with metadata</span>
+<span class="sd">    formatted in the same way as the data.</span>
+
+<span class="sd">    </span>
+<span class="sd">    PARAMETERS</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_group: h5py.Group</span>
+<span class="sd">        H5PY Group into which store the data and optional metadata.</span>
+
+<span class="sd">    data_dict: dict</span>
+<span class="sd">        Nested dictionary containing NumPy arrays.</span>
+<span class="sd">    </span>
+<span class="sd">    metadata_dict: dict</span>
+<span class="sd">        Nested dictionary containing metadata for arrays.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">subgroup</span> <span class="o">=</span> <span class="n">h5_group</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">_save_to_hdf5_recursive</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">h5_group</span><span class="o">=</span><span class="n">subgroup</span>
+        <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">h5_group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">metadata_key</span><span class="p">,</span> <span class="n">metadata_value</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">metadata_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata_value</span>
+
+
+<div class="viewcode-block" id="save_experiment_results">
+<a class="viewcode-back" href="../../gwadama.ioo.html#gwadama.ioo.save_experiment_results">[docs]</a>
+<span class="k">def</span> <span class="nf">save_experiment_results</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                            <span class="o">*</span><span class="p">,</span>
+                            <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+                            <span class="n">results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+                            <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">,</span>
+                            <span class="n">start_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                            <span class="n">return_dataframe</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save (update) experiment results to a CSV using pandas.DataFrame.</span>
+
+<span class="sd">    Parameters and results are saved as columns in a Pandas DataFrame, in a</span>
+<span class="sd">    new row of an existing CSV file, or as the first row if the file does not</span>
+<span class="sd">    exists. Each row represents an experiment.</span>
+<span class="sd">    Parameters&#39; keys may change depending on the experiment; when adding a new</span>
+<span class="sd">    key or omitting one, the corresponding place in the CSV file will be filled</span>
+<span class="sd">    with NaN.</span>
+
+<span class="sd">    Results are inserted at the beginning of the DataFrame&#39;s columns, and their</span>
+<span class="sd">    keys must not change between experiments.</span>
+
+<span class="sd">    If there is a complex parameter structure, it is recommended to provide</span>
+<span class="sd">    a flattened version with new and simpler keys.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Path to the CSV file.</span>
+<span class="sd">        If the file already exists, loads it and appends the experiment data</span>
+<span class="sd">        to the end of the DataFrame, and updates the file.</span>
+<span class="sd">        If the file does not exist, creates it.</span>
+<span class="sd">    </span>
+<span class="sd">    parameters : dict</span>
+<span class="sd">        Experiment settings and hyper-parameters.</span>
+<span class="sd">        They must be registered in a flat dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    results : dict</span>
+<span class="sd">        Experiment results, tipically the LOSS overall statistics.</span>
+<span class="sd">        For example:</span>
+<span class="sd">        ```</span>
+<span class="sd">        results = {</span>
+<span class="sd">            &#39;loss max&#39;: 0.3,</span>
+<span class="sd">            &#39;loss_mean&#39;: 0.1,</span>
+<span class="sd">            &#39;loss_median&#39;: 0.08,</span>
+<span class="sd">            &#39;loss_min&#39;: 0.001</span>
+<span class="sd">        }</span>
+<span class="sd">        ```</span>
+<span class="sd">        They will be inserted at the beginning of the DataFrame&#39;s columns.</span>
+<span class="sd">    </span>
+<span class="sd">    sep : str</span>
+<span class="sd">        Column separator in the CSV file. &#39;;&#39; by default.</span>
+<span class="sd">    </span>
+<span class="sd">    start_index : int</span>
+<span class="sd">        Index of the first row in the experiment (and the CSV file) when</span>
+<span class="sd">        creating a new file. If the file already exists, this is ignored.</span>
+<span class="sd">        0 by default.</span>
+<span class="sd">    </span>
+<span class="sd">    return_dataframe : bool</span>
+<span class="sd">        If True, return the DataFrame instance. False by default.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    df : pandas.DataFrame, optional</span>
+<span class="sd">        The pandas DataFrame instance, only returned if &#39;return_dataframe&#39;</span>
+<span class="sd">        is True.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">results</span><span class="p">,</span> <span class="o">**</span><span class="n">parameters</span><span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span> <span class="n">columns</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Experiment&#39;</span>
+        <span class="n">i_exp</span> <span class="o">=</span> <span class="n">start_index</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Make sure input results keys are the same as the ones in the file.</span>
+        <span class="n">columns_old</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">results_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">i_sep</span> <span class="o">=</span> <span class="n">columns_old</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">results_keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">results_keys</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">columns_old</span><span class="p">[:</span><span class="n">i_sep</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Experiment results keys must not change between experiments.&#39;</span><span class="p">)</span>
+
+        <span class="n">i_exp</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i_exp</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    
+    <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_dataframe</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Miquel Lluís Llorens Monteagudo.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

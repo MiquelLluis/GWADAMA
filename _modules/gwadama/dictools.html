@@ -1,0 +1,796 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>gwadama.dictools &#8212; GWADAMA 0.2.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=6e061ff1" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/gwadama/dictools';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">GWADAMA 0.2.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama.dictools</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for gwadama.dictools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;dictools.py</span>
+
+<span class="sd">Collection of utility functions related to nested Python dictionaries.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="unroll_nested_dictionary_keys">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.unroll_nested_dictionary_keys">[docs]</a>
+<span class="k">def</span> <span class="nf">unroll_nested_dictionary_keys</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of all combinations of keys inside a nested dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    Useful to iterate over all keys of a nested dictionary without having to</span>
+<span class="sd">    use multiple loops.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dictionary: dict</span>
+<span class="sd">        Nested dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    max_depth: int, optional</span>
+<span class="sd">        If specified, it is the number of layers to dig in to at most in</span>
+<span class="sd">        the nested dictionary.</span>
+<span class="sd">        If only the first layer is desired (no recursion at all), `max_depth=1`.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    : list</span>
+<span class="sd">        Unrolled combinations of all keys of the nested dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">__unroll_nested_dictionary_keys</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">__unroll_nested_dictionary_keys</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+                                    <span class="o">*</span><span class="p">,</span>
+                                    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                    <span class="n">current_keys</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                    <span class="n">current_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of all combinations of keys inside a nested dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    This is the recursive function. Use the main function.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">current_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">current_keys</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">unrolled_keys</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">new_keys</span> <span class="o">=</span> <span class="n">current_keys</span> <span class="o">+</span> <span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">max_depth</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">current_depth</span> <span class="o">&lt;</span> <span class="n">max_depth</span><span class="p">):</span>
+            <span class="c1"># Go down next depth layer.</span>
+            <span class="n">unrolled_keys</span> <span class="o">+=</span> <span class="n">__unroll_nested_dictionary_keys</span><span class="p">(</span>
+                <span class="n">value</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span> <span class="n">current_keys</span><span class="o">=</span><span class="n">new_keys</span><span class="p">,</span> <span class="n">current_depth</span><span class="o">=</span><span class="n">current_depth</span><span class="o">+</span><span class="mi">1</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unrolled_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_keys</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">unrolled_keys</span>
+
+
+<div class="viewcode-block" id="get_value_from_nested_dict">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.get_value_from_nested_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">get_value_from_nested_dict</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="n">keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a value from an arbitrarily-depth nested dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dict_: dict</span>
+<span class="sd">        Nested dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    keys: list</span>
+<span class="sd">        Sequence of keys necessary to get to the element inside the nested</span>
+<span class="sd">        dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    : Any</span>
+<span class="sd">        Value of the element inside the nested dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;dict_&#39; must be a dictionary&quot;</span><span class="p">)</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">dict_</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">((</span><span class="n">value</span><span class="o">:=</span><span class="n">value</span><span class="p">[</span><span class="n">key</span><span class="p">]),</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;the nested dictionary shape does not match with the input key sequence&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="set_value_to_nested_dict">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.set_value_to_nested_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">set_value_to_nested_dict</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">add_missing_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set a value to an arbitrarily-depth nested dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dict_: dict</span>
+<span class="sd">            Nested dictionary.</span>
+
+<span class="sd">        keys: iterable</span>
+<span class="sd">            Sequence of keys necessary to get to the element inside the nested</span>
+<span class="sd">            dictionary.</span>
+
+<span class="sd">        value: Any</span>
+
+<span class="sd">        add_missing_keys: bool</span>
+<span class="sd">            If True, missing keys (layers) will be added to the nested</span>
+<span class="sd">            dictionary.</span>
+<span class="sd">            </span>
+<span class="sd">            CAUTION: if `add_missing_keys=True`, no KeyError will be raised.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dict_</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">add_missing_keys</span><span class="p">:</span>
+                    <span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;the nested dictionary shape does not match with the input key sequence&quot;</span>
+                    <span class="p">)</span>
+            
+            <span class="n">dict_</span> <span class="o">=</span> <span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">dict_</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="fill">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.fill">[docs]</a>
+<span class="k">def</span> <span class="nf">fill</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">deepcopy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fill an arbitrarily-depth nested dictionary with a value.</span>
+
+<span class="sd">    Fill an arbitrarily-depth nested dictionary below the coordinates &#39;keys&#39;</span>
+<span class="sd">    with the value &#39;value&#39;.</span>
+
+<span class="sd">    The filling is performed inplace.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dict_: dict</span>
+<span class="sd">        Nested dictionary.</span>
+
+<span class="sd">    value: Any</span>
+
+<span class="sd">    keys: iterable, optional</span>
+<span class="sd">        Starting layers from where to fill the dictionary, if only a subset</span>
+<span class="sd">        of the whole &#39;dict_&#39; is desired to be filled.</span>
+
+<span class="sd">    deepcopy: bool</span>
+<span class="sd">        If True, each instance of &#39;value&#39; will be a copy. By default all</span>
+<span class="sd">        elements reference the same &#39;value&#39;.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">keys</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Get to the target layer.</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">dict_</span> <span class="o">=</span> <span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="n">__fill</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">deepcopy</span><span class="o">=</span><span class="n">deepcopy</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">__fill</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">deepcopy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fill an arbitrarily-depth nested dictionary with a value.</span>
+
+<span class="sd">    This is the recursive function. Use the main function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dict_</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">__fill</span><span class="p">(</span><span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">value</span><span class="p">,</span> <span class="n">deepcopy</span><span class="o">=</span><span class="n">deepcopy</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">deepcopy</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+                    <span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+
+
+<span class="k">def</span> <span class="nf">_replicate_structure_nested_dict</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new nested dictionary with the same structure as the input.</span>
+
+<span class="sd">    Values of the new dictionary are set to None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">replicated_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">replicated_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_replicate_structure_nested_dict</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">replicated_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">replicated_dict</span>
+
+
+<div class="viewcode-block" id="get_depth">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.get_depth">[docs]</a>
+<span class="k">def</span> <span class="nf">get_depth</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the depth of the input nested dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    A simple (non-nested) dictionary has a depth of 1.</span>
+<span class="sd">    Assumes a homogeneous nested dictionary, and only looks for the first</span>
+<span class="sd">    element at each layer.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">dict_</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="n">dict_</span> <span class="o">=</span> <span class="n">dict_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">depth</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+    <span class="k">return</span> <span class="n">depth</span></div>
+
+
+
+<div class="viewcode-block" id="dict_to_stacked_array">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.dict_to_stacked_array">[docs]</a>
+<span class="k">def</span> <span class="nf">dict_to_stacked_array</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">target_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stack the arrays inside a dict() to a 2d-array.</span>
+<span class="sd">    </span>
+<span class="sd">    Given a NON-nested dict whose values are flat numpy arrays, with potentially different</span>
+<span class="sd">    lengths, stacks them in a homogeneous 2d-array aligned to the left,</span>
+<span class="sd">    zero-padding the remaining space.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dict_ : dict[str: np.ndarray]</span>
+<span class="sd">        NON-nested Python dictionary containing numpy 1d-arrays.</span>
+<span class="sd">    </span>
+<span class="sd">    target_length : int, optional</span>
+<span class="sd">        If given, defines the size of the second axis of the returned 2d-array.</span>
+<span class="sd">        If omitted, the size will be equal to the longest array inside &#39;dict_&#39;.</span>
+<span class="sd">        Must be larger or equal than the longest array inside &#39;dict_&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    stacked_arrays : 2d-array</span>
+<span class="sd">        Stacked arrays, with right zero-padding those original strains whose</span>
+<span class="sd">        length were shorter.</span>
+<span class="sd">    </span>
+<span class="sd">    lengths : list</span>
+<span class="sd">        Original length of each input array, following the same order as the</span>
+<span class="sd">        first axis of &#39;stacked_arrays&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">target_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">target_length</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">array</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;</span> <span class="n">target_length</span><span class="p">:</span>
+                <span class="n">target_length</span> <span class="o">=</span> <span class="n">l</span>
+        <span class="k">if</span> <span class="n">target_length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;no arrays with nonzero length were found inside &#39;dict_&#39;&quot;</span>
+            <span class="p">)</span>
+
+    <span class="n">stacked_arrays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">dict_</span><span class="p">),</span> <span class="n">target_length</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">array</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dict_</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="n">pad</span> <span class="o">=</span> <span class="n">target_length</span> <span class="o">-</span> <span class="n">l</span>
+        <span class="k">if</span> <span class="n">pad</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;given &#39;target_length&#39; is smaller than the longest array inside &#39;dict_&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="n">stacked_arrays</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pad</span><span class="p">))</span>
+        <span class="n">lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">stacked_arrays</span><span class="p">,</span> <span class="n">lengths</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_find_level0_of_level1</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finds the top level key containing the second level &#39;key&#39;.</span>
+
+<span class="sd">    Finds the key of the uppermost level of the nested &#39;dict_&#39; which contains</span>
+<span class="sd">    the second level entry with key &#39;key&#39;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dict_ : dict</span>
+<span class="sd">        Nested dictionary.</span>
+
+<span class="sd">    key : int | str</span>
+<span class="sd">        Key of the second level of &#39;dict_&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    key_top : int | str</span>
+<span class="sd">        Key of the uppermost level of &#39;dict_&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If &#39;key&#39; is not found in the second level of &#39;dict_&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key_top</span><span class="p">,</span> <span class="n">level1</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">level1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">key_top</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;key &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; was not found inside the second level of the dictionary&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="flatten_nested_dict">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.flatten_nested_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">flatten_nested_dict</span><span class="p">(</span><span class="n">dict_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn any nested dictionary into a shallow (single level) one.</span>
+<span class="sd">    </span>
+<span class="sd">    Flatten a nested dictionary into a single level dictionary, keeping their</span>
+<span class="sd">    keys as tuples.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">__flatten_nested_dict</span><span class="p">(</span><span class="n">dict_</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">__flatten_nested_dict</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="n">parent_keys</span><span class="o">=</span><span class="p">()):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flatten recursively &#39;dict_in&#39;.</span>
+<span class="sd">    </span>
+<span class="sd">    Here is where the actual flattening happens, using recursion.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">flattened_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">parent_keys</span> <span class="o">+</span> <span class="p">(</span><span class="n">k</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">flattened_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">__flatten_nested_dict</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">parent_keys</span><span class="o">=</span><span class="n">key</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">flattened_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    
+    <span class="k">return</span> <span class="n">flattened_dict</span>
+    
+
+<div class="viewcode-block" id="filter_nested_dict">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.filter_nested_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">filter_nested_dict</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter a layer of a nested dictionary.</span>
+
+<span class="sd">    Filter a nested dictionary based on a condition applied to the keys of the</span>
+<span class="sd">    specified layer.</span>
+
+<span class="sd">    NOTE: Layer numbering begins with 0, as array-likes do; as God commands.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dict_ : dict</span>
+<span class="sd">        The nested dictionary to be filtered.</span>
+<span class="sd">    </span>
+<span class="sd">    condition : callable</span>
+<span class="sd">        The condition function to apply.</span>
+<span class="sd">        Should take a single argument, the key, and return a boolean indicating</span>
+<span class="sd">        wether to include its related value.</span>
+<span class="sd">    </span>
+<span class="sd">    layer : int</span>
+<span class="sd">        The layer at which to apply the condition.</span>
+<span class="sd">        1 corresponds to the top level, 2 to the second level, and so on.</span>
+<span class="sd">        Default is 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    : dict</span>
+<span class="sd">        Filtered version of the nested dictionary.</span>
+
+<span class="sd">    Caveats</span>
+<span class="sd">    -------</span>
+<span class="sd">    - The filtering does not alter the order of kept elements in &#39;dict_&#39;.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">filter_layer</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">current_layer</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">current_layer</span> <span class="o">==</span> <span class="n">layer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><span class="n">k</span><span class="p">)}</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">filter_layer</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">current_layer</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">return</span> <span class="n">filter_layer</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_next_item">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.get_next_item">[docs]</a>
+<span class="k">def</span> <span class="nf">get_next_item</span><span class="p">(</span><span class="n">dict_</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the next item in a nested dictionary.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    value : Any</span>
+<span class="sd">        Value of the next item in the dictionary.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;dict_&#39; must be a dictionary&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">dict_</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+        <span class="c1"># Empty dictionary.</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_next_item</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="get_number_of_elements">
+<a class="viewcode-back" href="../../gwadama.dictools.html#gwadama.dictools.get_number_of_elements">[docs]</a>
+<span class="k">def</span> <span class="nf">get_number_of_elements</span><span class="p">(</span><span class="n">dict_</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the number of elements in a nested dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dict_ : dict</span>
+<span class="sd">        Nested dictionary.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    number : int</span>
+<span class="sd">        Number of elements in the nested dictionary.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;dict_&#39; must be a dictionary&quot;</span><span class="p">)</span>
+
+    <span class="n">number</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">number</span> <span class="o">+=</span> <span class="n">get_number_of_elements</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">number</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+    <span class="k">return</span> <span class="n">number</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Miquel Lluís Llorens Monteagudo.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
