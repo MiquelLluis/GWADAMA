@@ -46,7 +46,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="0.2.0" />
   </head>
   
   
@@ -95,22 +95,13 @@
   
   <div class="col-lg-3 navbar-header-items__start">
     
-      <div class="navbar-item">
-
-  
-    
-  
-
-<a class="navbar-brand logo" href="../../index.html">
-  
-  
-  
-  
-  
-  
-    <p class="title logo__title">GWADAMA 0.2.0 documentation</p>
-  
-</a></div>
+      <div class="navbar-item"><div class="navbar-logo">
+    <a href="../../index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
+        <img src="_static/clawdia-logo.svg" class="navbar-project-icon" />
+        <span class="navbar-project-name">GWADAMA</span>
+        <span class="navbar-project-version">v0.2.0</span>
+    </a>
+</div></div>
     
   </div>
   
@@ -122,6 +113,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../modules.html">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -148,6 +145,22 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
       
     </div>
     
@@ -193,6 +206,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../modules.html">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -210,6 +229,22 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
         
       </div>
     
@@ -274,10 +309,8 @@
 <span></span><span class="kn">import</span> <span class="nn">bilby</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">import</span> <span class="nn">scipy.signal</span>
 
-<span class="kn">from</span> <span class="nn">clawdia.estimators</span> <span class="kn">import</span> <span class="n">find_merger</span>
-
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">tat</span>
 
 
 <div class="viewcode-block" id="project">
@@ -349,7 +382,7 @@
     <span class="n">h_plus_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">h_plus</span><span class="o">*</span><span class="n">window</span><span class="p">,</span> <span class="p">(</span><span class="n">pad_l</span><span class="p">,</span><span class="n">pad_r</span><span class="p">))</span>
     <span class="n">h_cros_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">h_cros</span><span class="o">*</span><span class="n">window</span><span class="p">,</span> <span class="p">(</span><span class="n">pad_l</span><span class="p">,</span><span class="n">pad_r</span><span class="p">))</span>
 
-    <span class="n">i_merger_pad</span> <span class="o">=</span> <span class="n">find_merger</span><span class="p">(</span><span class="n">h_plus_padded</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">h_cros_padded</span><span class="p">)</span>
+    <span class="n">i_merger_pad</span> <span class="o">=</span> <span class="n">tat</span><span class="o">.</span><span class="n">find_merger</span><span class="p">(</span><span class="n">h_plus_padded</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">h_cros_padded</span><span class="p">)</span>
 
     <span class="c1"># Bilby works in frequencies.</span>
     <span class="n">frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfftfreq</span><span class="p">(</span><span class="n">nfft</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">sf</span><span class="p">)</span>
@@ -367,7 +400,7 @@
     <span class="n">strains_projected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">irfft</span><span class="p">(</span><span class="n">strains_projected</span><span class="p">)</span>
 
     <span class="c1"># Get back the original length and position of the GW.</span>
-    <span class="n">i_merger</span> <span class="o">=</span> <span class="n">find_merger</span><span class="p">(</span><span class="n">strains_projected</span><span class="p">)</span>
+    <span class="n">i_merger</span> <span class="o">=</span> <span class="n">tat</span><span class="o">.</span><span class="n">find_merger</span><span class="p">(</span><span class="n">strains_projected</span><span class="p">)</span>
     <span class="n">i0</span> <span class="o">=</span> <span class="n">i_merger</span> <span class="o">-</span> <span class="n">i_merger_pad</span> <span class="o">+</span> <span class="n">pad_l</span>
     <span class="n">i1</span> <span class="o">=</span> <span class="n">i0</span> <span class="o">+</span> <span class="n">l_input</span>
     <span class="n">strains_projected</span> <span class="o">=</span> <span class="n">strains_projected</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span><span class="n">i1</span><span class="p">]</span>

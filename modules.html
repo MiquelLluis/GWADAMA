@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama &#8212; GWADAMA 0.2.0 documentation</title>
+    <title>API Documentation &#8212; GWADAMA 0.2.1 documentation</title>
   
   
   
@@ -39,15 +39,17 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/documentation_options.js?v=37f418d5"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'modules';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="gwadama.datasets" href="gwadama.datasets.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="0.2.1" />
   </head>
   
   
@@ -96,22 +98,13 @@
   
   <div class="col-lg-3 navbar-header-items__start">
     
-      <div class="navbar-item">
-
-  
-    
-  
-
-<a class="navbar-brand logo" href="index.html">
-  
-  
-  
-  
-  
-  
-    <p class="title logo__title">GWADAMA 0.2.0 documentation</p>
-  
-</a></div>
+      <div class="navbar-item"><div class="navbar-logo">
+    <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
+        <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
+        <span class="navbar-project-name">GWADAMA</span>
+        <span class="navbar-project-version">v0.2.1</span>
+    </a>
+</div></div>
     
   </div>
   
@@ -123,6 +116,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -150,6 +149,22 @@
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
       
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
     </div>
     
   </div>
@@ -166,10 +181,6 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
-      <span class="fa-solid fa-outdent"></span>
-    </button>
-  
 </div>
 
     </header>
@@ -180,10 +191,8 @@
       
       
       
-        
-      
       <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -198,6 +207,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -216,9 +231,44 @@
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
         
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
       </div>
     
   </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="gwadama.datasets.html">gwadama.datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.detectors.html">gwadama.detectors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
@@ -255,7 +305,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">API Documentation</span></li>
   </ul>
 </nav>
 </div>
@@ -272,75 +322,76 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="gwadama">
-<h1>gwadama<a class="headerlink" href="#gwadama" title="Link to this heading">#</a></h1>
+  <section id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Link to this heading">#</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This project is still in its early development stages and is under active
+development. Users should expect significant structural and functional
+changes in future updates.
+Upcoming improvements will focus on improving existing data structures to
+improve usability and performance, and adding new dataset classes to cover
+more use cases.</p>
+</div>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gwadama.html">gwadama package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gwadama.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.datasets.html">gwadama.datasets</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.Base"><code class="docutils literal notranslate"><span class="pre">Base</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.BaseInjected"><code class="docutils literal notranslate"><span class="pre">BaseInjected</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.CoReWaves"><code class="docutils literal notranslate"><span class="pre">CoReWaves</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.InjectedCoReWaves"><code class="docutils literal notranslate"><span class="pre">InjectedCoReWaves</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.InjectedSyntheticWaves"><code class="docutils literal notranslate"><span class="pre">InjectedSyntheticWaves</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.SyntheticWaves"><code class="docutils literal notranslate"><span class="pre">SyntheticWaves</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.datasets.html">gwadama.datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.Base"><code class="docutils literal notranslate"><span class="pre">Base</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.BaseInjected"><code class="docutils literal notranslate"><span class="pre">BaseInjected</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.CoReWaves"><code class="docutils literal notranslate"><span class="pre">CoReWaves</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.InjectedCoReWaves"><code class="docutils literal notranslate"><span class="pre">InjectedCoReWaves</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.InjectedSyntheticWaves"><code class="docutils literal notranslate"><span class="pre">InjectedSyntheticWaves</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.SyntheticWaves"><code class="docutils literal notranslate"><span class="pre">SyntheticWaves</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.detectors.html">gwadama.detectors</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.detectors.html#gwadama.detectors.project"><code class="docutils literal notranslate"><span class="pre">project()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.detectors.html">gwadama.detectors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.detectors.html#gwadama.detectors.project"><code class="docutils literal notranslate"><span class="pre">project()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.dict_to_stacked_array"><code class="docutils literal notranslate"><span class="pre">dict_to_stacked_array()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.fill"><code class="docutils literal notranslate"><span class="pre">fill()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.filter_nested_dict"><code class="docutils literal notranslate"><span class="pre">filter_nested_dict()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.flatten_nested_dict"><code class="docutils literal notranslate"><span class="pre">flatten_nested_dict()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_depth"><code class="docutils literal notranslate"><span class="pre">get_depth()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_next_item"><code class="docutils literal notranslate"><span class="pre">get_next_item()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_number_of_elements"><code class="docutils literal notranslate"><span class="pre">get_number_of_elements()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_value_from_nested_dict"><code class="docutils literal notranslate"><span class="pre">get_value_from_nested_dict()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.set_value_to_nested_dict"><code class="docutils literal notranslate"><span class="pre">set_value_to_nested_dict()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.unroll_nested_dictionary_keys"><code class="docutils literal notranslate"><span class="pre">unroll_nested_dictionary_keys()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.dict_to_stacked_array"><code class="docutils literal notranslate"><span class="pre">dict_to_stacked_array()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.fill"><code class="docutils literal notranslate"><span class="pre">fill()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.filter_nested_dict"><code class="docutils literal notranslate"><span class="pre">filter_nested_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.flatten_nested_dict"><code class="docutils literal notranslate"><span class="pre">flatten_nested_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_depth"><code class="docutils literal notranslate"><span class="pre">get_depth()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_next_item"><code class="docutils literal notranslate"><span class="pre">get_next_item()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_number_of_elements"><code class="docutils literal notranslate"><span class="pre">get_number_of_elements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_value_from_nested_dict"><code class="docutils literal notranslate"><span class="pre">get_value_from_nested_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.set_value_to_nested_dict"><code class="docutils literal notranslate"><span class="pre">set_value_to_nested_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.unroll_nested_dictionary_keys"><code class="docutils literal notranslate"><span class="pre">unroll_nested_dictionary_keys()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.correct_phase"><code class="docutils literal notranslate"><span class="pre">correct_phase()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.highpass_filter"><code class="docutils literal notranslate"><span class="pre">highpass_filter()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.instant_frequency"><code class="docutils literal notranslate"><span class="pre">instant_frequency()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.whiten"><code class="docutils literal notranslate"><span class="pre">whiten()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.correct_phase"><code class="docutils literal notranslate"><span class="pre">correct_phase()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.highpass_filter"><code class="docutils literal notranslate"><span class="pre">highpass_filter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.instant_frequency"><code class="docutils literal notranslate"><span class="pre">instant_frequency()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.snr"><code class="docutils literal notranslate"><span class="pre">snr()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.whiten"><code class="docutils literal notranslate"><span class="pre">whiten()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.CoReManager"><code class="docutils literal notranslate"><span class="pre">CoReManager</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.save_experiment_results"><code class="docutils literal notranslate"><span class="pre">save_experiment_results()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.save_to_hdf5"><code class="docutils literal notranslate"><span class="pre">save_to_hdf5()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.CoReManager"><code class="docutils literal notranslate"><span class="pre">CoReManager</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.save_experiment_results"><code class="docutils literal notranslate"><span class="pre">save_experiment_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.save_to_hdf5"><code class="docutils literal notranslate"><span class="pre">save_to_hdf5()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.synthetic.html#gwadama.synthetic.NonwhiteGaussianNoise"><code class="docutils literal notranslate"><span class="pre">NonwhiteGaussianNoise</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.synthetic.html#gwadama.synthetic.gaussian_waveform"><code class="docutils literal notranslate"><span class="pre">gaussian_waveform()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.synthetic.html#gwadama.synthetic.ring_down_waveform"><code class="docutils literal notranslate"><span class="pre">ring_down_waveform()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.synthetic.html#gwadama.synthetic.sine_gaussian_waveform"><code class="docutils literal notranslate"><span class="pre">sine_gaussian_waveform()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.synthetic.html#gwadama.synthetic.NonwhiteGaussianNoise"><code class="docutils literal notranslate"><span class="pre">NonwhiteGaussianNoise</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.synthetic.html#gwadama.synthetic.gaussian_waveform"><code class="docutils literal notranslate"><span class="pre">gaussian_waveform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.synthetic.html#gwadama.synthetic.ring_down_waveform"><code class="docutils literal notranslate"><span class="pre">ring_down_waveform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.synthetic.html#gwadama.synthetic.sine_gaussian_waveform"><code class="docutils literal notranslate"><span class="pre">sine_gaussian_waveform()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.find_time_origin"><code class="docutils literal notranslate"><span class="pre">find_time_origin()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.gen_time_array"><code class="docutils literal notranslate"><span class="pre">gen_time_array()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.pad_time_array"><code class="docutils literal notranslate"><span class="pre">pad_time_array()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.resample"><code class="docutils literal notranslate"><span class="pre">resample()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.shrink_time_array"><code class="docutils literal notranslate"><span class="pre">shrink_time_array()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.find_merger"><code class="docutils literal notranslate"><span class="pre">find_merger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.find_time_origin"><code class="docutils literal notranslate"><span class="pre">find_time_origin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.gen_time_array"><code class="docutils literal notranslate"><span class="pre">gen_time_array()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.pad_time_array"><code class="docutils literal notranslate"><span class="pre">pad_time_array()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.resample"><code class="docutils literal notranslate"><span class="pre">resample()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.shrink_time_array"><code class="docutils literal notranslate"><span class="pre">shrink_time_array()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="gwadama.html#module-gwadama">Module contents</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="gwadama.html#dependencies">DEPENDENCIES</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
 </ul>
 </div>
 </section>
@@ -355,27 +406,30 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">&lt;no title&gt;</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="gwadama.datasets.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">gwadama.datasets</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
             </div>
             
             
-              
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/modules.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div></div>
-
-</div></div>
               
             
           </div>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.dictools &#8212; GWADAMA 0.2.0 documentation</title>
+    <title>gwadama.dictools &#8212; GWADAMA 0.2.1 documentation</title>
   
   
   
@@ -39,15 +39,17 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/documentation_options.js?v=37f418d5"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.dictools';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="gwadama.fat" href="gwadama.fat.html" />
+    <link rel="prev" title="gwadama.detectors" href="gwadama.detectors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="0.2.1" />
   </head>
   
   
@@ -96,22 +98,13 @@
   
   <div class="col-lg-3 navbar-header-items__start">
     
-      <div class="navbar-item">
-
-  
-    
-  
-
-<a class="navbar-brand logo" href="index.html">
-  
-  
-  
-  
-  
-  
-    <p class="title logo__title">GWADAMA 0.2.0 documentation</p>
-  
-</a></div>
+      <div class="navbar-item"><div class="navbar-logo">
+    <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
+        <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
+        <span class="navbar-project-name">GWADAMA</span>
+        <span class="navbar-project-version">v0.2.1</span>
+    </a>
+</div></div>
     
   </div>
   
@@ -123,6 +116,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="modules.html">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -149,6 +148,22 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
       
     </div>
     
@@ -196,6 +211,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="modules.html">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -213,6 +234,22 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
         
       </div>
     
@@ -272,6 +309,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="modules.html" class="nav-link">API Documentation</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama.dictools</span></li>
   </ul>
 </nav>
@@ -295,7 +335,7 @@
 <p>Collection of utility functions related to nested Python dictionaries.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.dictools.dict_to_stacked_array">
-<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">dict_to_stacked_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#dict_to_stacked_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.dict_to_stacked_array" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">dict_to_stacked_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#dict_to_stacked_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.dict_to_stacked_array" title="Link to this definition">#</a></dt>
 <dd><p>Stack the arrays inside a dict() to a 2d-array.</p>
 <p>Given a NON-nested dict whose values are flat numpy arrays, with potentially different
 lengths, stacks them in a homogeneous 2d-array aligned to the left,
@@ -513,6 +553,24 @@ If only the first layer is desired (no recursion at all), <cite>max_depth=1</cit
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="gwadama.detectors.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">gwadama.detectors</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="gwadama.fat.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">gwadama.fat</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -544,15 +602,6 @@ If only the first layer is desired (no recursion at all), <cite>max_depth=1</cit
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.unroll_nested_dictionary_keys"><code class="docutils literal notranslate"><span class="pre">unroll_nested_dictionary_keys()</span></code></a></li>
 </ul>
   </nav></div>
-
-  <div class="sidebar-secondary-item">
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/gwadama.dictools.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div></div>
 
 </div></div>
               

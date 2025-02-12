@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.tat &#8212; GWADAMA 0.2.0 documentation</title>
+    <title>gwadama.tat &#8212; GWADAMA 0.2.1 documentation</title>
   
   
   
@@ -39,15 +39,17 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/documentation_options.js?v=37f418d5"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.tat';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="gwadama.units" href="gwadama.units.html" />
+    <link rel="prev" title="gwadama.synthetic" href="gwadama.synthetic.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="0.2.1" />
   </head>
   
   
@@ -96,22 +98,13 @@
   
   <div class="col-lg-3 navbar-header-items__start">
     
-      <div class="navbar-item">
-
-  
-    
-  
-
-<a class="navbar-brand logo" href="index.html">
-  
-  
-  
-  
-  
-  
-    <p class="title logo__title">GWADAMA 0.2.0 documentation</p>
-  
-</a></div>
+      <div class="navbar-item"><div class="navbar-logo">
+    <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
+        <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
+        <span class="navbar-project-name">GWADAMA</span>
+        <span class="navbar-project-version">v0.2.1</span>
+    </a>
+</div></div>
     
   </div>
   
@@ -123,6 +116,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="modules.html">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -149,6 +148,22 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
       
     </div>
     
@@ -196,6 +211,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="modules.html">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -213,6 +234,22 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
         
       </div>
     
@@ -272,6 +309,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="modules.html" class="nav-link">API Documentation</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama.tat</span></li>
   </ul>
 </nav>
@@ -294,8 +334,47 @@
 <p>tat.py</p>
 <p>Time analysis toolkit.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="gwadama.tat.find_merger">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">find_merger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#find_merger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.find_merger" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the index position of the merger in the given strain.</p>
+<p>This function provides a rough estimate of the merger index position by
+locating the maximum of the absolute amplitude of the gravitational wave
+signal in the time domain. It assumes that the merger roughly corresponds
+to this peak, which holds for certain clean or high-SNR simulated CBC
+gravitational waves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Warning<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>This function may be replaced in the near future by a more formal estimator
+with a better model, such as a Gaussian fit for binary mergers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Caution<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>This is a very ad-hoc method and may not be accurate for all datasets,
+especially depending on the sensitivity of the detector. This method
+assumes that the peak amplitude in the time domain corresponds closely to
+the merger, which may not hold for lower-SNR signals or noisy data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h</strong><span class="classifier">np.ndarray</span></dt><dd><p>The gravitational wave strain data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int</dt><dd><p>The index of the estimated merger position in the strain data.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="gwadama.tat.find_time_origin">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">find_time_origin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#find_time_origin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.find_time_origin" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">find_time_origin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#find_time_origin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.find_time_origin" title="Link to this definition">#</a></dt>
 <dd><p>Find the index position of the origin of a time array.</p>
 <p>It is just a shortcut for <cite>np.argmin(np.abs(times))</cite>.</p>
 <dl class="field-list simple">
@@ -345,7 +424,7 @@ be adjusted.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.tat.pad_time_array">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">pad_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#pad_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.pad_time_array" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">pad_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/tat.html#pad_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.pad_time_array" title="Link to this definition">#</a></dt>
 <dd><p>Extend a time array by ‘pad’ number of samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -374,7 +453,7 @@ different.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.tat.resample">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.resample" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.resample" title="Link to this definition">#</a></dt>
 <dd><p>Resample a single strain in time domain.</p>
 <p>Resample strain’s sampling rate using an interpolation in the time domain
 for upscalling to a constant rate, and then decimate it to the target rate.</p>
@@ -414,7 +493,7 @@ and the factor down.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.tat.shrink_time_array">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">shrink_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#shrink_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.shrink_time_array" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">shrink_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/tat.html#shrink_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.shrink_time_array" title="Link to this definition">#</a></dt>
 <dd><p>Shrink a time array on both sides by ‘unpad’ number of samples.</p>
 <p class="rubric">Notes</p>
 <ul class="simple">
@@ -436,6 +515,24 @@ different.</p></li>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="gwadama.synthetic.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">gwadama.synthetic</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="gwadama.units.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">gwadama.units</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -455,6 +552,7 @@ different.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.find_merger"><code class="docutils literal notranslate"><span class="pre">find_merger()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.find_time_origin"><code class="docutils literal notranslate"><span class="pre">find_time_origin()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.gen_time_array"><code class="docutils literal notranslate"><span class="pre">gen_time_array()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.pad_time_array"><code class="docutils literal notranslate"><span class="pre">pad_time_array()</span></code></a></li>
@@ -462,15 +560,6 @@ different.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.shrink_time_array"><code class="docutils literal notranslate"><span class="pre">shrink_time_array()</span></code></a></li>
 </ul>
   </nav></div>
-
-  <div class="sidebar-secondary-item">
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/gwadama.tat.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div></div>
 
 </div></div>
               

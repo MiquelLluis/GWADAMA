@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.synthetic &#8212; GWADAMA 0.2.0 documentation</title>
+    <title>gwadama.synthetic &#8212; GWADAMA 0.2.1 documentation</title>
   
   
   
@@ -39,15 +39,17 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/documentation_options.js?v=37f418d5"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.synthetic';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="gwadama.tat" href="gwadama.tat.html" />
+    <link rel="prev" title="gwadama.ioo" href="gwadama.ioo.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
+  <meta name="docsearch:version" content="0.2.1" />
   </head>
   
   
@@ -96,22 +98,13 @@
   
   <div class="col-lg-3 navbar-header-items__start">
     
-      <div class="navbar-item">
-
-  
-    
-  
-
-<a class="navbar-brand logo" href="index.html">
-  
-  
-  
-  
-  
-  
-    <p class="title logo__title">GWADAMA 0.2.0 documentation</p>
-  
-</a></div>
+      <div class="navbar-item"><div class="navbar-logo">
+    <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
+        <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
+        <span class="navbar-project-name">GWADAMA</span>
+        <span class="navbar-project-version">v0.2.1</span>
+    </a>
+</div></div>
     
   </div>
   
@@ -123,6 +116,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="modules.html">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -149,6 +148,22 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
       
     </div>
     
@@ -196,6 +211,12 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="modules.html">
+    API Documentation
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -213,6 +234,22 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MiquelLluis/GWADAMA" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
         
       </div>
     
@@ -272,6 +309,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="modules.html" class="nav-link">API Documentation</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama.synthetic</span></li>
   </ul>
 </nav>
@@ -326,7 +366,7 @@ its original value can be accessed through the attribute ‘_psd’.</p>
 <td><p>Rescale the signal 'x' to the given snr w.r.t.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.synthetic.NonwhiteGaussianNoise.snr" title="gwadama.synthetic.NonwhiteGaussianNoise.snr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">snr</span></code></a>(x)</p></td>
-<td><p>Compute the Signal to Noise Ratio using Clawdia's function.</p></td>
+<td><p>Compute the Signal to Noise Ratio.</p></td>
 </tr>
 </tbody>
 </table>
@@ -419,7 +459,7 @@ False by default.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gwadama.synthetic.NonwhiteGaussianNoise.snr">
 <span class="sig-name descname"><span class="pre">snr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/synthetic.html#NonwhiteGaussianNoise.snr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.synthetic.NonwhiteGaussianNoise.snr" title="Link to this definition">#</a></dt>
-<dd><p>Compute the Signal to Noise Ratio using Clawdia’s function.</p>
+<dd><p>Compute the Signal to Noise Ratio.</p>
 <p>Due to the legacy code state, I need to compute a sample of the PSD
 first. But in the future I plan to make it so that it can take both
 a PSD estimation function or an array realization like I did here.</p>
@@ -429,7 +469,7 @@ a PSD estimation function or an array realization like I did here.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.synthetic.gaussian_waveform">
-<span class="sig-prename descclassname"><span class="pre">gwadama.synthetic.</span></span><span class="sig-name descname"><span class="pre">gaussian_waveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hrss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/gwadama/synthetic.html#gaussian_waveform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.synthetic.gaussian_waveform" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.synthetic.</span></span><span class="sig-name descname"><span class="pre">gaussian_waveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hrss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/synthetic.html#gaussian_waveform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.synthetic.gaussian_waveform" title="Link to this definition">#</a></dt>
 <dd><p>Generate a Gaussian-like waveform.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -457,7 +497,7 @@ Here is used to compute the effective duration of the wave.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.synthetic.ring_down_waveform">
-<span class="sig-prename descclassname"><span class="pre">gwadama.synthetic.</span></span><span class="sig-name descname"><span class="pre">ring_down_waveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hrss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/gwadama/synthetic.html#ring_down_waveform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.synthetic.ring_down_waveform" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.synthetic.</span></span><span class="sig-name descname"><span class="pre">ring_down_waveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hrss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/synthetic.html#ring_down_waveform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.synthetic.ring_down_waveform" title="Link to this definition">#</a></dt>
 <dd><p>Generate a Sine-Gaussian-like waveform.</p>
 <p>This waveform has its peak at the beginning. In order to synchronise it
 with other waveforms which have their peak at the center, it is recommended
@@ -486,7 +526,7 @@ REF: (2015) Powell J, Trifirò D, Cuoco E, Heng I S and Cavaglià M,</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.synthetic.sine_gaussian_waveform">
-<span class="sig-prename descclassname"><span class="pre">gwadama.synthetic.</span></span><span class="sig-name descname"><span class="pre">sine_gaussian_waveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hrss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="_modules/gwadama/synthetic.html#sine_gaussian_waveform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.synthetic.sine_gaussian_waveform" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.synthetic.</span></span><span class="sig-name descname"><span class="pre">sine_gaussian_waveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hrss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/synthetic.html#sine_gaussian_waveform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.synthetic.sine_gaussian_waveform" title="Link to this definition">#</a></dt>
 <dd><p>Generate a Sine-Gaussian-like waveform.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -522,6 +562,24 @@ REF: (2015) Powell J, Trifirò D, Cuoco E, Heng I S and Cavaglià M,</p>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="gwadama.ioo.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">gwadama.ioo</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="gwadama.tat.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">gwadama.tat</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -553,15 +611,6 @@ REF: (2015) Powell J, Trifirò D, Cuoco E, Heng I S and Cavaglià M,</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.synthetic.sine_gaussian_waveform"><code class="docutils literal notranslate"><span class="pre">sine_gaussian_waveform()</span></code></a></li>
 </ul>
   </nav></div>
-
-  <div class="sidebar-secondary-item">
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/gwadama.synthetic.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div></div>
 
 </div></div>
               
