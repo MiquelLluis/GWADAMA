@@ -17,4 +17,4 @@ from .datasets import *
 from .ioo import CoReManager
 from . import synthetic
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
