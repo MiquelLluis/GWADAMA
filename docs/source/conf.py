@@ -1,68 +1,93 @@
 # Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+
+# Ensure Sphinx can find the package
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'GWADAMA'
 copyright = '2025, Miquel Lluís Llorens Monteagudo'
 author = 'Miquel Lluís Llorens Monteagudo'
-release = '0.2.0'
+
+from gwadama import __version__ as version
+release = version
+
 
 # -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     'numpydoc',            # Parses NumPy-style docstrings
     'sphinx.ext.autodoc',  # Auto-generates documentation from docstrings
     'sphinx.ext.viewcode', # Adds links to highlighted source code
     'sphinx.ext.mathjax',  # Renders math equations
-    'sphinx.ext.autosummary', # Generate summary tables
+    # 'sphinx.ext.autosummary',  # Generate summary tables
+    'sphinx.ext.intersphinx',  # Allows references to external libraries
 ]
 
-autosummary_generate = True
-autosummary_imported_members = True  # Include members imported from other modules
+autosummary_generate = False
+# autosummary_generate_overwrite = True  # Overwrite existing stub files
+# autosummary_generate_output = os.path.join(os.path.abspath('.'), '_autosummary')
+# autosummary_imported_members = True  # Include members imported from other modules
 autodoc_default_options = {
     "members": True,
-    "undoc-members": False,
+    "undoc-members": True,
     "special-members": "__init__",
     "inherited-members": True,
     "show-inheritance": True,
 }
-
-# Optional: Numpydoc settings (tweak as needed)
-# numpydoc_show_class_members = False  # Avoid showing all class members automatically
-# numpydoc_class_members_toctree = False  # Avoid creating a toctree for class members
-
-templates_path = ['_templates']
 exclude_patterns = []
 
-# Ensure Sphinx can find the 'clawdia' package
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../..'))
-
-
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-html_theme = 'pydata_sphinx_theme'
-html_static_path = ['_static']
-html_css_files = [
-    'custom.css',
-]
-
+suppress_warnings = ["autosummary"]
 
 # Add explicit anchors to methods and class members
 numpydoc_class_members_toctree = True  # Ensures class methods are linked in the "On this page" section
 autodoc_default_flags = ['members', 'show-inheritance']
 
-
-html_theme_options = {
-    "secondary_sidebar_items": ["page-toc", "sourcelink"],
-    "show_toc_level": 2,
+# To Enable Cross-Referencing with Sphinx (Intersphinx)
+intersphinx_mapping = {
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
 }
 
-# toc_object_entries_show_depth = 3
+
+# -- Options for HTML output -------------------------------------------------
+
+html_static_path = ['_static']
+templates_path = ['_templates']
+html_theme = 'pydata_sphinx_theme'
+html_css_files = [
+    'custom.css',
+]
+
+# html_logo = "_static/gwadama-logo.svg"
+
+html_theme_options = {
+    # HEADER ------------------------------------------------------------------
+
+    # "external_links": [
+    #     {"name": "GitHub", "url": "https://github.com/MiquelLluis/GWADAMA"},
+    # ],
+    "icon_links": [
+        {
+            # Label for this link
+            "name": "GitHub",
+            # URL where the link will redirect
+            "url": "https://github.com/MiquelLluis/GWADAMA",  # required
+            # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
+            "icon": "fa-brands fa-square-github",
+            # The type of image to be used (see below for details)
+            "type": "fontawesome",
+        }
+   ],
+
+
+   # SECONDARY SIDEBAR (RIGHT) ------------------------------------------------
+
+   "secondary_sidebar_items": ["page-toc"],
+    "show_nav_level": 0,
+    "show_toc_level": 2,
+    "navigation_depth": 3,
+}
+
