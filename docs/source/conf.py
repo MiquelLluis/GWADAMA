@@ -61,7 +61,7 @@ html_css_files = [
     'custom.css',
 ]
 
-# html_logo = "_static/gwadama-logo.svg"
+html_logo = "_static/gwadama-logo.png"
 
 html_theme_options = {
     # HEADER ------------------------------------------------------------------
