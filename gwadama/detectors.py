@@ -1,10 +1,8 @@
 import bilby
 import numpy as np
 import scipy as sp
-import scipy.signal
 
-from clawdia.estimators import find_merger
-
+from . import tat
 
 
 def project(h_plus: np.ndarray, h_cros: np.ndarray,
@@ -92,7 +90,7 @@ def project(h_plus: np.ndarray, h_cros: np.ndarray,
     strains_projected = np.fft.irfft(strains_projected)
 
     # Get back the original length and position of the GW.
-    i_merger = find_merger(strains_projected)
+    i_merger = tat.find_merger(strains_projected)
     i0 = i_merger - i_merger_pad + pad_l
     i1 = i0 + l_input
     strains_projected = strains_projected[i0:i1]

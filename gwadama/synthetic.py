@@ -1,11 +1,9 @@
 from typing import Callable
 
 import numpy as np
-import scipy as sp
-import scipy.signal
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 
-import clawdia
+from . import fat
 
 
 
@@ -200,7 +198,7 @@ class NonwhiteGaussianNoise:
         return (x_new, factor)
 
     def snr(self, x):
-        """Compute the Signal to Noise Ratio using Clawdia's function.
+        """Compute the Signal to Noise Ratio.
         
         Due to the legacy code state, I need to compute a sample of the PSD
         first. But in the future I plan to make it so that it can take both
@@ -209,7 +207,7 @@ class NonwhiteGaussianNoise:
         """
         freqs = np.linspace(self.freq_cutoff, self.freq_nyquist, 2*self.sample_rate)
         psd = np.array([freqs, self.psd(freqs)])
-        snr = clawdia.estimators.snr(x, psd=psd, at=1/self.sample_rate, window=('tukey',0.1))
+        snr = fat.snr(x, psd=psd, at=1/self.sample_rate, window=('tukey',0.1))
         
         return snr
 

@@ -15,7 +15,6 @@ from copy import deepcopy
 import itertools
 from typing import Callable
 
-# from clawdia.estimators import find_merger  # Imported only when instancing CoReWaves.
 from gwpy.timeseries import TimeSeries
 import numpy as np
 import pandas as pd
@@ -2816,8 +2815,7 @@ class CoReWaves(Base):
         return strains, times, metadata
     
     def find_merger(self, strain: np.ndarray) -> int:
-        from clawdia.estimators import find_merger
-        return find_merger(strain)
+        return tat.find_merger(strain)
 
     def _update_merger_positions(self):
         """Update all 'merger_pos' tags inside the metadata attribute.

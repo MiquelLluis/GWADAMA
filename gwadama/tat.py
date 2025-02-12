@@ -196,3 +196,36 @@ def find_time_origin(times: np.ndarray) -> int:
     
     """
     return np.argmin(np.abs(times))
+
+
+def find_merger(h: np.ndarray) -> int:
+    """Estimate the index position of the merger in the given strain.
+
+    This function provides a rough estimate of the merger index position by
+    locating the maximum of the absolute amplitude of the gravitational wave
+    signal in the time domain. It assumes that the merger roughly corresponds
+    to this peak, which holds for certain clean or high-SNR simulated CBC
+    gravitational waves.
+
+    :warning:
+    This function may be replaced in the near future by a more formal estimator
+    with a better model, such as a Gaussian fit for binary mergers.
+    
+    :caution:
+    This is a very ad-hoc method and may not be accurate for all datasets,
+    especially depending on the sensitivity of the detector. This method
+    assumes that the peak amplitude in the time domain corresponds closely to
+    the merger, which may not hold for lower-SNR signals or noisy data.
+
+    Parameters
+    ----------
+    h : np.ndarray
+        The gravitational wave strain data.
+
+    Returns
+    -------
+    int
+        The index of the estimated merger position in the strain data.
+    
+    """
+    return np.argmax(np.abs(h))
