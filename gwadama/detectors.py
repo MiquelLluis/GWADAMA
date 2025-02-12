@@ -72,7 +72,7 @@ def project(h_plus: np.ndarray, h_cros: np.ndarray,
     h_plus_padded = np.pad(h_plus*window, (pad_l,pad_r))
     h_cros_padded = np.pad(h_cros*window, (pad_l,pad_r))
 
-    i_merger_pad = find_merger(h_plus_padded - 1j*h_cros_padded)
+    i_merger_pad = tat.find_merger(h_plus_padded - 1j*h_cros_padded)
 
     # Bilby works in frequencies.
     frequencies = np.fft.rfftfreq(nfft, d=1/sf)
