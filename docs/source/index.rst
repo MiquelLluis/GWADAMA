@@ -30,6 +30,11 @@
     </div>
 
 
+.. literalinclude:: ../../requirements.txt
+    :language: none
+    :caption: Required Dependencies
+
+
 .. toctree::
     :hidden:
     :maxdepth: 2
