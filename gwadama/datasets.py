@@ -890,7 +890,7 @@ class Base:
 
         if isinstance(classes, str):
             if classes == 'all':
-                return labels
+                return (labels, labels_id) if with_id else labels
             else:
                 classes = [classes]
         elif not isinstance(classes, list):
