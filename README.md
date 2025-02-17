@@ -16,26 +16,6 @@ gravitational-wave data-related operations:
 
 - Export to several formats.
 
-[DOCUMENTATION](https://miquellluis.github.io/GWADAMA/)
 
-REQUIREMENTS
-------------
-- bilby (2.3.0)
 
-- clawdia
-
-- gwpy (3.0.7)
-
-- numpy (1.25.0)
-
-- pandas (2.0.3)
-
-- scipy (1.11.1)
-
-- sklearn (1.2.2)
-
-- tqdm (4.66.1)
-
-- watpy (0.1.1)
-
-In parenthesis are the version numbers they've been tested with.
+## [DOCUMENTATION](https://miquellluis.github.io/GWADAMA/)
