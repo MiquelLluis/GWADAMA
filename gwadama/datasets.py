@@ -33,7 +33,7 @@ from .units import *
 
 
 __all__ = ['Base', 'BaseInjected', 'SyntheticWaves', 'InjectedSyntheticWaves',
-           'CoReWaves', 'InjectedCoReWaves']
+           'UnlabeledWaves', 'CoReWaves', 'InjectedCoReWaves']
 
 
 class Base:
@@ -2600,6 +2600,70 @@ class InjectedSyntheticWaves(BaseInjected):
             self.Xtest = None
             self.Ytrain = None
             self.Ytest = None
+
+
+class UnlabeledWaves(Base):
+    """Manage a generic noiseless dataset with no labels.
+    
+    TODO
+    - Special case of 'Base' with only 1 class.
+    - Shape keeps being {class: {id: strain}}.
+    - This class modifies the treatment of metadata to avoid issues with the
+      lack of labels.
+
+    """
+    def __init__(self, strains_array, strain_limits=None, random_seed=None):
+        self.classes = {'binary': 1}  # Dummy class.
+        self.strains = self._unpack_strains(strains_array, strain_limits)
+        self.labels = self._gen_labels()  # Dummy labels.
+        # self.metadata: pd.DataFrame = None  # OMMITED IN THIS CLASS
+        
+        # Number of nested layers in strains' dictionary. Keep updated always:
+        self._dict_depth: int = dictools.get_depth(self.strains)
+
+        self.max_length = self._find_max_length()
+        self.random_seed = random_seed  # SKlearn train_test_split doesn't accept a Generator yet.
+        self._track_times = False  # If True, self.times must be not None.
+
+        #----------------------------------------------------------------------
+        # Attributes whose values can be set up or otherwise left as follows.
+        #----------------------------------------------------------------------
+
+        # Whitening related attributes.
+        self.whitened = False
+        self.whiten_params = {}
+        self.nonwhiten_strains = None
+
+        # Time tracking related attributes.
+        self.sample_rate: int = None
+        self.times: dict = None
+        
+        # Train/Test subset splits (views into the same 'self.strains').
+        #   Timeseries:
+        self.Xtrain: np.ndarray = None
+        self.Xtest: np.ndarray = None
+        #   Labels:
+        self.Ytrain: np.ndarray = None
+        self.Ytest: np.ndarray = None
+
+    def _unpack_strains(self, strain_array: np.ndarray, strain_limits: np.ndarray = None) -> dict:
+        num_signals = strain_array.shape[0]
+
+        if strain_limits is None:
+            extracted_signals = {i: strain_array[i, :] for i in range(num_signals)}
+        elif strain_limits.shape == (2,):
+            start, end = strain_limits
+            extracted_signals = {i: strain_array[i, start:end] for i in range(num_signals)}
+        elif strain_limits.shape == (num_signals, 2):
+            extracted_signals = {i: strain_array[i, start:end] for i, (start, end) in enumerate(strain_limits)}
+        else:
+            raise ValueError("Invalid shape for strain_limits. Must be None, (2,), or (N,2).")
+
+        # Add the outer (class) layer:
+        class_name = next(iter(self.classes))  # Get the first class name
+
+        return {class_name: extracted_signals}
+
 
 
 class CoReWaves(Base):
