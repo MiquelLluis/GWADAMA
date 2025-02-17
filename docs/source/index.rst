@@ -35,6 +35,11 @@
     :caption: Required Dependencies
 
 
+.. literalinclude:: ../../requirements-optional.txt
+    :language: none
+    :caption: Optional Dependencies
+
+
 .. toctree::
     :hidden:
     :maxdepth: 2

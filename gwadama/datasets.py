@@ -2681,6 +2681,9 @@ class CoReWaves(Base):
             Azimuthal angle of the source in radians.
 
         """
+        if not isinstance(coredb, ioo.CoReManager):
+            raise TypeError("Expected 'coredb' to be an instance of CoReManager.")
+
         self._check_classes_dict(classes)
         self.classes = classes
         self.discarded = discarded

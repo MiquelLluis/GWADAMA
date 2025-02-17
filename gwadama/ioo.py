@@ -10,9 +10,13 @@ import h5py
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
-import watpy
 
 from .units import *
+
+
+# Note: 'watpy' is an optional dependency and is imported lazily inside CoReManager.
+# This allows users to use CLAWDIA without requiring 'watpy' unless they need CoReManager.
+
 
 
 
@@ -77,6 +81,13 @@ class CoReManager:
             Refer to 'watpy.coredb.coredb.CoRe_db' for more details.
 
         """
+        try:
+            import watpy  # Lazy import
+        except ImportError:
+            raise ImportError(
+                "The 'watpy' package is required for CoReManager but is not installed."
+            )
+
         self.db_path = Path(db_path)
         self.cdb = watpy.coredb.coredb.CoRe_db(db_path)
         self.metadata = self._gen_metadata_dataframe()
