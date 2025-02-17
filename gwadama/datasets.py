@@ -420,9 +420,9 @@ class Base:
         - If time arrays are present, they are also padded accordingly.
         """
         if isinstance(padding, int):
-            padding_d = {id: (padding, padding) for id in self.metadata.index}
+            padding_d = {id: (padding, padding) for id in self.labels}
         elif isinstance(padding, tuple):
-            padding_d = {id: padding for id in self.metadata.index}
+            padding_d = {id: padding for id in self.labels}
         elif isinstance(padding, dict):
             padding_d = padding
         else:
@@ -470,7 +470,7 @@ class Base:
 
         """
         if isinstance(limits, tuple):
-            limits_d = {id: limits for id in self.metadata.index}
+            limits_d = {id: limits for id in self.labels}
         else:
             limits_d = limits
 
@@ -608,7 +608,7 @@ class Base:
             It is also saved in its homonymous attribute.
             
         """
-        indices = list(self.metadata.index)
+        indices = list(self.labels)
         i_train, i_test = train_test_split(
             indices,
             train_size=train_size,
@@ -633,7 +633,7 @@ class Base:
         Parameters
         ----------
         indices : array-like
-            The indices are w.r.t. the Pandas 'self.metadata.index'.
+            The indices are w.r.t. 'self.labels'.
 
         Returns
         -------
@@ -3088,7 +3088,7 @@ class InjectedCoReWaves(BaseInjected):
             freq_butter_order=freq_butter_order, random_seed=random_seed
         )
 
-        self.whole_snr = {id_: {} for id_ in self.metadata.index}
+        self.whole_snr = {id_: {} for id_ in self.labels}
 
     def _update_merger_positions(self):
         """Update all 'merger_pos' tags inside the metadata attribute.
