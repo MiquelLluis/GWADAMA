@@ -14,6 +14,7 @@ There are two basic type of datasets, clean and injected:
 from copy import deepcopy
 import itertools
 from typing import Callable
+import warnings
 
 from gwpy.timeseries import TimeSeries
 import numpy as np
@@ -128,6 +129,10 @@ class Base:
         1D Array containing the labels in the same order as 'Xtrain' and
         'Xtest' respectively.
         See the attribute 'labels' for more info.
+
+    id_train, id_test : NDArray[int], optional
+        1D Array containing the id of the signals in the same order as
+        'Xtrain' and 'Xtest' respectively.
     
     Caveats
     -------
@@ -179,6 +184,9 @@ class Base:
         #   Labels:
         self.Ytrain: np.ndarray = None
         self.Ytest: np.ndarray = None
+        #   Indices (sorted as in train and test splits respectively):
+        self.id_train: np.ndarray = None
+        self.id_test: np.ndarray = None
     
     def __str__(self):
         """Return a summary of the dataset."""
@@ -628,13 +636,13 @@ class Base:
     def build_train_test_subsets(self, train_size: int | float, random_seed: int = None):
         """Generate a random Train and Test subsets.
 
-        Only entries in the index of 'metadata' DataFrame are considered
-        independent waveforms, any extra key (layer) in the 'strains' dict
-        is treated monolithically during the shuffle.
+        Only indices in the 'labels' attribute are considered independent
+        waveforms, any extra key (layer) in the 'strains' dict is treated
+        monolithically during the shuffle.
         
-        The strain values are just new views into the 'strains' attribute.
-        The shuffling is performed by Scikit-Learn's function
-        'train_test_split', with stratification enabled.
+        The strain values are just new views into the 'strains' attribute. The
+        shuffling is performed by Scikit-Learn's function 'train_test_split',
+        with stratification enabled.
 
         Parameters
         ----------
@@ -650,17 +658,34 @@ class Base:
             It is also saved in its homonymous attribute.
             
         """
+        match (self.random_seed, random_seed):
+            case (int() as existing_seed, int() as new_seed):
+                if new_seed != existing_seed:
+                    warnings.warn(
+                        "'random_seed' was already set as attribute in this instance,"
+                        f" replacing it by the value {random_seed} passed as parameter."
+                    )
+                    self.random_seed = random_seed
+            case (None, int() as new_seed):
+                self.random_seed = new_seed
+            case (int(), None):
+                pass
+            case (None, None):
+                warnings.warn(
+                    "'random_seed' is not being manually set; this could result"
+                    " in unreproducible results."
+                )
+            
         indices = list(self.labels)
-        i_train, i_test = train_test_split(
+        self.id_train, self.id_test = train_test_split(
             indices,
             train_size=train_size,
-            random_state=random_seed,
+            random_state=self.random_seed,
             shuffle=True,
             stratify=list(self.labels.values())
         )
-        self.Xtrain, self.Ytrain = self._build_subset_strains(i_train)
-        self.Xtest, self.Ytest = self._build_subset_strains(i_test)
-        self.random_seed = random_seed
+        self.Xtrain, self.Ytrain = self._build_subset_strains(self.id_train)
+        self.Xtest, self.Ytest = self._build_subset_strains(self.id_test)        
     
     def _build_subset_strains(self, indices):
         """Return a subset of strains and their labels based on their ID.
@@ -1284,11 +1309,15 @@ class BaseInjected(Base):
             self.Xtest = {k: None for k in clean_dataset.Xtest.keys()}
             self.Ytrain = clean_dataset.Ytrain
             self.Ytest = clean_dataset.Ytest
+            self.id_train = clean_dataset.id_train
+            self.id_test = clean_dataset.id_test
         else:
             self.Xtrain = None
             self.Xtest = None
             self.Ytrain = None
             self.Ytest = None
+            self.id_train = None
+            self.id_test = None
     
     def __getstate__(self):
         """Avoid error when trying to pickle PSD and ASD interpolants.
