@@ -2632,16 +2632,73 @@ class InjectedSyntheticWaves(BaseInjected):
 
 
 class UnlabeledWaves(Base):
-    """Manage a generic noiseless dataset with no labels.
-    
-    TODO
-    - Special case of 'Base' with only 1 class.
-    - Shape keeps being {class: {id: strain}}.
-    - This class modifies the treatment of metadata to avoid issues with the
-      lack of labels.
+    """Dataset class for clean gravitational wave signals without labels.
 
+    This class extends `Base`, modifying its behavior to handle datasets 
+    where gravitational wave signals are provided without associated labels.
+    Unlike `Base`, it does not require a classification structure but 
+    retains methods for loading, storing, and managing waveform data.
+
+    The dataset consists of nested dictionaries, storing each waveform in an 
+    independent array to accommodate variable lengths.
+
+    Attributes
+    ----------    
+    strains : dict
+        Dictionary of stored waveforms, indexed by unique identifiers.
+    
+    max_length : int
+        Length of the longest waveform in the dataset.
+
+    sample_rate : int, optional
+        The constant sampling rate for the waveforms, if provided.
+
+    Xtrain, Xtest : dict, optional
+        Train and test subsets randomly split using `train_test_split`, if 
+        required. These are views into `strains`, without associated labels.
+
+    Notes
+    -----
+    - Unlike `Base`, this class does not track class labels.
+    - Train/Test split is still supported but is not stratified.
+    
     """
-    def __init__(self, strains_array, strain_limits=None, random_seed=None):
+    def __init__(self, strains_array, strain_limits=None, sample_rate=None, random_seed=None):
+        """Initialize an UnlabeledWaves dataset.
+
+        This constructor processes a NumPy array of gravitational wave signals,
+        storing them in a structured dictionary while optionally discarding
+        unnecessary zero-padding. Unlike `Base`, this class does not require
+        labeled categories or metadata but retains support for dataset
+        splitting and signal management.
+
+        Parameters
+        ----------
+        strains_array : np.ndarray
+            A 2D array containing gravitational wave signals, where each row 
+            represents a separate waveform, possibly zero-padded.
+
+        strain_limits : list[tuple[int, int]] | None, optional
+            A list of (start, end) indices defining the valid range for each 
+            waveform in `strains_array`. If None, waveforms are assumed to 
+            contain no unnecessary padding.
+
+        sample_rate : int, optional
+            The assumed constant sampling rate for the waveforms. If None, time 
+            tracking is disabled.
+
+        random_seed : int, optional
+            Seed for random operations such as dataset splitting, ensuring 
+            reproducibility.
+
+        Notes
+        -----
+        - A dummy class label ('binary': 1) is assigned for compatibility.
+        - Metadata is omitted in this class.
+        - The dataset structure supports train/test splitting, but labels are 
+          not relevant.
+        
+        """
         self.classes = {'binary': 1}  # Dummy class.
         self.strains = self._unpack_strains(strains_array, strain_limits)
         self.labels = self._gen_labels()  # Dummy labels.
@@ -2654,17 +2711,13 @@ class UnlabeledWaves(Base):
         self.random_seed = random_seed  # SKlearn train_test_split doesn't accept a Generator yet.
         self._track_times = False  # If True, self.times must be not None.
 
-        #----------------------------------------------------------------------
-        # Attributes whose values can be set up or otherwise left as follows.
-        #----------------------------------------------------------------------
-
         # Whitening related attributes.
         self.whitened = False
         self.whiten_params = {}
         self.nonwhiten_strains = None
 
         # Time tracking related attributes.
-        self.sample_rate: int = None
+        self.sample_rate = sample_rate
         self.times: dict = None
         
         # Train/Test subset splits (views into the same 'self.strains').
@@ -2674,6 +2727,9 @@ class UnlabeledWaves(Base):
         #   Labels:
         self.Ytrain: np.ndarray = None
         self.Ytest: np.ndarray = None
+        #   Indices (sorted as in train and test splits respectively):
+        self.id_train: np.ndarray = None
+        self.id_test: np.ndarray = None
 
     def _unpack_strains(self, strain_array: np.ndarray, strain_limits: np.ndarray = None) -> dict:
         num_signals = strain_array.shape[0]
