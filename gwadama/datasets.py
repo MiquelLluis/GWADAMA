@@ -2693,13 +2693,13 @@ class UnlabeledWaves(Base):
 
         Notes
         -----
-        - A dummy class label ('binary': 1) is assigned for compatibility.
+        - A dummy class label ('unique': 1) is assigned for compatibility.
         - Metadata is omitted in this class.
         - The dataset structure supports train/test splitting, but labels are 
           not relevant.
         
         """
-        self.classes = {'binary': 1}  # Dummy class.
+        self.classes = {'unique': 1}  # Dummy class.
         self.strains = self._unpack_strains(strains_array, strain_limits)
         self.labels = self._gen_labels()  # Dummy labels.
         # self.metadata: pd.DataFrame = None  # OMMITED IN THIS CLASS
