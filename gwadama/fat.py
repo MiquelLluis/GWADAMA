@@ -38,7 +38,7 @@ def whiten(strain: np.ndarray,
         Its components are:
         - asd[0] = frequency points
         - asd[1] = ASD points
-        NOTE: It must has a linear and constant sampling rate!
+        NOTE: It must has a linear and constant sampling frequency!
     
     sample_rate : int
         The thingy that makes things do correctly their thing.
@@ -85,7 +85,11 @@ def whiten(strain: np.ndarray,
 
     if pad > 0:
         strain = np.pad(strain, pad, 'constant', constant_values=0)
-        unpad = pad
+        _unpad = slice(pad, -pad)
+    elif unpad == 0:
+        _unpad = slice(None)
+    else:
+        _unpad = slice(unpad, -unpad)
  
     frame = TimeSeries(strain, sample_rate=sample_rate)
     strain_w = frame.whiten(
@@ -95,7 +99,7 @@ def whiten(strain: np.ndarray,
         **kwargs
     ).value  # Convert to numpy array!!!
     
-    strain_w = strain_w[unpad:-unpad]
+    strain_w = strain_w[_unpad]
     if normed:
         strain_w /= np.max(np.abs(strain_w))
 
