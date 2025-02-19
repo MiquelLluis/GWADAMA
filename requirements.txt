@@ -1,8 +1,0 @@
-bilby==2.3.0
-gwpy==3.0.7
-h5py==3.10.0
-numpy==1.26.4
-pandas==2.0.3
-scikit_learn==1.2.2
-scipy==1.14.1
-tqdm==4.66.1

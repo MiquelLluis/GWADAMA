@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "GWADAMA"
+version = "0.2.1"
+description = "A Python package for gravitational wave dataset management."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Miquel Lluís Llorens Monteagudo", email = "mllorens.monteagudo@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+dependencies = [
+    "bilby==2.3.0",
+    "gwpy==3.0.7",
+    "h5py==3.10.0",
+    "numpy==1.26.4",
+    "pandas==2.0.3",
+    "scikit_learn==1.2.2",
+    "scipy==1.14.1",
+    "tqdm==4.66.1"
+]
+
+[project.optional-dependencies]
+optional = [
+    "core_watpy==0.1.1"
+]
+
+[tool.setuptools]
+packages = ["gwadama"]
+include-package-data = true
