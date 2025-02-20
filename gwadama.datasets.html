@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.datasets &#8212; GWADAMA 0.2.1 documentation</title>
+    <title>gwadama.datasets &#8212; GWADAMA 0.3.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=37f418d5"></script>
+    <script src="_static/documentation_options.js?v=e259d695"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.datasets';</script>
@@ -49,7 +49,7 @@
     <link rel="prev" title="API Documentation" href="modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.1" />
+  <meta name="docsearch:version" content="0.3.0" />
   </head>
   
   
@@ -102,7 +102,7 @@
     <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
         <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
         <span class="navbar-project-name">GWADAMA</span>
-        <span class="navbar-project-version">v0.2.1</span>
+        <span class="navbar-project-version">v0.3.0</span>
     </a>
 </div></div>
     
@@ -420,6 +420,9 @@ so no copies are performed.</p>
 ‘Xtest’ respectively.
 See the attribute ‘labels’ for more info.</p>
 </dd>
+<dt><strong>id_train, id_test</strong><span class="classifier">NDArray[int], optional</span></dt><dd><p>1D Array containing the id of the signals in the same order as
+‘Xtrain’ and ‘Xtest’ respectively.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -487,12 +490,12 @@ See the attribute ‘labels’ for more info.</p>
 <dt class="sig sig-object py" id="gwadama.datasets.Base.build_train_test_subsets">
 <span class="sig-name descname"><span class="pre">build_train_test_subsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/datasets.html#Base.build_train_test_subsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.datasets.Base.build_train_test_subsets" title="Link to this definition">#</a></dt>
 <dd><p>Generate a random Train and Test subsets.</p>
-<p>Only entries in the index of ‘metadata’ DataFrame are considered
-independent waveforms, any extra key (layer) in the ‘strains’ dict
-is treated monolithically during the shuffle.</p>
-<p>The strain values are just new views into the ‘strains’ attribute.
-The shuffling is performed by Scikit-Learn’s function
-‘train_test_split’, with stratification enabled.</p>
+<p>Only indices in the ‘labels’ attribute are considered independent
+waveforms, any extra key (layer) in the ‘strains’ dict is treated
+monolithically during the shuffle.</p>
+<p>The strain values are just new views into the ‘strains’ attribute. The
+shuffling is performed by Scikit-Learn’s function ‘train_test_split’,
+with stratification enabled.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -1172,12 +1175,12 @@ quadratic spline interpolant function.</p>
 <dt class="sig sig-object py" id="gwadama.datasets.BaseInjected.build_train_test_subsets">
 <span class="sig-name descname"><span class="pre">build_train_test_subsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.BaseInjected.build_train_test_subsets" title="Link to this definition">#</a></dt>
 <dd><p>Generate a random Train and Test subsets.</p>
-<p>Only entries in the index of ‘metadata’ DataFrame are considered
-independent waveforms, any extra key (layer) in the ‘strains’ dict
-is treated monolithically during the shuffle.</p>
-<p>The strain values are just new views into the ‘strains’ attribute.
-The shuffling is performed by Scikit-Learn’s function
-‘train_test_split’, with stratification enabled.</p>
+<p>Only indices in the ‘labels’ attribute are considered independent
+waveforms, any extra key (layer) in the ‘strains’ dict is treated
+monolithically during the shuffle.</p>
+<p>The strain values are just new views into the ‘strains’ attribute. The
+shuffling is performed by Scikit-Learn’s function ‘train_test_split’,
+with stratification enabled.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -1890,12 +1893,12 @@ cropping range as value. The range is given as a tuple of the form
 <dt class="sig sig-object py" id="gwadama.datasets.CoReWaves.build_train_test_subsets">
 <span class="sig-name descname"><span class="pre">build_train_test_subsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.CoReWaves.build_train_test_subsets" title="Link to this definition">#</a></dt>
 <dd><p>Generate a random Train and Test subsets.</p>
-<p>Only entries in the index of ‘metadata’ DataFrame are considered
-independent waveforms, any extra key (layer) in the ‘strains’ dict
-is treated monolithically during the shuffle.</p>
-<p>The strain values are just new views into the ‘strains’ attribute.
-The shuffling is performed by Scikit-Learn’s function
-‘train_test_split’, with stratification enabled.</p>
+<p>Only indices in the ‘labels’ attribute are considered independent
+waveforms, any extra key (layer) in the ‘strains’ dict is treated
+monolithically during the shuffle.</p>
+<p>The strain values are just new views into the ‘strains’ attribute. The
+shuffling is performed by Scikit-Learn’s function ‘train_test_split’,
+with stratification enabled.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -2367,7 +2370,7 @@ starting from the merger, hence the name ‘partial SNR’.</p>
 </dd>
 <dt><strong>whole_snr</strong><span class="classifier">dict</span></dt><dd><p>Nested dictionary storing for each injection the equivalent SNR value
 computed over the whole signal, hence the name ‘whole SNR’.
-Structure: {<a href="#id125"><span class="problematic" id="id126">id_</span></a>: {partial_snr: whole_snr}}</p>
+Structure: {<a href="#id135"><span class="problematic" id="id136">id_</span></a>: {partial_snr: whole_snr}}</p>
 </dd>
 <dt><strong>TODO</strong></dt><dd></dd>
 </dl>
@@ -2496,12 +2499,12 @@ quadratic spline interpolant function.</p>
 <dt class="sig sig-object py" id="gwadama.datasets.InjectedCoReWaves.build_train_test_subsets">
 <span class="sig-name descname"><span class="pre">build_train_test_subsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.InjectedCoReWaves.build_train_test_subsets" title="Link to this definition">#</a></dt>
 <dd><p>Generate a random Train and Test subsets.</p>
-<p>Only entries in the index of ‘metadata’ DataFrame are considered
-independent waveforms, any extra key (layer) in the ‘strains’ dict
-is treated monolithically during the shuffle.</p>
-<p>The strain values are just new views into the ‘strains’ attribute.
-The shuffling is performed by Scikit-Learn’s function
-‘train_test_split’, with stratification enabled.</p>
+<p>Only indices in the ‘labels’ attribute are considered independent
+waveforms, any extra key (layer) in the ‘strains’ dict is treated
+monolithically during the shuffle.</p>
+<p>The strain values are just new views into the ‘strains’ attribute. The
+shuffling is performed by Scikit-Learn’s function ‘train_test_split’,
+with stratification enabled.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -3189,12 +3192,12 @@ quadratic spline interpolant function.</p>
 <dt class="sig sig-object py" id="gwadama.datasets.InjectedSyntheticWaves.build_train_test_subsets">
 <span class="sig-name descname"><span class="pre">build_train_test_subsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.InjectedSyntheticWaves.build_train_test_subsets" title="Link to this definition">#</a></dt>
 <dd><p>Generate a random Train and Test subsets.</p>
-<p>Only entries in the index of ‘metadata’ DataFrame are considered
-independent waveforms, any extra key (layer) in the ‘strains’ dict
-is treated monolithically during the shuffle.</p>
-<p>The strain values are just new views into the ‘strains’ attribute.
-The shuffling is performed by Scikit-Learn’s function
-‘train_test_split’, with stratification enabled.</p>
+<p>Only indices in the ‘labels’ attribute are considered independent
+waveforms, any extra key (layer) in the ‘strains’ dict is treated
+monolithically during the shuffle.</p>
+<p>The strain values are just new views into the ‘strains’ attribute. The
+shuffling is performed by Scikit-Learn’s function ‘train_test_split’,
+with stratification enabled.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -3879,12 +3882,12 @@ the duration parameter or the amplitude threshold.</p>
 <dt class="sig sig-object py" id="gwadama.datasets.SyntheticWaves.build_train_test_subsets">
 <span class="sig-name descname"><span class="pre">build_train_test_subsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.SyntheticWaves.build_train_test_subsets" title="Link to this definition">#</a></dt>
 <dd><p>Generate a random Train and Test subsets.</p>
-<p>Only entries in the index of ‘metadata’ DataFrame are considered
-independent waveforms, any extra key (layer) in the ‘strains’ dict
-is treated monolithically during the shuffle.</p>
-<p>The strain values are just new views into the ‘strains’ attribute.
-The shuffling is performed by Scikit-Learn’s function
-‘train_test_split’, with stratification enabled.</p>
+<p>Only indices in the ‘labels’ attribute are considered independent
+waveforms, any extra key (layer) in the ‘strains’ dict is treated
+monolithically during the shuffle.</p>
+<p>The strain values are just new views into the ‘strains’ attribute. The
+shuffling is performed by Scikit-Learn’s function ‘train_test_split’,
+with stratification enabled.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -4271,6 +4274,524 @@ their initial size. This is useful to remove the vignetting effect.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gwadama.datasets.</span></span><span class="sig-name descname"><span class="pre">UnlabeledWaves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strains_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strain_limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/datasets.html#UnlabeledWaves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gwadama.datasets.Base" title="gwadama.datasets.Base"><code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></a></p>
+<p>Dataset class for clean gravitational wave signals without labels.</p>
+<p>This class extends <cite>Base</cite>, modifying its behavior to handle datasets 
+where gravitational wave signals are provided without associated labels.
+Unlike <cite>Base</cite>, it does not require a classification structure but 
+retains methods for loading, storing, and managing waveform data.</p>
+<p>The dataset consists of nested dictionaries, storing each waveform in an 
+independent array to accommodate variable lengths.</p>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Unlike <cite>Base</cite>, this class does not track class labels.</p></li>
+<li><p>Train/Test split is still supported but is not stratified.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>strains</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of stored waveforms, indexed by unique identifiers.</p>
+</dd>
+<dt><strong>max_length</strong><span class="classifier">int</span></dt><dd><p>Length of the longest waveform in the dataset.</p>
+</dd>
+<dt><strong>sample_rate</strong><span class="classifier">int, optional</span></dt><dd><p>The constant sampling rate for the waveforms, if provided.</p>
+</dd>
+<dt><strong>Xtrain, Xtest</strong><span class="classifier">dict, optional</span></dt><dd><p>Train and test subsets randomly split using <cite>train_test_split</cite>, if 
+required. These are views into <cite>strains</cite>, without associated labels.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.build_train_test_subsets" title="gwadama.datasets.UnlabeledWaves.build_train_test_subsets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_train_test_subsets</span></code></a>(train_size[, ...])</p></td>
+<td><p>Generate a random Train and Test subsets.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.find_class" title="gwadama.datasets.UnlabeledWaves.find_class"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_class</span></code></a>(id)</p></td>
+<td><p>Find which 'class' corresponds the strain 'id'.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.get_strain" title="gwadama.datasets.UnlabeledWaves.get_strain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_strain</span></code></a>(*indices[, normalize])</p></td>
+<td><p>Get a single strain from the complete index coordinates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.get_strains_array" title="gwadama.datasets.UnlabeledWaves.get_strains_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_strains_array</span></code></a>([length])</p></td>
+<td><p>Get all strains stacked in a zero-padded Numpy 2d-array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.get_times" title="gwadama.datasets.UnlabeledWaves.get_times"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_times</span></code></a>(*indices)</p></td>
+<td><p>Get a single time array from the complete index coordinates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.get_xtest_array" title="gwadama.datasets.UnlabeledWaves.get_xtest_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_xtest_array</span></code></a>([length, classes])</p></td>
+<td><p>Get the test subset stacked in a zero-padded Numpy 2d-array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.get_xtrain_array" title="gwadama.datasets.UnlabeledWaves.get_xtrain_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_xtrain_array</span></code></a>([length, classes])</p></td>
+<td><p>Get the train subset stacked in a zero-padded Numpy 2d-array.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.get_ytest_array" title="gwadama.datasets.UnlabeledWaves.get_ytest_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ytest_array</span></code></a>([classes, with_id, with_index])</p></td>
+<td><p>Get the filtered test labels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.get_ytrain_array" title="gwadama.datasets.UnlabeledWaves.get_ytrain_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ytrain_array</span></code></a>([classes, with_id, with_index])</p></td>
+<td><p>Get the filtered training labels.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.items" title="gwadama.datasets.UnlabeledWaves.items"><code class="xref py py-obj docutils literal notranslate"><span class="pre">items</span></code></a>()</p></td>
+<td><p>Return a new view of the dataset's items with unrolled indices.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.keys" title="gwadama.datasets.UnlabeledWaves.keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keys</span></code></a>([max_depth])</p></td>
+<td><p>Return the unrolled combinations of all strain identifiers.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.pad_strains" title="gwadama.datasets.UnlabeledWaves.pad_strains"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pad_strains</span></code></a>(padding)</p></td>
+<td><p>Pad strains with zeros on both sides.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.resample" title="gwadama.datasets.UnlabeledWaves.resample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resample</span></code></a>(sample_rate[, verbose])</p></td>
+<td><p>Resample strain and time arrays to a constant rate.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.shrink_strains" title="gwadama.datasets.UnlabeledWaves.shrink_strains"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shrink_strains</span></code></a>(limits)</p></td>
+<td><p>Shrink strains to a specific interval.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.stack_by_id" title="gwadama.datasets.UnlabeledWaves.stack_by_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stack_by_id</span></code></a>(id_list[, length])</p></td>
+<td><p>Stack an subset of strains by their ID into a Numpy array.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gwadama.datasets.UnlabeledWaves.whiten" title="gwadama.datasets.UnlabeledWaves.whiten"><code class="xref py py-obj docutils literal notranslate"><span class="pre">whiten</span></code></a>([asd_array, pad, highpass, flength, ...])</p></td>
+<td><p>Whiten the strains.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strains_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strain_limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/datasets.html#UnlabeledWaves.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initialize an UnlabeledWaves dataset.</p>
+<p>This constructor processes a NumPy array of gravitational wave signals,
+storing them in a structured dictionary while optionally discarding
+unnecessary zero-padding. Unlike <cite>Base</cite>, this class does not require
+labeled categories or metadata but retains support for dataset
+splitting and signal management.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>strains_array</strong><span class="classifier">np.ndarray</span></dt><dd><p>A 2D array containing gravitational wave signals, where each row 
+represents a separate waveform, possibly zero-padded.</p>
+</dd>
+<dt><strong>strain_limits</strong><span class="classifier">list[tuple[int, int]] | None, optional</span></dt><dd><p>A list of (start, end) indices defining the valid range for each 
+waveform in <cite>strains_array</cite>. If None, waveforms are assumed to 
+contain no unnecessary padding.</p>
+</dd>
+<dt><strong>sample_rate</strong><span class="classifier">int, optional</span></dt><dd><p>The assumed constant sampling rate for the waveforms. If None, time 
+tracking is disabled.</p>
+</dd>
+<dt><strong>random_seed</strong><span class="classifier">int, optional</span></dt><dd><p>Seed for random operations such as dataset splitting, ensuring 
+reproducibility.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>A dummy class label (‘unique’: 1) is assigned for compatibility.</p></li>
+<li><p>Metadata is omitted in this class.</p></li>
+<li><p>The dataset structure supports train/test splitting, but labels are 
+not relevant.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.build_train_test_subsets">
+<span class="sig-name descname"><span class="pre">build_train_test_subsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.build_train_test_subsets" title="Link to this definition">#</a></dt>
+<dd><p>Generate a random Train and Test subsets.</p>
+<p>Only indices in the ‘labels’ attribute are considered independent
+waveforms, any extra key (layer) in the ‘strains’ dict is treated
+monolithically during the shuffle.</p>
+<p>The strain values are just new views into the ‘strains’ attribute. The
+shuffling is performed by Scikit-Learn’s function ‘train_test_split’,
+with stratification enabled.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>train_size</strong><span class="classifier">int | float</span></dt><dd><p>If float, should be between 0.0 and 1.0 and represent the proportion
+of the dataset to include in the train subset.
+If int, represents the absolute number of train waves.</p>
+<p>Ref: <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html">https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html</a></p>
+</dd>
+<dt><strong>random_seed</strong><span class="classifier">int, optional</span></dt><dd><p>Passed directly to ‘sklearn.model_selection.train_test_split’.
+It is also saved in its homonymous attribute.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.find_class">
+<span class="sig-name descname"><span class="pre">find_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.find_class" title="Link to this definition">#</a></dt>
+<dd><p>Find which ‘class’ corresponds the strain ‘id’.</p>
+<p>Finds the ‘class’ of the strain represented by the unique identifier
+‘id’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>id</strong><span class="classifier">str</span></dt><dd><p>Unique identifier of the string, that which also appears in the
+<cite>metadata.index</cite> DataFrame.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>clas</strong><span class="classifier">int | str</span></dt><dd><p>Class key associated to the strain ‘id’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.get_strain">
+<span class="sig-name descname"><span class="pre">get_strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.get_strain" title="Link to this definition">#</a></dt>
+<dd><p>Get a single strain from the complete index coordinates.</p>
+<p>This is just a shortcut to avoid having to write several squared
+brackets.</p>
+<p>NOTE: The returned strain is not a copy; if its contents are modified,
+the changes will be reflected inside the ‘strains’ attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>*indices</strong><span class="classifier">str | int</span></dt><dd><p>The indices of the strain to retrieve.</p>
+</dd>
+<dt><strong>normalize</strong><span class="classifier">bool</span></dt><dd><p>If True, the returned strain will be normalized to its maximum
+amplitude.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>strain</strong><span class="classifier">np.ndarray</span></dt><dd><p>The requested strain.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.get_strains_array">
+<span class="sig-name descname"><span class="pre">get_strains_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.get_strains_array" title="Link to this definition">#</a></dt>
+<dd><p>Get all strains stacked in a zero-padded Numpy 2d-array.</p>
+<p>Stacks all signals into an homogeneous numpy array whose length
+(axis=1) is determined by either ‘length’ or, if None, by the longest
+strain in the subset.
+The remaining space is zeroed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>length</strong><span class="classifier">int, optional</span></dt><dd><p>Target length of the ‘strains_array’. If None, the longest signal
+determines the length.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>strains_array</strong><span class="classifier">np.ndarray</span></dt><dd><p>train subset.</p>
+</dd>
+<dt><strong>lengths</strong><span class="classifier">list</span></dt><dd><p>Original length of each strain, following the same order as the
+first axis of ‘train_array’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.get_times">
+<span class="sig-name descname"><span class="pre">get_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.get_times" title="Link to this definition">#</a></dt>
+<dd><p>Get a single time array from the complete index coordinates.</p>
+<p>This is just a shortcut to avoid having to write several squared
+brackets.</p>
+<p>NOTE: The returned strain is not a copy; if its contents are modified,
+the changes will be reflected inside the ‘times’ attribute.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.get_xtest_array">
+<span class="sig-name descname"><span class="pre">get_xtest_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.get_xtest_array" title="Link to this definition">#</a></dt>
+<dd><p>Get the test subset stacked in a zero-padded Numpy 2d-array.</p>
+<p>Stacks all signals in the test subset into an homogeneous numpy array
+whose length (axis=1) is determined by either ‘length’ or, if None, by
+the longest strain in the subset. The remaining space is zeroed.</p>
+<p>Optionally, classes can be filtered by specifying which to include with
+the <cite>classes</cite> parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>length</strong><span class="classifier">int, optional</span></dt><dd></dd>
+<dt><strong>classes</strong><span class="classifier">str | List[str], optional</span></dt><dd><p>Specify which classes to include. Include ‘all’ by default.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>test_array</strong><span class="classifier">np.ndarray</span></dt><dd><p>test subset.</p>
+</dd>
+<dt><strong>lengths</strong><span class="classifier">list</span></dt><dd><p>Original length of each strain, following the same order as the
+first axis of ‘test_array’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.get_xtrain_array">
+<span class="sig-name descname"><span class="pre">get_xtrain_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.get_xtrain_array" title="Link to this definition">#</a></dt>
+<dd><p>Get the train subset stacked in a zero-padded Numpy 2d-array.</p>
+<p>Stacks all signals in the train subset into an homogeneous numpy array
+whose length (axis=1) is determined by either ‘length’ or, if None, by
+the longest strain in the subset. The remaining space is zeroed.</p>
+<p>Optionally, classes can be filtered by specifying which to include with
+the <cite>classes</cite> parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>length</strong><span class="classifier">int, optional</span></dt><dd><p>Target length of the ‘train_array’. If None, the longest signal
+determines the length.</p>
+</dd>
+<dt><strong>classes</strong><span class="classifier">str | List[str], optional</span></dt><dd><p>Specify which classes to include. Include ‘all’ by default.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>train_array</strong><span class="classifier">np.ndarray</span></dt><dd><p>train subset.</p>
+</dd>
+<dt><strong>lengths</strong><span class="classifier">list</span></dt><dd><p>Original length of each strain, following the same order as the
+first axis of ‘train_array’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.get_ytest_array">
+<span class="sig-name descname"><span class="pre">get_ytest_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.get_ytest_array" title="Link to this definition">#</a></dt>
+<dd><p>Get the filtered test labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>classes</strong><span class="classifier">str | list[str] | ‘all’</span></dt><dd><p>The classes to include in the labels.
+All classes are included by default.</p>
+</dd>
+<dt><strong>with_id</strong><span class="classifier">bool</span></dt><dd><p>If True, return also the list of related IDs.</p>
+</dd>
+<dt><strong>with_index</strong><span class="classifier">bool</span></dt><dd><p>If True, return also the related GLOBAL indices; w.r.t. the stacked
+arrays returned by ‘get_xtest_array’ WITHOUT filters.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>Filtered test labels.</p>
+</dd>
+<dt>np.ndarray, optional</dt><dd><p>IDs associated to the filtered test labels.</p>
+</dd>
+<dt>np.ndarray, optional</dt><dd><p>Indices associated to the filtered test labels.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.get_ytrain_array">
+<span class="sig-name descname"><span class="pre">get_ytrain_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.get_ytrain_array" title="Link to this definition">#</a></dt>
+<dd><p>Get the filtered training labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>classes</strong><span class="classifier">str | list[str] | ‘all’</span></dt><dd><p>The classes to include in the labels.
+All classes are included by default.</p>
+</dd>
+<dt><strong>with_id</strong><span class="classifier">bool</span></dt><dd><p>If True, return also the list of related IDs.</p>
+</dd>
+<dt><strong>with_index</strong><span class="classifier">bool</span></dt><dd><p>If True, return also the related GLOBAL indices; w.r.t. the stacked
+arrays returned by ‘get_xtrain_array’ WITHOUT filters.
+False by default.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>Filtered train labels.</p>
+</dd>
+<dt>np.ndarray, optional</dt><dd><p>IDs associated to the filtered train labels.</p>
+</dd>
+<dt>np.ndarray, optional</dt><dd><p>Indices associated to the filtered train labels.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.items" title="Link to this definition">#</a></dt>
+<dd><p>Return a new view of the dataset’s items with unrolled indices.</p>
+<p>Each iteration consists on a tuple containing all the nested keys in
+‘self.strains’ along with the corresponding strain,
+(clas, id, <a href="#id125"><span class="problematic" id="id126">*</span></a>, strain).</p>
+<p>It can be thought of as an extension of Python’s <cite>dict.items()</cite>.
+Useful to quickly iterate over all items in the dataset.</p>
+<p>Example of usage with an arbitrary number of keys in the nested
+dictionary of strains:</p>
+<p><a href="#id127"><span class="problematic" id="id128">``</span></a>`
+for <a href="#id129"><span class="problematic" id="id130">*</span></a>keys, strain in self.items():</p>
+<blockquote>
+<div><p>print(f”Number of identifiers: {len(keys)}”)
+print(f”Length of the strain: {len(strain)}”)
+do_something(strain)</p>
+</div></blockquote>
+<p><a href="#id131"><span class="problematic" id="id132">``</span></a><a href="#id133"><span class="problematic" id="id134">`</span></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.keys">
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.keys" title="Link to this definition">#</a></dt>
+<dd><p>Return the unrolled combinations of all strain identifiers.</p>
+<p>Return the unrolled combinations of all keys  of the nested dictionary
+of strains by a hierarchical recursive search.</p>
+<p>It can be thought of as the extended version of Python’s
+‘dict().keys()’, although this returns a plain list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>max_depth</strong><span class="classifier">int, optional</span></dt><dd><p>If specified, it is the number of layers to iterate to at most in
+the nested ‘strains’ dictionary.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>keys</strong><span class="classifier">list</span></dt><dd><p>The unrolled combination in a Python list.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.pad_strains">
+<span class="sig-name descname"><span class="pre">pad_strains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.pad_strains" title="Link to this definition">#</a></dt>
+<dd><p>Pad strains with zeros on both sides.</p>
+<p>This function pads each strain with a specific number of samples on both sides.
+It also updates the ‘max_length’ attribute to reflect the new maximum length of the padded strains.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>padding</strong><span class="classifier">int | tuple | dict</span></dt><dd><p>The padding to apply to each strain.
+If padding is an integer, it will be applied at both sides of all strains.
+If padding is a tuple, it must be of the form (left_pad, right_pad) in samples.
+If padding is a dictionary, it must be of the form {id: (left_pad, right_pad)},
+where id is the identifier of each strain.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>If time arrays are present, they are also padded accordingly.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.resample">
+<span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.resample" title="Link to this definition">#</a></dt>
+<dd><p>Resample strain and time arrays to a constant rate.</p>
+<p>This assumes time tracking either with time arrays or with the
+sampling rate provided during initialization, which will be used to
+generate the time arrays previous to the resampling.</p>
+<p>This method updates the sample_rate and the max_length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sample_rate</strong><span class="classifier">int</span></dt><dd><p>The new sampling rate in Hz.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>If True, print information about the resampling.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.shrink_strains">
+<span class="sig-name descname"><span class="pre">shrink_strains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.shrink_strains" title="Link to this definition">#</a></dt>
+<dd><p>Shrink strains to a specific interval.</p>
+<p>Shrink strains (and their associated time arrays if present) to the
+interval given by ‘limits’.</p>
+<p>It also updates the ‘max_length’ attribute.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>limits</strong><span class="classifier">tuple | dict</span></dt><dd><p>The limits of the interval to shrink to.
+If limits is a tuple, it must be of the form (start, end) in
+samples.
+If limits is a dictionary, it must be of the form {id: (start, end)},
+where id is the identifier of each strain.</p>
+<p>NOTE: If extra layers below ID are present, they will be shrunk
+accordingly.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.stack_by_id">
+<span class="sig-name descname"><span class="pre">stack_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.stack_by_id" title="Link to this definition">#</a></dt>
+<dd><p>Stack an subset of strains by their ID into a Numpy array.</p>
+<p>Stack an arbitrary selection of strains by their original ID into a
+zero-padded 2d-array. The resulting order is the same as the order of
+that in ‘id_list’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>id_list</strong><span class="classifier">list</span></dt><dd><p>The IDs of the strains to be stacked.</p>
+</dd>
+<dt><strong>length</strong><span class="classifier">int, optional</span></dt><dd><p>The target length of the stacked array. If None, the longest signal
+determines the length.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>stacked_signals</strong><span class="classifier">np.ndarray</span></dt><dd><p>The array containing the stacked strains.</p>
+</dd>
+<dt><strong>lengths</strong><span class="classifier">list</span></dt><dd><p>The original lengths of each strain, following the same order as
+the first axis of ‘stacked_signals’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Unlike in ‘get_xtrain_array’ and ‘get_xtest_array’, this method does
+not filter by ‘classes’ since it would be redundant, as IDs are
+unique.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gwadama.datasets.UnlabeledWaves.whiten">
+<span class="sig-name descname"><span class="pre">whiten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asd_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highpass</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flength</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gwadama.datasets.UnlabeledWaves.whiten" title="Link to this definition">#</a></dt>
+<dd><p>Whiten the strains.</p>
+<p>Calling this method performs the whitening of all strains.
+Optionally, strains are first zero-padded, whitened and then shrunk to
+their initial size. This is useful to remove the vignetting effect.</p>
+<p>NOTE: Original (non-whitened) strains will be stored in the
+‘nonwhiten_strains’ attribute.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -4455,6 +4976,26 @@ their initial size. This is useful to remove the vignetting effect.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.SyntheticWaves.shrink_strains"><code class="docutils literal notranslate"><span class="pre">SyntheticWaves.shrink_strains()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.SyntheticWaves.stack_by_id"><code class="docutils literal notranslate"><span class="pre">SyntheticWaves.stack_by_id()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.SyntheticWaves.whiten"><code class="docutils literal notranslate"><span class="pre">SyntheticWaves.whiten()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.__init__"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.build_train_test_subsets"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.build_train_test_subsets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.find_class"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.find_class()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.get_strain"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.get_strain()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.get_strains_array"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.get_strains_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.get_times"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.get_times()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.get_xtest_array"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.get_xtest_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.get_xtrain_array"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.get_xtrain_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.get_ytest_array"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.get_ytest_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.get_ytrain_array"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.get_ytrain_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.items"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.items()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.keys"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.keys()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.pad_strains"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.pad_strains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.resample"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.resample()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.shrink_strains"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.shrink_strains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.stack_by_id"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.stack_by_id()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.datasets.UnlabeledWaves.whiten"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves.whiten()</span></code></a></li>
 </ul>
 </li>
 </ul>

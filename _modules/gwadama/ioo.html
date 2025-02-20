@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gwadama.ioo &#8212; GWADAMA 0.2.0 documentation</title>
+    <title>gwadama.ioo &#8212; GWADAMA 0.3.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="../../_static/documentation_options.js?v=e259d695"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/gwadama/ioo';</script>
@@ -46,7 +46,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.0" />
+  <meta name="docsearch:version" content="0.3.0" />
   </head>
   
   
@@ -97,9 +97,9 @@
     
       <div class="navbar-item"><div class="navbar-logo">
     <a href="../../index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
-        <img src="_static/clawdia-logo.svg" class="navbar-project-icon" />
+        <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
         <span class="navbar-project-name">GWADAMA</span>
-        <span class="navbar-project-version">v0.2.0</span>
+        <span class="navbar-project-version">v0.3.0</span>
     </a>
 </div></div>
     
@@ -318,9 +318,13 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
-<span class="kn">import</span> <span class="nn">watpy</span>
 
 <span class="kn">from</span> <span class="nn">.units</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="c1"># Note: &#39;watpy&#39; is an optional dependency and is imported lazily inside CoReManager.</span>
+<span class="c1"># This allows users to use CLAWDIA without requiring &#39;watpy&#39; unless they need CoReManager.</span>
+
 
 
 
@@ -389,6 +393,13 @@
 <span class="sd">            Refer to &#39;watpy.coredb.coredb.CoRe_db&#39; for more details.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">watpy</span>  <span class="c1"># Lazy import</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">&quot;The &#39;watpy&#39; package is required for CoReManager but is not installed.&quot;</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">db_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cdb</span> <span class="o">=</span> <span class="n">watpy</span><span class="o">.</span><span class="n">coredb</span><span class="o">.</span><span class="n">coredb</span><span class="o">.</span><span class="n">CoRe_db</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_metadata_dataframe</span><span class="p">()</span>
