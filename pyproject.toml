@@ -20,7 +20,6 @@ classifiers = [
 
 dependencies = [
     "bilby==2.3.0",
-    "gwpy==3.0.7",
     "h5py==3.10.0",
     "numpy==1.26.4",
     "pandas==2.0.3",
@@ -31,7 +30,8 @@ dependencies = [
 
 [project.optional-dependencies]
 optional = [
-    "core_watpy==0.1.1"
+    "core_watpy==0.1.1",
+    "gwpy==3.0.7"
 ]
 
 [tool.setuptools]

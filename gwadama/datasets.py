@@ -16,7 +16,7 @@ import itertools
 from typing import Callable
 import warnings
 
-from gwpy.timeseries import TimeSeries
+# from gwpy.timeseries import TimeSeries  # Lazy import
 import numpy as np
 import pandas as pd
 import scipy as sp
@@ -613,7 +613,7 @@ class Base:
         
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
-            strain_w = fat.whiten(
+            strain_w = tat.whiten(
                 strain, asd=asd_array, sample_rate=self.sample_rate, flength=flength,
                 highpass=highpass, pad=pad, normed=normed
             )
@@ -1598,7 +1598,7 @@ class BaseInjected(Base):
                     strain_clean_padded, snr_, id=id_, snr_offset=pad, pos=pos0
                 )
                 if self.whitened:
-                    injected = fat.whiten(
+                    injected = tat.whiten(
                         injected, asd=self.asd_array, unpad=pad, sample_rate=self.sample_rate,
                         # Parameters for GWpy's whiten() function:
                         highpass=self.freq_cutoff, flength=self.flength
@@ -1696,6 +1696,7 @@ class BaseInjected(Base):
         """Export all strains to GWF format, one file per strain."""
 
         from pathlib import Path
+        from gwpy.timeseries import TimeSeries
 
         for indices in self.keys():
             strain = self.get_strain(*indices)
@@ -1749,7 +1750,7 @@ class BaseInjected(Base):
         for *keys, strain in loop_aux:
             snr = keys[2]  # Shape of self.strains dict-> (class, id, snr[, rep])
 
-            strain_w = fat.whiten(
+            strain_w = tat.whiten(
                 strain, asd=asd_array, pad=pad, unpad=unpad[snr], sample_rate=self.sample_rate,
                 highpass=highpass, flength=flength
             )

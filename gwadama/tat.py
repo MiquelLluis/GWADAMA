@@ -456,6 +456,7 @@ def convolve(strain, fir, window='hann'):
 
 
 def whiten(strain: np.ndarray,
+           *,
            asd: np.ndarray,
            sample_rate: int,
            flength: int,
