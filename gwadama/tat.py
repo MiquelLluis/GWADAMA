@@ -3,11 +3,8 @@
 Time analysis toolkit.
 
 """
-
-
 import numpy as np
 import scipy as sp
-import scipy.signal
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 
 
@@ -229,3 +226,289 @@ def find_merger(h: np.ndarray) -> int:
     
     """
     return np.argmax(np.abs(h))
+
+
+def planck(N, nleft=0, nright=0):
+    """Return a Planck taper window.
+
+    Parameters
+    ----------
+    N : `int`
+        Number of samples in the output window
+
+    nleft : `int`, optional
+        Number of samples to taper on the left, should be less than `N/2`
+
+    nright : `int`, optional
+        Number of samples to taper on the right, should be less than `N/2`
+
+    Returns
+    -------
+    w : `ndarray`
+        The window, with the maximum value normalized to 1 and at least one
+        end tapered smoothly to 0.
+    
+    """
+    w = np.ones(N, dtype=float)
+    if nleft:
+        k = np.arange(1, nleft)
+        z = nleft * (1/k + 1/(k - nleft))
+        w[1:nleft] *= sp.special.expit(-z)  # sigmoid
+        w[0] = 0
+    if nright:
+        k = np.arange(1, nright)
+        z = -nright * (1/(k - nright) + 1/k)
+        w[-nright:-1] *= sp.special.expit(-z)
+        w[-1] = 0
+    
+    return w
+
+
+def truncate_transfer(transfer, ncorner=None):
+    """Smoothly zero the edges of a frequency domain transfer function
+
+    Parameters
+    ----------
+    transfer : `numpy.ndarray`
+        transfer function to start from, must have at least ten samples
+
+    ncorner : `int`, optional
+        number of extra samples to zero off at low frequency, default: `None`
+
+    Returns
+    -------
+    out : `numpy.ndarray`
+        the smoothly truncated transfer function
+    """
+    nsamp = transfer.size
+    ncorner = ncorner or 0
+    out = transfer.copy()
+    out[:ncorner] = 0
+    out[ncorner:] *= planck(nsamp-ncorner, nleft=5, nright=5)
+    
+    return out
+
+
+def truncate_impulse(impulse, ntaps, window='hann'):
+    """Smoothly truncate a time domain impulse response
+
+    Parameters
+    ----------
+    impulse : `numpy.ndarray`
+        the impulse response to start from
+
+    ntaps : `int`
+        number of taps in the final filter
+
+    window : `str`, `numpy.ndarray`, optional
+        window function to truncate with, default: ``'hann'``
+        see :func:`scipy.signal.get_window` for details on acceptable formats
+
+    Returns
+    -------
+    out : `numpy.ndarray`
+        the smoothly truncated impulse response
+    """
+    out = impulse.copy()
+    trunc_start = ntaps // 2
+    trunc_stop = out.size - trunc_start
+    window = sp.signal.get_window(window, ntaps)
+    out[:trunc_start] *= window[trunc_start:]
+    out[trunc_stop:] *= window[:trunc_start]
+    out[trunc_start:trunc_stop] = 0
+    
+    return out
+
+
+def fir_from_transfer(transfer, ntaps, window='hann', ncorner=None):
+    """Design a Type II FIR filter given an arbitrary transfer function
+
+    Parameters
+    ----------
+    transfer : `numpy.ndarray`
+        transfer function to start from, must have at least ten samples
+
+    ntaps : `int`
+        number of taps in the final filter, must be an even number
+
+    window : `str`, `numpy.ndarray`, optional
+        window function to truncate with, default: ``'hann'``
+        see :func:`scipy.signal.get_window` for details on acceptable formats
+
+    ncorner : `int`, optional
+        number of extra samples to zero off at low frequency, default: `None`
+
+    Returns
+    -------
+    out : `numpy.ndarray`
+        A time domain FIR filter of length `ntaps`
+    """
+    # truncate and highpass the transfer function
+    transfer = truncate_transfer(transfer, ncorner=ncorner)
+    # compute and truncate the impulse response
+    impulse = np.fft.irfft(transfer)
+    impulse = truncate_impulse(impulse, ntaps=ntaps, window=window)
+    # wrap around and normalise to construct the filter
+    out = np.roll(impulse, shift=ntaps//2-1)[:ntaps]
+    
+    return out
+
+
+def whiten_fir_filter(strain: np.ndarray,
+                      asd: np.ndarray,
+                      sample_rate: int,
+                      flength: int,
+                      highpass: float = None,
+                      pad: int = 0,
+                      unpad: int = 0,
+                      normed: bool = True) -> np.ndarray:
+    """Whiten a single strain signal using a FIR filter.
+
+    Whiten a strain using the input amplitude spectral density 'asd' to
+    design the FIR filter, and shrinking signals afterwards to account for the
+    edge effects introduced by the filter windowing.
+
+    Parameters
+    ----------
+    strain : NDArray
+        Strain data points in time domain.
+
+    asd : 2d-array
+        Amplitude spectral density assumed for the 'set_strain'.
+        Its components are:
+        - asd[0] = frequency points
+        - asd[1] = ASD points
+        NOTE: It must have a linear and constant sampling frequency!
+
+    sample_rate : int
+        The sampling rate of the strain data.
+
+    flength : int
+        Length (in samples) of the time-domain FIR whitening filter.
+        Passed in seconds (`flength/sample_rate`) to GWpy's whiten() function
+        as the 'fduration' parameter.
+
+    pad : int, optional
+        Margin at each side of the strain to add (zero-pad) in order to avoid
+        edge effects. The corrupted area at each side is `0.5 * fduration` in
+        GWpy's whiten().
+        Will be cropped afterwards, thus no samples are added at the end of
+        the call to this function.
+        If given, 'unpad' will be ignored.
+
+    unpad : int, optional
+        Margin at each side of the strain to crop.
+        Will be ignored if 'pad' is given.
+
+    highpass : float, optional
+        Highpass corner frequency (in Hz) of the FIR whitening filter.
+
+    normed : bool
+        If True, normalizes the strains to their maximum absolute amplitude.
+
+    Returns
+    -------
+    strain_w : NDArray
+        Whitened strain (in time domain).
+    """
+    if asd.ndim != 2:
+        raise ValueError("'asd' must have 2 dimensions")
+    if not is_arithmetic_progression(asd[0]):
+        raise ValueError("frequency points in 'asd[0]' must be ascending with constant increment")
+    if not isinstance(flength, int):
+        raise TypeError("'flength' must be an integer")
+    
+    # Handle padding
+    if pad > 0:
+        strain = np.pad(strain, pad, 'constant', constant_values=0)
+        unpad_slice = slice(pad, -pad)
+    elif unpad == 0:
+        unpad_slice = slice(None)
+    else:
+        unpad_slice = slice(unpad, -unpad)
+
+    # Constant detrending
+    strain_detrended = strain - np.mean(strain)
+
+    asd_freq, asd_vals = asd
+    dt = 1 / sample_rate
+
+    freq_target = np.fft.rfftfreq(len(strain), dt)
+    if asd_freq[-1] < freq_target[-1]:
+        raise ValueError("ASD frequency range is insufficient for the strain data.")
+
+    # Linear interpolation of ASD if needed, assuming ASD_freq is already
+    # covering the strain frequency range.
+    asd_interp_function = sp.interpolate.interp1d(
+        asd_freq, asd_vals, kind='linear',
+        bounds_error=False, fill_value=0
+    )
+    asd_interpolated = asd_interp_function(freq_target)
+
+    # Compute transfer function
+    with np.errstate(divide='ignore'):
+        transfer_function = np.reciprocal(asd_interpolated, where=asd_interpolated!=0)
+    transfer_function[np.isinf(transfer_function)] = 0  # Handle division by zero
+
+    # Handle highpass
+    duration = len(strain) / sample_rate
+    delta_f = 1 / duration
+    if highpass:
+        ncorner = int(highpass / delta_f)
+    else:
+        ncorner = None
+
+    # Create the causal FIR filter
+    fir_filter = fir_from_transfer(transfer_function, ntaps=flength, ncorner=ncorner)
+
+    # Convolve with filter
+    strain_whitened = sp.signal.fftconvolve(strain_detrended, fir_filter, mode='same')
+    strain_whitened *= np.sqrt(2 * dt)  # scaling factor
+
+    # Unpad
+    strain_whitened = strain_whitened[unpad_slice]
+
+    # Normalize if needed
+    if normed:
+        max_abs = np.max(np.abs(strain_whitened))
+        if max_abs != 0:
+            strain_whitened /= max_abs
+
+    return strain_whitened
+
+
+def is_arithmetic_progression(arr: np.ndarray, rtol=1e-5, atol=1e-8) -> bool:
+    """Check if the array is an arithmetic progression.
+    
+    Check if the array is a progression with a constant increment, allowing for
+    numerical tolerances.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        Input array to check.
+    
+    rtol : float, optional
+        Relative tolerance for comparing floating-point values.
+        Default is 1e-5.
+    
+    atol : float, optional
+        Absolute tolerance for comparing floating-point values.
+        Default is 1e-8.
+
+    Returns
+    -------
+    bool
+        True if the array is an arithmetic progression (within a specified
+        tolerance at their increments), False otherwise.
+    
+    """
+    if len(arr) <= 1:
+        return True
+    
+    step = arr[1] - arr[0]
+    expected_last = arr[0] + step*(len(arr) - 1)
+    if not np.isclose(arr[-1], expected_last, rtol=rtol, atol=atol):
+        return False
+    
+    return np.allclose(np.diff(arr), step, rtol=rtol, atol=atol)
