@@ -247,6 +247,10 @@ def planck(N, nleft=0, nright=0):
     w : `ndarray`
         The window, with the maximum value normalized to 1 and at least one
         end tapered smoothly to 0.
+
+    References
+    ----------
+    Based on :func:`gwpy.signal.window.planck`.
     
     """
     w = np.ones(N, dtype=float)
@@ -279,6 +283,11 @@ def truncate_transfer(transfer, ncorner=None):
     -------
     out : `numpy.ndarray`
         the smoothly truncated transfer function
+
+    References
+    ----------
+    Based on :func:`gwpy.signal.filter_design.truncate_transfer`.
+
     """
     nsamp = transfer.size
     ncorner = ncorner or 0
@@ -308,6 +317,11 @@ def truncate_impulse(impulse, ntaps, window='hann'):
     -------
     out : `numpy.ndarray`
         the smoothly truncated impulse response
+
+    References
+    ----------
+    Based on :func:`gwpy.signal.filter_design.truncate_impulse`.
+
     """
     out = impulse.copy()
     trunc_start = ntaps // 2
@@ -342,6 +356,11 @@ def fir_from_transfer(transfer, ntaps, window='hann', ncorner=None):
     -------
     out : `numpy.ndarray`
         A time domain FIR filter of length `ntaps`
+
+    References
+    ----------
+    Based on :func:`gwpy.signal.filter_design.fir_from_transfer`.
+
     """
     # truncate and highpass the transfer function
     transfer = truncate_transfer(transfer, ncorner=ncorner)
@@ -354,19 +373,104 @@ def fir_from_transfer(transfer, ntaps, window='hann', ncorner=None):
     return out
 
 
-def whiten_fir_filter(strain: np.ndarray,
-                      asd: np.ndarray,
-                      sample_rate: int,
-                      flength: int,
-                      highpass: float = None,
-                      pad: int = 0,
-                      unpad: int = 0,
-                      normed: bool = True) -> np.ndarray:
+def convolve(strain, fir, window='hann'):
+    """Convolve a time series.
+
+    Convolve a time series with a FIR filter using the overlap-save method.
+
+    Parameters
+    ----------
+    strain : numpy.ndarray
+        The input time series strain.
+    
+    fir : numpy.ndarray
+        The FIR filter coefficients.
+    
+    window : str, optional
+        The window function to apply to the boundaries (default: 'hann').
+
+    Returns
+    -------
+    numpy.ndarray
+        The convolved time series, same length as input data.
+
+    Notes
+    -----
+    This function, based on the implementation of GWpy[1]_, differs in its
+    implementation from the `oaconvolve` implementation of SciPy[2]_, which
+    uses the overlap-add method:
+
+    - **Algorithm**: Overlap-save discards edge artifacts after convolution,
+      whereas overlap-add sums overlapping output segments.
+    - **Boundary Windowing**: Explicitly applies a window (e.g., Hann) to the
+      first/last ``N/2`` samples (where ``N`` is the filter length) to suppress
+      spectral leakage at boundaries. SciPy implementations do not modify input
+      boundaries.
+    - **Edge Corruption**: Intentionally tolerates edge corruption in a segment
+      of length ``N/2`` at both ends, while SciPy's output validity depends on
+      the selected mode (`full`/`valid`/`same`).
+    - **Use Case Focus**: Optimized for 1D time-series processing with
+      boundary-aware windowing. SciPy's `oaconvolve` is more general-purpose,
+      focused in computational efficiency for large N-dimensional arrays
+      and arbitrary convolution modes.
+
+    References
+    ----------
+    .. [1] Based on :meth:`gwpy.timeseries.TimeSeries.convolve`.
+    .. [2] SciPy's more general implementation :func:`scipy.signal.oaconvolve`.
+    
+    """
+    pad = int(np.ceil(len(fir) / 2))
+    nfft = min(8 * len(fir), len(strain))
+    
+    # Apply window to the boundaries of the input data
+    window_arr = sp.signal.get_window(window, len(fir))
+    padded_data = strain.copy()
+    padded_data[:pad] *= window_arr[:pad]
+    padded_data[-pad:] *= window_arr[-pad:]
+    
+    if nfft >= len(strain) // 2:
+        # Perform a single convolution if FFT length is sufficiently large
+        conv = sp.signal.fftconvolve(padded_data, fir, mode='same')
+    else:
+        nstep = nfft - 2 * pad
+        conv = np.zeros_like(strain)
+        
+        # Process the first chunk
+        first_chunk = padded_data[:nfft]
+        conv[:nfft-pad] = sp.signal.fftconvolve(first_chunk, fir, mode='same')[:nfft-pad]
+        
+        # Process middle chunks
+        for k in range(nfft-pad, len(strain)-nfft+pad, nstep):
+            yk = sp.signal.fftconvolve(padded_data[k-pad:k+nstep+pad], fir, mode='same')
+            conv[k:k+yk.size-2*pad] = yk[pad:-pad]
+        
+        # Process the last chunk
+        conv[-nfft+pad:] = sp.signal.fftconvolve(
+            padded_data[-nfft:],
+            fir,
+            mode='same'
+        )[-nfft+pad:]
+    
+    return conv
+
+
+def whiten(strain: np.ndarray,
+           asd: np.ndarray,
+           sample_rate: int,
+           flength: int,
+           window='hann',
+           highpass: float = None,
+           pad: int = 0,
+           unpad: int = 0,
+           normed: bool = True) -> np.ndarray:
     """Whiten a single strain signal using a FIR filter.
 
     Whiten a strain using the input amplitude spectral density 'asd' to
     design the FIR filter, and shrinking signals afterwards to account for the
     edge effects introduced by the filter windowing.
+
+    This is a standalone implementation of GWpy's whiten method.[1]_
 
     Parameters
     ----------
@@ -385,8 +489,12 @@ def whiten_fir_filter(strain: np.ndarray,
 
     flength : int
         Length (in samples) of the time-domain FIR whitening filter.
-        Passed in seconds (`flength/sample_rate`) to GWpy's whiten() function
-        as the 'fduration' parameter.
+    
+    window : str, np.ndarray, optional
+        window function to apply to timeseries prior to FFT,
+        default: 'hann'
+        see :func:`scipy.signal.get_window` for details on acceptable
+        formats.
 
     pad : int, optional
         Margin at each side of the strain to add (zero-pad) in order to avoid
@@ -410,6 +518,11 @@ def whiten_fir_filter(strain: np.ndarray,
     -------
     strain_w : NDArray
         Whitened strain (in time domain).
+    
+    References
+    ----------
+    .. [1] Based on :meth:`gwpy.timeseries.TimeSeries.whiten`.
+
     """
     if asd.ndim != 2:
         raise ValueError("'asd' must have 2 dimensions")
@@ -462,7 +575,7 @@ def whiten_fir_filter(strain: np.ndarray,
     fir_filter = fir_from_transfer(transfer_function, ntaps=flength, ncorner=ncorner)
 
     # Convolve with filter
-    strain_whitened = sp.signal.fftconvolve(strain_detrended, fir_filter, mode='same')
+    strain_whitened = convolve(strain_detrended, fir_filter, window=window)
     strain_whitened *= np.sqrt(2 * dt)  # scaling factor
 
     # Unpad
