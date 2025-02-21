@@ -30,15 +30,6 @@
     </div>
 
 
-.. literalinclude:: ../../requirements.txt
-    :language: none
-    :caption: Required Dependencies
-
-
-.. literalinclude:: ../../requirements-optional.txt
-    :language: none
-    :caption: Optional Dependencies
-
 
 .. toctree::
     :hidden:
