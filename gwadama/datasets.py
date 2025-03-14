@@ -1207,11 +1207,8 @@ class BaseInjected(Base):
             psd[1] = psd_samples
             ```.
             
-            NOTE: It is also used to compute the 'asd' attribute (ASD).
-
-        detector : str
-            GW detector name.
-            Not used, just for identification.
+            .. note::
+                `psd` is also used to compute the 'asd' attribute (ASD).
 
         noise_length : int
             Length of the background noise array to be generated for later use.
@@ -1224,12 +1221,17 @@ class BaseInjected(Base):
             clean signals before injection.
 
         freq_butter_order : int | float
-            Butterworth filter order.
+            Butterworth filter order. For signals above 100 Hz it's usually
+            enough with order 4 to 6.
             See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
             for more information.
         
         flength : int
             Length (in samples) of the time-domain FIR whitening filter.
+
+        detector : str, optional
+            GW detector name.
+            Not used, just for identification.
 
         whiten_params : dict, optional
             Parameters of the whitening filter, with the following entries:
