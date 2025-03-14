@@ -1439,7 +1439,7 @@ class BaseInjected(Base):
         
         """
         if callable(psd):
-            asd_fun = lambda f: np.sqrt(psd)
+            asd_fun = lambda f: np.sqrt(psd(f))
             # Compute a realization of the ASD function with 16 bins per
             # integer frequency to ensure the numerical representation has
             # enough precision.
