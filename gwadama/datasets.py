@@ -1413,6 +1413,7 @@ class BaseInjected(Base):
         
         """
         if callable(psd):
+            _check_vectorized(psd)
             psd_fun = psd
             # Compute a realization of the PSD function with 16 bins per
             # integer frequency to ensure the numerical representation has
@@ -3651,3 +3652,15 @@ class InjectedCoReWaves(BaseInjected):
         super().whiten(verbose=verbose)
 
         self._update_merger_positions()
+
+
+def _check_vectorized(func):
+    """Check if a function is vectorized (i.e., supports NumPy arrays element-wise)."""
+    test_input = np.array([1, 2, 3])  # Small test array
+    
+    # Run the function; any raised error propagates immediately
+    output = func(test_input)
+
+    # Ensure the output is a NumPy array of the same shape
+    if not (isinstance(output, np.ndarray) and (output.shape == test_input.shape)):
+        raise TypeError("The provided function is not properly vectorized. Use numpy.vectorize if needed.")
