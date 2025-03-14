@@ -1166,10 +1166,10 @@ class BaseInjected(Base):
                  clean_dataset: Base,
                  *,
                  psd: np.ndarray | Callable,
-                 detector: str,
                  noise_length: int,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
+                 detector: str = '',
                  whiten_params: dict = None,
                  random_seed: int = None):
         """Base constructor for injected datasets.
