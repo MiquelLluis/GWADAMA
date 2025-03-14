@@ -1221,15 +1221,14 @@ class BaseInjected(Base):
             Frequency cutoff below which no noise bins will be generated in the
             frequency space, and also used for the high-pass filter applied to
             clean signals before injection.
+            TODO: Properly separate this parameter from the whitening frequency
+            cutoff, which can be set to a different value.
 
         freq_butter_order : int | float
             Butterworth filter order. For signals above 100 Hz it's usually
             enough with order 4 to 6.
             See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
             for more information.
-        
-        flength : int
-            Length (in samples) of the time-domain FIR whitening filter.
 
         detector : str, optional
             GW detector name.
@@ -1604,8 +1603,7 @@ class BaseInjected(Base):
                 if self.whitened:
                     injected = tat.whiten(
                         injected, asd=self.asd_array, unpad=pad, sample_rate=self.sample_rate,
-                        # Parameters for GWpy's whiten() function:
-                        highpass=self.freq_cutoff, flength=self.flength
+                        highpass=self.freq_cutoff, flength=self.whiten_params['flength']
                     )
                 if injections_per_snr == 1:
                     self.strains[clas][id_][snr_] = injected
@@ -2827,9 +2825,6 @@ class InjectedUnlabeledWaves(BaseInjected):
             enough with order 4 to 6.
             See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
             for more information.
-
-        flength : int
-            Length (in samples) of the time-domain FIR whitening filter.
 
         detector : str, optional
             GW detector name.
