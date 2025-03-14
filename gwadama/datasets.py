@@ -1321,6 +1321,56 @@ class BaseInjected(Base):
             self.Ytest = None
             self.id_train = None
             self.id_test = None
+
+    def __str__(self):
+        """Return a summary of the dataset."""
+        
+        # Get the name of the class
+        class_name = self.__class__.__name__
+        
+        # Basic information
+        num_classes = len(self.classes) if self.classes else 0
+        num_strains = len(self) if self.strains else 0
+        max_length = self.max_length if hasattr(self, 'max_length') else 0
+        sample_rate = self.sample_rate if hasattr(self, 'sample_rate') else None
+        whitened = self.whitened if hasattr(self, 'whitened') else False
+        train_test_split = (self.Xtrain is not None and self.Xtest is not None)
+        
+        # Metadata information
+        metadata_shape = self.metadata.shape if hasattr(self, 'metadata') and self.metadata is not None else (0, 0)
+        
+        # Time tracking information
+        time_tracking = self._track_times if hasattr(self, '_track_times') else False
+        
+        # Whitening information
+        whitening_info = "Whitened" if whitened else "Not whitened"
+
+        # Noise
+        noise_length = len(self.noise)
+
+        # Injections
+        n_snr_injections = len(self.snr_list)
+        
+        # Train/Test split information
+        split_info = "Train/Test split performed" if train_test_split else "No Train/Test split"
+        
+        # Construct the string
+        summary = [
+            f"=== {class_name} Dataset Summary ===",
+            f"  Classes: {num_classes}",
+            f"  Strains: {num_strains}",
+            f"  Max Strain Length: {max_length} samples",
+            f"  Sample Rate: {sample_rate} Hz" if sample_rate else "  Sample Rate: Not specified",
+            f"  Time Tracking: {'Enabled' if time_tracking else 'Disabled'}",
+            f"  Whitening: {whitening_info}",
+            f"  Noise realization lenght: {noise_length}",
+            f"  Number of injections at different SNR: {n_snr_injections}",
+            f"  Train/Test Split: {split_info}",
+            f"  Metadata Shape: {metadata_shape}",
+            "=" * (len(class_name) + 24)  # Add a separator line matching the header length
+        ]
+        
+        return "\n".join(summary)
     
     def __getstate__(self):
         """Avoid error when trying to pickle PSD and ASD interpolants.
