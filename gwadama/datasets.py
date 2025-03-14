@@ -2751,7 +2751,176 @@ class UnlabeledWaves(Base):
         class_name = next(iter(self.classes))  # Get the first class name
 
         return {class_name: extracted_signals}
+    
 
+class InjectedUnlabeledWaves(BaseInjected):
+    """Dataset class for injected gravitational wave signals without labels.
+
+    This class extends `Base`, modifying its behavior to handle injections in
+    `UnlabeledWaves` datasets, where gravitational wave signals are provided
+    without associated labels.
+
+    Attributes
+    ----------
+    TODO
+
+    Notes
+    -----
+    - Unlike `BaseInjected`, this class does not track class labels.
+    - Train/Test split is still supported but is not stratified.
+    
+    """
+    def __init__(self,
+                 clean_dataset: UnlabeledWaves,
+                 *,
+                 psd: np.ndarray | Callable,
+                 noise_length: int,
+                 freq_cutoff: int | float,
+                 freq_butter_order: int | float,
+                 detector: str = '',
+                 whiten_params: dict = None,
+                 random_seed: int = None):
+        """Initialize an InjectedUnlabeledWaves dataset.
+
+        This constructor is built from a previous UnlabeledWaves instance.
+
+        If train/test subsets are present, they too are updated when performing
+        injections or changing units, but only through re-building them from
+        the main 'strains' attribute using the already generated indices.
+        Original train/test subsets from the clean dataset are not inherited.
+
+        WARNING: Initializing this class does not perform the injections! For
+        that use the method 'gen_injections'.
+
+        Parameters
+        ----------
+        clean_dataset : UnlabeledWaves
+
+        psd : np.ndarray | Callable
+            Power Spectral Density of the detector's sensitivity in the range
+            of frequencies of interest. Can be given as a callable function
+            whose argument is expected to be an array of frequencies, or as a
+            2d-array with shape (2, psd_length) so that
+            
+            ```
+            psd[0] = frequency_samples
+            psd[1] = psd_samples
+            ```.
+            
+            .. note::
+                `psd` is also used to compute the 'asd' attribute (ASD).
+        
+        noise_length : int
+            Length of the background noise array to be generated for later use.
+            It should be at least longer than the longest signal expected to be
+            injected.
+
+        freq_cutoff : int | float
+            Frequency cutoff below which no noise bins will be generated in the
+            frequency space, and also used for the high-pass filter applied to
+            clean signals before injection.
+
+        freq_butter_order : int | float
+            Butterworth filter order. For signals above 100 Hz it's usually
+            enough with order 4 to 6.
+            See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
+            for more information.
+
+        flength : int
+            Length (in samples) of the time-domain FIR whitening filter.
+
+        detector : str, optional
+            GW detector name.
+            Not used, just for identification.
+
+        whiten_params : dict, optional
+            Parameters of the whitening filter (if used), with the following
+            entries:
+            
+            - 'flength' : int
+                Length (in samples) of the time-domain FIR whitening.
+            
+            - 'highpass' : float
+                Frequency cutoff.
+            
+            - 'normed' : bool
+                Normalization applied after the whitening filter.
+
+        random_seed : int, optional
+            Value passed to 'sklearn.model_selection.train_test_split' to
+            generate the Train and Test subsets.
+            Saved for reproducibility purposes, and also used to initialize
+            Numpy's default RandomGenerator.
+
+        Notes
+        -----
+        - A dummy class label ('unique': 1) is assigned for compatibility.
+        - Metadata is omitted in this class.
+        - The dataset structure supports train/test splitting, but labels are 
+          not relevant.
+        - This constructor is a reimplementation of `Base.__init__` adapted for
+          a single (dummy) class.
+        
+        """
+        # Inherit clean strain instance attributes.
+        #----------------------------------------------------------------------
+        self.strains_clean = deepcopy(clean_dataset.strains)
+        self.classes = clean_dataset.classes.copy()  # Dummy class.
+        self.labels = self.labels = clean_dataset.labels.copy()  # Dummy labels.
+        self._track_times = clean_dataset._track_times
+        if self._track_times:
+            self.times = deepcopy(clean_dataset.times)
+        self.sample_rate = clean_dataset.sample_rate
+        self.max_length = clean_dataset.max_length
+
+        # Noise instance and related attributes.
+        #----------------------------------------------------------------------
+        self.random_seed = random_seed
+        self.rng = np.random.default_rng(random_seed)
+        self.detector = detector
+        # Highpass parameters applied when generating the noise array.
+        self.freq_cutoff = freq_cutoff
+        self.freq_butter_order = freq_butter_order
+    
+        self._psd, self.psd_array = self._setup_psd(psd)
+        self._asd, self.asd_array = self._setup_asd_from_psd(psd)
+        self.noise = self._generate_background_noise(noise_length)
+
+        # Injection related:
+        #----------------------------------------------------------------------
+        self.strains = None
+        self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
+        self.snr_list = []
+        self.pad = {}  # {snr: pad}
+        self.injections_per_snr = 1  # Default value.
+        self.whitened = False  # Switched to True after calling self.whiten().
+        self.whiten_params = whiten_params
+        # NOTE: I designed this while building the InjectedCoReWaves class, so
+        # chances are this is not general enough.
+        if whiten_params is not None:
+            self.whiten_params.update({
+                'asd_array': self.asd_array,  # Referenced here again for consistency.
+                'pad': 0,  # Signals are expected to be already padded.
+                'unpad': self.pad,  # Referenced here again for consistency.
+                'highpass': self.freq_cutoff  # Referenced here again for consistency.
+            })
+        
+        # Train/Test subset views:
+        #----------------------------------------------------------------------
+        if clean_dataset.Xtrain is not None:
+            self.Xtrain = {k: None for k in clean_dataset.Xtrain.keys()}
+            self.Xtest = {k: None for k in clean_dataset.Xtest.keys()}
+            self.Ytrain = clean_dataset.Ytrain
+            self.Ytest = clean_dataset.Ytest
+            self.id_train = clean_dataset.id_train
+            self.id_test = clean_dataset.id_test
+        else:
+            self.Xtrain = None
+            self.Xtest = None
+            self.Ytrain = None
+            self.Ytest = None
+            self.id_train = None
+            self.id_test = None
 
 
 class CoReWaves(Base):
