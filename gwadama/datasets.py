@@ -1253,9 +1253,12 @@ class BaseInjected(Base):
             Numpy's default RandomGenerator.
         
         """
+        if not clean_dataset.sample_rate:
+            raise ValueError("`sample_rate` must be defined in order to perform injections")
+
         # Inherit clean strain instance attributes.
         #----------------------------------------------------------------------
-
+        self.sample_rate = clean_dataset.sample_rate
         self.classes = clean_dataset.classes.copy()
         self._check_classes_dict(self.classes)
         self.labels = clean_dataset.labels.copy()
@@ -1264,12 +1267,10 @@ class BaseInjected(Base):
         self._track_times = clean_dataset._track_times
         if self._track_times:
             self.times = deepcopy(clean_dataset.times)
-        self.sample_rate = clean_dataset.sample_rate
         self.max_length = clean_dataset.max_length
 
         # Noise instance and related attributes.
         #----------------------------------------------------------------------
-
         self.random_seed = random_seed
         self.rng = np.random.default_rng(random_seed)
         self.detector = detector
@@ -1283,10 +1284,8 @@ class BaseInjected(Base):
 
         # Injection related:
         #----------------------------------------------------------------------
-
         # TODO: ¿Implement the case when clean_dataset is already whitened?
         # It should mark it and use the clean copy of nonwhitened data instead.
-
         self.strains = None
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
@@ -1306,7 +1305,6 @@ class BaseInjected(Base):
 
         # Train/Test subset views:
         #----------------------------------------------------------------------
-
         if clean_dataset.Xtrain is not None:
             self.Xtrain = {k: None for k in clean_dataset.Xtrain.keys()}
             self.Xtest = {k: None for k in clean_dataset.Xtest.keys()}
@@ -2909,15 +2907,18 @@ class InjectedUnlabeledWaves(BaseInjected):
           a single (dummy) class.
         
         """
+        if not clean_dataset.sample_rate:
+            raise ValueError("`sample_rate` must be defined in order to perform injections")
+
         # Inherit clean strain instance attributes.
         #----------------------------------------------------------------------
+        self.sample_rate = clean_dataset.sample_rate
         self.strains_clean = deepcopy(clean_dataset.strains)
         self.classes = clean_dataset.classes.copy()  # Dummy class.
         self.labels = self.labels = clean_dataset.labels.copy()  # Dummy labels.
         self._track_times = clean_dataset._track_times
         if self._track_times:
             self.times = deepcopy(clean_dataset.times)
-        self.sample_rate = clean_dataset.sample_rate
         self.max_length = clean_dataset.max_length
 
         # Noise instance and related attributes.
