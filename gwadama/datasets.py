@@ -33,8 +33,10 @@ from . import tat
 from .units import *
 
 
-__all__ = ['Base', 'BaseInjected', 'SyntheticWaves', 'InjectedSyntheticWaves',
-           'UnlabeledWaves', 'CoReWaves', 'InjectedCoReWaves']
+__all__ = ['Base', 'BaseInjected',
+           'SyntheticWaves', 'InjectedSyntheticWaves',
+           'UnlabeledWaves', 'InjectedUnlabeledWaves',
+           'CoReWaves', 'InjectedCoReWaves']
 
 
 class Base:
