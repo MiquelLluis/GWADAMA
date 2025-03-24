@@ -128,6 +128,12 @@ class NonwhiteGaussianNoise:
     def inject(self, x, *, snr, snr_lim=None, pos=0, normed=False):
         """Add the simulated noise to the signal 'x'.
 
+        Warning
+        --------
+        Currently, this method scales the signal to match the SNR w.r.t. the
+        noise. This may change in the future so that the signal's amplitude is
+        kept constant, and the background noise is scaled instead.
+
         Parameters
         ----------
         x : array
