@@ -351,8 +351,8 @@ class Base:
         ```
         
         """
-        for indices in self.keys():
-            yield (*indices, self.get_strain(*indices))
+        for strain_indices in self.keys():
+            yield (*strain_indices, self.get_strain(*strain_indices))
 
     def find_class(self, id):
         """Find which 'class' corresponds the strain 'id'.
@@ -1527,7 +1527,7 @@ class BaseInjected(Base):
         
         - The SNR is computed using a matched filter against the noise PSD.
         
-        - If `pad > 0`, it also updates the time arrays.
+        - If `pad > 0`, it also updates the time arrays (if present).
         
         - If strain units are in geometrized, they will be converted first to
           IS, injected, and converted back to geometrized.
@@ -2683,7 +2683,21 @@ class InjectedSyntheticWaves(BaseInjected):
             self.Ytest = None
 
 
-class UnlabeledWaves(Base):
+class UnlabeledBaseMixin:
+    def keys(self, max_depth = None) -> list:
+        # Remove the dummy class key to make it transparent.
+        return [x[1:] for x in super().keys(max_depth)]
+    keys.__doc__ = Base.keys.__doc__
+
+    def get_strain(self, *indices, normalize=False):
+        # Add the dummy class name as the first index, so that the user does
+        # does not need to write themselve explicitly:
+        indices = (next(iter(self.classes.keys())), *indices)
+        return super().get_strain(*indices, normalize=normalize)
+    get_strain.__doc__ = Base.get_strain.__doc__
+
+
+class UnlabeledWaves(UnlabeledBaseMixin, Base):
     """Dataset class for clean gravitational wave signals without labels.
 
     This class extends `Base`, modifying its behavior to handle datasets 
@@ -2720,9 +2734,9 @@ class UnlabeledWaves(Base):
 
         This constructor processes a NumPy array of gravitational wave signals,
         storing them in a structured dictionary while optionally discarding
-        unnecessary zero-padding. Unlike `Base`, this class does not require
-        labeled categories or metadata but retains support for dataset
-        splitting and signal management.
+        unnecessary zero-padding. Unlike `Base`, this class does not support
+        labeled categories nor requires metadata, but retains support for
+        dataset splitting and signal management.
 
         Parameters
         ----------
@@ -2745,7 +2759,10 @@ class UnlabeledWaves(Base):
 
         Notes
         -----
-        - A dummy class label ('unique': 1) is assigned for compatibility.
+        - A dummy class label ('unique': 1) is assigned for compatibility
+          inside the `strains` dict, but it will be made invisible for the
+          user, so it shall not be given when using methods such as
+          `UnlabeledWaves.get_strain`.
         - Metadata is omitted in this class.
         - The dataset structure supports train/test splitting, but labels are 
           not relevant.
@@ -2753,7 +2770,7 @@ class UnlabeledWaves(Base):
         """
         self.classes = {'unique': 1}  # Dummy class.
         self.strains = self._unpack_strains(strains_array, strain_limits)
-        self.labels = self._gen_labels()  # Dummy labels.
+        self.labels = {id_: 1 for id_ in range(strains_array.shape[0])}  # Dummy labels.
         # self.metadata: pd.DataFrame = None  # OMMITED IN THIS CLASS
         
         # Number of nested layers in strains' dictionary. Keep updated always:
@@ -2802,7 +2819,7 @@ class UnlabeledWaves(Base):
         return {class_name: extracted_signals}
     
 
-class InjectedUnlabeledWaves(BaseInjected):
+class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
     """Dataset class for injected gravitational wave signals without labels.
 
     This class extends `Base`, modifying its behavior to handle injections in
