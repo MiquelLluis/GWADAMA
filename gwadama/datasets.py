@@ -1777,7 +1777,9 @@ class BaseInjected(Base):
         Strains are later cut to their original size before adding the pad,
         to remove the vigneting.
         
-        NOTE: This is an irreversible action; if the original injections need
+        Warning
+        -------
+        This is an irreversible action; if the original injections need
         to be preserved it is advised to make a copy of the instance before
         performing the whitening.
         
