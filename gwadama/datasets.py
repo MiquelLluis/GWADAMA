@@ -2684,6 +2684,22 @@ class InjectedSyntheticWaves(BaseInjected):
 
 
 class UnlabeledBaseMixin:
+    """Mixin class for managing methods related to unlabeled datasets.
+
+    This mixin modifies the functionality of the base class to handle datasets
+    without associated class labels.
+    
+    This class is intended to be used as part of a dataset class that operates
+    on unlabeled gravitational wave signals, ensuring compatibility with 
+    methods from the base class while maintaining flexibility for unlabeled
+    data.
+
+    Notes
+    -----
+    - When inheriting this class, it should precede the base classes in the MRO
+      to handle correctly the references.
+    
+    """
     def keys(self, max_depth = None) -> list:
         # Remove the dummy class key to make it transparent.
         return [x[1:] for x in super().keys(max_depth)]
