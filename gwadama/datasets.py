@@ -1295,13 +1295,9 @@ class BaseInjected(Base):
         self.whiten_params = whiten_params
         # NOTE: I designed this while building the InjectedCoReWaves class, so
         # chances are this is not general enough.
-        if whiten_params is not None:
-            self.whiten_params.update({
-                'asd_array': self.asd_array,  # Referenced here again for consistency.
-                'pad': 0,  # Signals are expected to be already padded.
-                'unpad': self.pad,  # Referenced here again for consistency.
-                'highpass': self.freq_cutoff  # Referenced here again for consistency.
-            })
+        if self.whiten_params is not None:
+            self.whiten_params = self.whiten_params.copy()  # Avoid unintended effects
+            self._patch_whiten_params()
 
         # Train/Test subset views:
         #----------------------------------------------------------------------
@@ -1319,6 +1315,14 @@ class BaseInjected(Base):
             self.Ytest = None
             self.id_train = None
             self.id_test = None
+
+    def _patch_whiten_params(self):
+        self.whiten_params.update({
+                'asd_array': self.asd_array,  # Referenced here again for consistency.
+                'pad': 0,  # Signals are expected to be already padded.
+                'unpad': self.pad,  # Referenced here again for consistency.
+                'highpass': self.freq_cutoff  # Referenced here again for consistency.
+            })
 
     def __str__(self):
         """Return a summary of the dataset."""
@@ -1770,7 +1774,7 @@ class BaseInjected(Base):
             if verbose:
                 print("Strain exported to", file)
     
-    def whiten(self, verbose=False):
+    def whiten(self, whiten_params=None, verbose=False):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
@@ -1787,8 +1791,12 @@ class BaseInjected(Base):
         if self.whitened:
             raise RuntimeError("dataset already whitened")
         
-        if self.whiten_params is None:
-            raise RuntimeError("missing whitening parameters")
+        if not self.whiten_params:
+            if not whiten_params:
+                raise RuntimeError("missing whitening parameters")
+            
+            self.whiten_params = whiten_params.copy()
+            self._patch_whiten_params()
 
         if self.strains is None:
             raise RuntimeError("no injections have been performed yet")
@@ -2981,13 +2989,9 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         self.whiten_params = whiten_params
         # NOTE: I designed this while building the InjectedCoReWaves class, so
         # chances are this is not general enough.
-        if whiten_params is not None:
-            self.whiten_params.update({
-                'asd_array': self.asd_array,  # Referenced here again for consistency.
-                'pad': 0,  # Signals are expected to be already padded.
-                'unpad': self.pad,  # Referenced here again for consistency.
-                'highpass': self.freq_cutoff  # Referenced here again for consistency.
-            })
+        if self.whiten_params is not None:
+            self.whiten_params = self.whiten_params.copy()  # Avoid unintended effects
+            self._patch_whiten_params()
         
         # Train/Test subset views:
         #----------------------------------------------------------------------
