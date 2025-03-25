@@ -18,6 +18,7 @@ import warnings
 
 # from gwpy.timeseries import TimeSeries  # Lazy import
 import numpy as np
+from numpy.typing import ArrayLike
 import pandas as pd
 import scipy as sp
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
@@ -451,7 +452,7 @@ class Base:
         
         return dictools.get_value_from_nested_dict(self.times, indices)
 
-    def pad_strains(self, padding: int | tuple | dict) -> None:
+    def pad_strains(self, padding: int | ArrayLike | dict) -> None:
         """
         Pad strains with zeros on both sides.
 
@@ -460,7 +461,7 @@ class Base:
 
         Parameters
         ----------
-        padding : int | tuple | dict
+        padding : int | ArrayLike | dict
             The padding to apply to each strain.
             If padding is an integer, it will be applied at both sides of all strains.
             If padding is a tuple, it must be of the form (left_pad, right_pad) in samples.
@@ -473,7 +474,7 @@ class Base:
         """
         if isinstance(padding, int):
             padding_d = {id: (padding, padding) for id in self.labels}
-        elif isinstance(padding, tuple):
+        elif isinstance(padding, tuple|list|np.ndarray):
             padding_d = {id: padding for id in self.labels}
         elif isinstance(padding, dict):
             padding_d = padding
@@ -1521,7 +1522,7 @@ class BaseInjected(Base):
     
     def gen_injections(self,
                        snr: int|float|list,
-                       pad: int = 0,
+                       pad: int|ArrayLike = 0,
                        randomize_noise: bool = False,
                        random_seed: int = None,
                        injections_per_snr: int = 1,
@@ -1546,9 +1547,10 @@ class BaseInjected(Base):
         ----------
         snr : int | float | list
         
-        pad : int
+        pad : int | ArrayLike
             Number of zeros to pad the signal at both ends before the
-            injection.
+            injection. If ArrayLike, it must contain only the number of zeros at
+            the left and right to be added.
 
         randomize_noise : bool
             If True, the noise segment is randomly chosen before the injection.
@@ -1599,6 +1601,11 @@ class BaseInjected(Base):
         
         if set(snr_list) & set(self.snr_list):
             raise ValueError("one or more SNR values are already present in the dataset")
+        
+        if isinstance(pad, int):
+            pad_left, pad_right = pad, pad
+        else:
+            pad_left, pad_right = pad
 
         if self._track_times:
             # Replaced temporarily because when injecting for the first time
@@ -1648,10 +1655,10 @@ class BaseInjected(Base):
                 else:
                     pos0 = 0
 
-                # 'pad' is added to 'snr_offset' to compensate for the padding
+                # Left pad is added to 'snr_offset' to compensate for the padding
                 # which has not been updated in the 'metadata' yet.
                 injected = self._inject(
-                    strain_clean_padded, snr_, id=id_, snr_offset=pad, pos=pos0
+                    strain_clean_padded, snr_, id=id_, snr_offset=pad_left, pos=pos0
                 )
                 if self.whitened:
                     injected = tat.whiten(
@@ -1674,7 +1681,7 @@ class BaseInjected(Base):
             # - Enlarge if the strains were padded and no whitening followed.
             if self._track_times:
                 times_i = self.get_times(clas, id_)
-                if pad > 0 and not self.whitened:
+                if pad_left+pad_right > 0 and not self.whitened:
                     times_i = tat.pad_time_array(times_i, pad)
                 for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
                     if injections_per_snr == 1:
@@ -3622,7 +3629,7 @@ class InjectedCoReWaves(BaseInjected):
                 snr: int | float,
                 *,
                 id: str,
-                snr_offset: int,
+                snr_offset: int | list,
                 pos: int = 0) -> np.ndarray:
         """Inject a strain at 'snr' into noise using 'self.noise' instance.
 

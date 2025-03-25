@@ -4,6 +4,7 @@ Time analysis toolkit.
 
 """
 import numpy as np
+from numpy.typing import ArrayLike
 import scipy as sp
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 
@@ -118,7 +119,7 @@ def gen_time_array(t0, t1, sr):
     return times
 
 
-def pad_time_array(times: np.ndarray, pad: int | tuple) -> np.ndarray:
+def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
     """Extend a time array by 'pad' number of samples.
 
     Parameters
@@ -126,9 +127,9 @@ def pad_time_array(times: np.ndarray, pad: int | tuple) -> np.ndarray:
     times: NDArray
         Time array.
     
-    pad: int | tuple
+    pad: int | ArrayLike
         If int, number of samples to add on both sides.
-        If tuple, number of samples to add on each side.
+        If ArrayLike, number of samples to add on each side.
     
     Returns
     -------
@@ -144,10 +145,8 @@ def pad_time_array(times: np.ndarray, pad: int | tuple) -> np.ndarray:
     """
     if isinstance(pad, int):
         pad0, pad1 = pad, pad
-    elif isinstance(pad, tuple):
-        pad0, pad1 = pad
     else:
-        raise TypeError("'pad' type not recognized")
+        pad0, pad1 = pad
 
     length = len(times) + pad0 + pad1
     dt = times[1] - times[0]
