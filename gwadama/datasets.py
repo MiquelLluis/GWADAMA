@@ -598,10 +598,10 @@ class Base:
         """Whiten the strains.
         
         Calling this method performs the whitening of all strains.
-        Optionally, strains are first zero-padded, whitened and then shrunk to
-        their initial size. This is useful to remove the vignetting effect.
         
-        NOTE: Original (non-whitened) strains will be stored in the
+        Note
+        ----
+        Original (non-whitened) strains will be stored in the
         'nonwhiten_strains' attribute.
         
         """
@@ -2710,15 +2710,13 @@ class UnlabeledBaseMixin:
       to handle correctly the references.
     
     """
-    def keys(self, max_depth = None) -> list:
-        # Remove the dummy class key to make it transparent.
-        return [x[1:] for x in super().keys(max_depth)]
-    keys.__doc__ = Base.keys.__doc__
-
     def get_strain(self, *indices, normalize=False):
-        # Add the dummy class name as the first index, so that the user does
-        # does not need to write themselve explicitly:
-        indices = (next(iter(self.classes.keys())), *indices)
+        # Add the dummy class name (if ommited) as the first index, so that the
+        # user does not need to write it explicitly:
+        class_label = next(iter(self.classes.keys()))
+        if indices[0] != class_label:
+            indices = (next(iter(self.classes.keys())), *indices)
+
         return super().get_strain(*indices, normalize=normalize)
     get_strain.__doc__ = Base.get_strain.__doc__
 
@@ -2786,17 +2784,15 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         Notes
         -----
         - A dummy class label ('unique': 1) is assigned for compatibility
-          inside the `strains` dict, but it will be made invisible for the
-          user, so it shall not be given when using methods such as
-          `UnlabeledWaves.get_strain`.
+          inside the `strains` dict.
         - Metadata is omitted in this class.
         - The dataset structure supports train/test splitting, but labels are 
-          not relevant.
+          ignored.
         
         """
         self.classes = {'unique': 1}  # Dummy class.
         self.strains = self._unpack_strains(strains_array, strain_limits)
-        self.labels = {id_: 1 for id_ in range(strains_array.shape[0])}  # Dummy labels.
+        self.labels = self._gen_labels()  # Dummy labels.
         # self.metadata: pd.DataFrame = None  # OMMITED IN THIS CLASS
         
         # Number of nested layers in strains' dictionary. Keep updated always:
