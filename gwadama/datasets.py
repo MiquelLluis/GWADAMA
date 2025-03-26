@@ -1300,8 +1300,9 @@ class BaseInjected(Base):
         the main 'strains' attribute using the already generated indices.
         Original train/test subsets from the clean dataset are not inherited.
         
-        WARNING: Initializing this class does not perform the injections! For
-        that use the method 'gen_injections'.
+        .. warning::
+            Initializing this class does not perform the injections! For that use
+            the method 'gen_injections'.
 
         Parameters
         ----------
@@ -1875,11 +1876,10 @@ class BaseInjected(Base):
         Strains are later cut to their original size before adding the pad,
         to remove the vigneting.
         
-        Warning
-        -------
-        This is an irreversible action; if the original injections need
-        to be preserved it is advised to make a copy of the instance before
-        performing the whitening.
+        .. warning::
+            This is an irreversible action; if the original injections need
+            to be preserved it is advised to make a copy of the instance before
+            performing the whitening.
 
         Parameters
         ----------
@@ -2990,8 +2990,9 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         the main 'strains' attribute using the already generated indices.
         Original train/test subsets from the clean dataset are not inherited.
 
-        WARNING: Initializing this class does not perform the injections! For
-        that use the method 'gen_injections'.
+        .. warning::
+            Initializing this class does not perform the injections! For
+            that use the method 'gen_injections'.
 
         Parameters
         ----------
@@ -3470,9 +3471,8 @@ class CoReWaves(Base):
 
         This also updates the metadata column 'merger_pos'.
 
-        Warning
-        -------
-        This is an irreversible action.
+        .. warning::
+            This is an irreversible action.
 
         Parameters
         ----------
@@ -3788,11 +3788,10 @@ class InjectedCoReWaves(BaseInjected):
         Strains are later cut to their original size before adding the pad,
         to remove the vigneting.
         
-        Warning
-        -------
-        This is an irreversible action; if the original injections need
-        to be preserved it is advised to make a copy of the instance before
-        performing the whitening.
+        .. warning::
+            This is an irreversible action; if the original injections need
+            to be preserved it is advised to make a copy of the instance before
+            performing the whitening.
         
         """
         super().whiten(
