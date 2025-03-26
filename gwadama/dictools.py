@@ -3,6 +3,8 @@
 Collection of utility functions related to nested Python dictionaries.
 
 """
+# from copy import deepcopy  # Lazy import
+
 import numpy as np
 
 
