@@ -101,6 +101,11 @@ class Base:
     max_length : int
         Length of the longest strain in the dataset.
         Remember to update it if modifying the strains length.
+
+    padding : dict, optional
+        Padding added to the strains with the form:
+            {id: (pad_left, pad_right)}
+        This only keeps track of any padding added for later potential usages.
     
     times : dict, optional
         Time samples associated with the strains, following the same structure
@@ -171,10 +176,13 @@ class Base:
         # Attributes whose values can be set up or otherwise left as follows.
         #----------------------------------------------------------------------
 
+        # Optional padding record.
+        self.padding = {}
+
         # Whitening related attributes.
         self.whitened = False
         self.whiten_params = {}
-        self.nonwhiten_strains = None
+        self.nonwhiten_strains = None  # No need to set it before whitening.
 
         # Time tracking related attributes.
         self.sample_rate: int = None
@@ -193,6 +201,7 @@ class Base:
     
     def __str__(self):
         """Return a summary of the dataset."""
+        #TODO: Add padding information
         
         # Get the name of the class
         class_name = self.__class__.__name__
@@ -212,10 +221,10 @@ class Base:
         time_tracking = self._track_times if hasattr(self, '_track_times') else False
         
         # Whitening information
-        whitening_info = "Whitened" if whitened else "Not whitened"
+        whitening_info = "Whitened" if whitened else "NOT whitened"
         
         # Train/Test split information
-        split_info = "Train/Test split performed" if train_test_split else "No Train/Test split"
+        split_info = "Performed" if train_test_split else "NOT performed"
         
         # Construct the string
         summary = [
@@ -452,40 +461,99 @@ class Base:
         
         return dictools.get_value_from_nested_dict(self.times, indices)
 
-    def pad_strains(self, padding: int | ArrayLike | dict) -> None:
+    def _format_padding(self, padding) -> dict:
+        """Format the padding into a dict of (left, right) padding per ID.
+
+        This method standardizes the padding input into a dictionary mapping 
+        each signal ID to a tuple of (left_pad, right_pad) values.
+        
+        Parameters
+        ----------
+        padding : int | ArrayLike | dict
+            The padding specification. Allowed types:
+        
+            - **int**: Symmetrical padding (same left/right) for all signals.
+            - **tuple/list/numpy.ndarray**: Sequence with exactly 2 elements
+              interpreted as (left_pad, right_pad) for all signals.
+            - **dict**: Pre-formatted dictionary with signal IDs as keys and
+              (left, right) padding tuples as values. Returned directly without
+              validation.
+
+        Returns
+        -------
+        padding_dict : dict
+            Dictionary mapping each signal ID to its (left_pad, right_pad)
+            tuple.
+
+        """
+        if isinstance(padding, int):
+            padding_dict = {id: (padding, padding) for id in self.labels}
+        elif isinstance(padding, tuple|list|np.ndarray):
+            padding_dict = {id: padding for id in self.labels}
+        elif isinstance(padding, dict):
+            padding_dict = padding
+        else:
+            raise TypeError("padding must be an integer, a tuple or a dictionary")
+        
+        return padding_dict
+
+    def pad_strains(self, padding: int | ArrayLike | dict, window=None) -> None:
         """
         Pad strains with zeros on both sides.
 
-        This function pads each strain with a specific number of samples on both sides.
-        It also updates the 'max_length' attribute to reflect the new maximum length of the padded strains.
+        This function pads each strain with a specific number of samples on
+        both sides. It also updates the 'max_length' attribute to reflect the
+        new maximum length of the padded strains.
 
         Parameters
         ----------
         padding : int | ArrayLike | dict
-            The padding to apply to each strain.
-            If padding is an integer, it will be applied at both sides of all strains.
-            If padding is a tuple, it must be of the form (left_pad, right_pad) in samples.
-            If padding is a dictionary, it must be of the form {id: (left_pad, right_pad)},
-            where id is the identifier of each strain.
+            The padding to apply to each strain. If padding is an integer, it
+            will be applied at both sides of all strains. If padding is a
+            tuple, it must be of the form (left_pad, right_pad) in samples. If
+            padding is a dictionary, it must be of the form {id: (left_pad,
+            right_pad)}, where id is the identifier of each strain.
+
+        window : str | tuple | Callable, optional
+            Window to apply before padding the arrays.
+            If str or tuple, it will be used a `scipy.signal.get_window(window)`.
+            If Callable, it must take the strain before padding as argument,
+            and return the windowed array.
+            By default, no window is applied.
+
+            .. versionadded:: 0.4.0
+                This parameter was added in v0.4.0 to emphasize the potential
+                need of windowing before padding strains to avoid spectral
+                leakage.
 
         Notes
         -----
         - If time arrays are present, they are also padded accordingly.
+        
         """
-        if isinstance(padding, int):
-            padding_d = {id: (padding, padding) for id in self.labels}
-        elif isinstance(padding, tuple|list|np.ndarray):
-            padding_d = {id: padding for id in self.labels}
-        elif isinstance(padding, dict):
-            padding_d = padding
-        else:
-            raise ValueError("padding must be an integer, a tuple or a dictionary")
+        padding = self._format_padding(padding)
+        
+        if window is None:
+            window = lambda x: x  # identity
+            warnings.warn(
+                "No window is applied to the signal. This can cause issues "
+                "when padding the signal, as it may introduce discontinuities. "
+                "Consider using a windowing function."
+            )
+        elif isinstance(window, (str, tuple)):
+            window = lambda x: sp.signal.get_window(window, x)
+        elif not callable(window):
+            raise TypeError(
+                "window must be a Callable or a valid input for SciPy's "
+                "`signal.get_window()` function."
+            )
 
         for clas, id, *keys in self.keys():
-            strain = self.get_strain(clas, id, *keys)
-            left_pad, right_pad = padding_d[id]
+            # Apply window if given
+            strain = window(self.get_strain(clas, id, *keys))
             
             # Pad the strain
+            left_pad, right_pad = padding[id]
             strain_padded = np.pad(strain, (left_pad, right_pad), mode='constant')
             dictools.set_value_to_nested_dict(self.strains, [clas, id, *keys], strain_padded)
 
@@ -498,48 +566,73 @@ class Base:
                 times_padded = np.concatenate([left_time_points, times, right_time_points])
                 dictools.set_value_to_nested_dict(self.times, [clas, id, *keys], times_padded)
 
-        # Update the maximum strain length attribute
-        self.max_length = self._find_max_length()
-
-    def shrink_strains(self, limits: tuple | dict) -> None:
-        """Shrink strains to a specific interval.
-
-        Shrink strains (and their associated time arrays if present) to the
-        interval given by 'limits'.
+        if self.padding:
+            # Add from previous padding the padded parts here.
+            for id, pad_id in padding.items():
+                self.padding[id] += pad_id
+        else:
+            self.padding = padding
         
-        It also updates the 'max_length' attribute.
+        self.max_length = self._find_max_length()
+        if self.Xtrain:
+            self._update_train_test_subsets()
+
+    def shrink_strains(self, padding: int | tuple | dict) -> None:
+        """Shrink strains by a specified padding.
+
+        Shrink strains (and their associated time arrays if present) by the
+        specified padding, which is understood as negative.
+        
+        It also updates the 'max_length' attribute, and the previous padding
+        if present.
 
         Parameters
         ----------
-        limits : tuple | dict
-            The limits of the interval to shrink to.
-            If limits is a tuple, it must be of the form (start, end) in
+        padding : int | tuple | dict
+            The pad to **shrink** to all strains. Values must be given in
+            absolute value (positive int).
+            If `pad` is an integer, symmettric shrinking is applied to all
             samples.
-            If limits is a dictionary, it must be of the form {id: (start, end)},
-            where id is the identifier of each strain.
+            If `pad` is a tuple, it must be of the form (pad_left, pad_right)
+            in samples.
+            If `pad` is a dictionary, it must be of the form
+                {id: (pad_left, pad_right)},
+            where id is the identifier of each
+            strain.
             
-            NOTE: If extra layers below ID are present, they will be shrunk
-            accordingly.
+            .. note::
+                If extra layers below ID are present, they will be shrunk
+                using the same pad in cascade.
 
         """
-        if isinstance(limits, tuple):
-            limits_d = {id: limits for id in self.labels}
-        else:
-            limits_d = limits
+        padding = self._format_padding(padding)
 
         for clas, id, *keys in self.keys():
             strain = self.get_strain(clas, id, *keys)
             # Same shrinking limits for all possible strains below ID layer.
-            start, end = limits_d[id]
-            strain = strain[start:end]
+            pad_left, pad_right = padding[id]
+            strain = strain[pad_left:-pad_right]
             dictools.set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
 
             if self._track_times:
                 times = self.get_times(clas, id, *keys)
-                times = times[start:end]
+                times = times[pad_left:-pad_right]
                 dictools.set_value_to_nested_dict(self.times, [clas,id,*keys], times)
 
+        if self.padding:
+            # Subtract from previous padding the shrunk parts here.
+            for id, pad_id in padding.items():
+                # THE SIGN IS APPLIED HERE.
+                self.padding[id][0] -= pad_id[0]
+                self.padding[id][1] -= pad_id[1]
+        else:
+            # If no previous pad wass added, store the current with negative
+            # values (since we're shrinking, not enlarging).
+            self.padding = {id: (-pad[0], -pad[1]) for id, pad in padding}
+        
         self.max_length = self._find_max_length()
+        if self.Xtrain:
+            self._update_train_test_subsets()
 
     def resample(self, sample_rate, verbose=False) -> None:
         """Resample strain and time arrays to a constant rate.
@@ -590,12 +683,14 @@ class Base:
         self.max_length = self._find_max_length()
     
     def whiten(self,
-               asd_array: np.ndarray = None,
-               pad: int = 0,
+               *,
+               asd_array: np.ndarray,
+               flength: int,
                highpass: int = None,
-               flength: float = None,
-               normed: bool = False,
-               verbose=False) -> None:
+               normed=False,
+               shrink: int = 0,
+               window: str | tuple = 'hann',
+               verbose=False):
         """Whiten the strains.
         
         Calling this method performs the whitening of all strains.
@@ -618,22 +713,32 @@ class Base:
         for *keys, strain in loop_aux:
             strain_w = tat.whiten(
                 strain, asd=asd_array, sample_rate=self.sample_rate, flength=flength,
-                highpass=highpass, pad=pad, normed=normed
+                highpass=highpass, shrink=shrink, normed=normed
             )
             # Update strains attribute.
             dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
         self.whitened = True
         self.whiten_params = {
-            "asd_array": asd_array,
-            "pad": pad,
-            "highpass": highpass,
+            "asd_array": asd_array,  # Only saved in Base (clean).
             "flength": flength,
-            "normed": normed
+            "highpass": highpass,
+            "normed": normed,
+            "shrink": shrink,
+            "window": window
         }
         
-        # Update side-effect attributes.
-        if self.Xtrain is not None:
+        # If strains were shrunk after whitening, update the padding attribute.
+        if shrink > 0:
+            if self.padding:
+                # Subtract from previous padding the shrunk part
+                for id in self.padding:
+                    self.padding[id][0] -= shrink
+            else:
+                # Initialize the padding attribute.
+                self.padding = {id: (-shrink, 0) for id in self.labels}
+
+        if self.Xtrain:
             self._update_train_test_subsets()
 
     def build_train_test_subsets(self, train_size: int | float, random_seed: int = None):
@@ -724,8 +829,13 @@ class Base:
         return strains, labels
 
     def _update_train_test_subsets(self):
-        """Builds again the Train/Test subsets from the main strains attribute."""
-
+        """Builds again the Train/Test subsets from the main strains attribute.
+        
+        Each time the strains are **replaced** and mutability is not guaranteed
+        to propagate changes to the train/test dictionaries, it is necessary to
+        build them again, which is the purpose of this helper function.
+        
+        """
         id_train = list(self.Xtrain.keys())
         id_test = list(self.Xtest.keys())
         self.Xtrain, self.Ytrain = self._build_subset_strains(id_train)
@@ -1173,7 +1283,6 @@ class BaseInjected(Base):
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
                  detector: str = '',
-                 whiten_params: dict = None,
                  random_seed: int = None):
         """Base constructor for injected datasets.
 
@@ -1235,18 +1344,6 @@ class BaseInjected(Base):
             GW detector name.
             Not used, just for identification.
 
-        whiten_params : dict, optional
-            Parameters of the whitening filter, with the following entries:
-            
-            - 'flength' : int
-                Length (in samples) of the time-domain FIR whitening.
-            
-            - 'highpass' : float
-                Frequency cutoff.
-            
-            - 'normed' : bool
-                Normalization applied after the whitening filter.
-
         random_seed : int, optional
             Value passed to 'sklearn.model_selection.train_test_split' to
             generate the Train and Test subsets.
@@ -1268,6 +1365,7 @@ class BaseInjected(Base):
         self._track_times = clean_dataset._track_times
         if self._track_times:
             self.times = deepcopy(clean_dataset.times)
+        self.padding = clean_dataset.padding.copy()
         self.max_length = clean_dataset.max_length
 
         # Noise instance and related attributes.
@@ -1290,15 +1388,9 @@ class BaseInjected(Base):
         self.strains = None
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
-        self.pad = {}  # {snr: pad}
         self.injections_per_snr = 1  # Default value.
         self.whitened = False  # Switched to True after calling self.whiten().
-        self.whiten_params = whiten_params
-        # NOTE: I designed this while building the InjectedCoReWaves class, so
-        # chances are this is not general enough.
-        if self.whiten_params is not None:
-            self.whiten_params = self.whiten_params.copy()  # Avoid unintended effects
-            self._patch_whiten_params()
+        self.whiten_params = None
 
         # Train/Test subset views:
         #----------------------------------------------------------------------
@@ -1317,16 +1409,9 @@ class BaseInjected(Base):
             self.id_train = None
             self.id_test = None
 
-    def _patch_whiten_params(self):
-        self.whiten_params.update({
-                'asd_array': self.asd_array,  # Referenced here again for consistency.
-                'pad': 0,  # Signals are expected to be already padded.
-                'unpad': self.pad,  # Referenced here again for consistency.
-                'highpass': self.freq_cutoff  # Referenced here again for consistency.
-            })
-
     def __str__(self):
         """Return a summary of the dataset."""
+        #TODO: Add padding information
         
         # Get the name of the class
         class_name = self.__class__.__name__
@@ -1346,7 +1431,7 @@ class BaseInjected(Base):
         time_tracking = self._track_times if hasattr(self, '_track_times') else False
         
         # Whitening information
-        whitening_info = "Whitened" if whitened else "Not whitened"
+        whitening_info = "Whitened" if whitened else "NOT whitened"
 
         # Noise
         noise_length = len(self.noise)
@@ -1355,7 +1440,7 @@ class BaseInjected(Base):
         n_snr_injections = len(self.snr_list)
         
         # Train/Test split information
-        split_info = "Train/Test split performed" if train_test_split else "No Train/Test split"
+        split_info = "Performed" if train_test_split else "NOT performed"
         
         # Construct the string
         summary = [
@@ -1436,7 +1521,7 @@ class BaseInjected(Base):
             
         return psd_fun, psd_array
 
-    def _setup_asd_from_psd(self, psd):
+    def _setup_asd_from_psd(self, psd) -> tuple[Callable, np.ndarray]:
         """Setup the ASD function or array depending on the input.
         
         Setup the amplitude spectral density function and array from any of
@@ -1521,36 +1606,34 @@ class BaseInjected(Base):
         return dictools.get_value_from_nested_dict(self.times, indices)
     
     def gen_injections(self,
-                       snr: int|float|list,
-                       pad: int|ArrayLike = 0,
+                       snr: int|float|list|tuple,
                        randomize_noise: bool = False,
                        random_seed: int = None,
                        injections_per_snr: int = 1,
-                       verbose=False):
+                       verbose=False,
+                       **inject_kwargs):
         """Inject all strains in simulated noise with the given SNR values.
-
         
         - The SNR is computed using a matched filter against the noise PSD.
         
-        - If `pad > 0`, it also updates the time arrays (if present).
+        - If the strain is in geometrized units, it will be converted first to
+          the IS, then injected and converted back to geometrized units.
         
-        - If strain units are in geometrized, they will be converted first to
-          IS, injected, and converted back to geometrized.
-        
-        - After each injection, applies a highpass filter at the low-cut
+        - After each injection, applies a highpass filter at the `freq_cutoff`
           frequency specified at __init__.
+          Although both the clean signals and the injected noise are already
+          filtered, there could be residual low-frequency components near
+          the cutoff due to the filter's non-ideal roll-off characteristics,
+          which might be arbitrarily amplified after the injection. This
+          final highpass filter is a safeguard.
         
         - If the method 'whiten' has been already called, all further
-          injections will automatically be whitened and their pad removed.
+          injections will automatically be whitened with the same parameters,
+          including the unpadding (if > 0).
         
         Parameters
         ----------
-        snr : int | float | list
-        
-        pad : int | ArrayLike
-            Number of zeros to pad the signal at both ends before the
-            injection. If ArrayLike, it must contain only the number of zeros at
-            the left and right to be added.
+        snr : int | float | list | tuple
 
         randomize_noise : bool
             If True, the noise segment is randomly chosen before the injection.
@@ -1558,9 +1641,10 @@ class BaseInjected(Base):
             clean strains.
             False by default.
             
-            NOTE: To avoid the possibility of repeating the same noise section
-            in different injections, the noise realization must be reasonably
-            large, e.g:
+            .. note::
+                To avoid the possibility of repeating the same noise section
+                in different injections, the noise realization must be
+                reasonably large, e.g:
                 
                 `noise_length > n_clean_strains * self.max_length * len(snr)`
         
@@ -1573,16 +1657,17 @@ class BaseInjected(Base):
 
             This is useful to minimize the statistical impact of the noise
             when performing injections at a sensitive (low) SNR.
+
+        **inject_kwargs
+            Additional arguments passed to the `_inject` method.
         
         Notes
         -----
         - If whitening is intended to be applied afterwards it is useful to
-          pad the signal in order to avoid the window vignetting produced by
-          the whitening itself. This pad will be cropped afterwards.
+          pad the signals beforehand, in order to avoid the window vignetting
+          produced by the whitening itself.
         
-        - New injections are stored in the 'strains' atrribute, with the pad
-          associated to all the injections performed at once. Even when
-          whitening is also performed right after the injections.
+        - New injections are stored in the 'strains' atrribute.
         
         Raises
         ------
@@ -1594,18 +1679,13 @@ class BaseInjected(Base):
         """
         if isinstance(snr, (int, float)):
             snr_list = [snr]
-        elif isinstance(snr, list):
+        elif isinstance(snr, (list,tuple)):
             snr_list = snr
         else:
             raise TypeError(f"'{type(snr)}' is not a valid 'snr' type")
         
         if set(snr_list) & set(self.snr_list):
             raise ValueError("one or more SNR values are already present in the dataset")
-        
-        if isinstance(pad, int):
-            pad_left, pad_right = pad, pad
-        else:
-            pad_left, pad_right = pad
 
         if self._track_times:
             # Replaced temporarily because when injecting for the first time
@@ -1630,20 +1710,17 @@ class BaseInjected(Base):
             )
             pbar = tqdm(total=n_injections)
 
-
+        # Perform the injections
+        #-----------------------
 
         for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_clean):
-            gw_clean = self.strains_clean[clas][id_]
-            strain_clean_padded = np.pad(gw_clean, pad)
-            # NOTE: Do not update the metadata nor times with this pad in case
-            # the whitening is applied immediately after the injections.
-
             # Highpass filter to the clean signal.
-            # NOTE: The noise realization is already generated without
-            # frequency components lower than the cutoff (they are set to
-            # 0 during the random sampling).
-            strain_clean_padded = fat.highpass_filter(
-                strain_clean_padded, f_cut=self.freq_cutoff, f_order=self.freq_butter_order,
+            # It is performed before injection to avoid wheight errors when
+            # computing the SNR.
+            strain_clean = fat.highpass_filter(
+                self.strains_clean[clas][id_],
+                f_cut=self.freq_cutoff,
+                f_order=self.freq_butter_order,
                 sample_rate=self.sample_rate
             )
 
@@ -1651,38 +1728,46 @@ class BaseInjected(Base):
             for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
                 
                 if randomize_noise:
-                    pos0 = rng.integers(0, len(self.noise) - len(strain_clean_padded))
+                    pos0 = rng.integers(0, len(self.noise) - len(strain_clean))
                 else:
                     pos0 = 0
 
-                # Left pad is added to 'snr_offset' to compensate for the padding
-                # which has not been updated in the 'metadata' yet.
                 injected = self._inject(
-                    strain_clean_padded, snr_, id=id_, snr_offset=pad_left, pos=pos0
+                    strain_clean,
+                    snr_,
+                    id=id_,
+                    pos=pos0,
+                    **inject_kwargs
                 )
                 if self.whitened:
                     injected = tat.whiten(
-                        injected, asd=self.asd_array, unpad=pad, sample_rate=self.sample_rate,
-                        highpass=self.freq_cutoff, flength=self.whiten_params['flength']
+                        injected,
+                        asd=self.asd_array,
+                        sample_rate=self.sample_rate,
+                        flength=self.whiten_params['flength'],
+                        window=self.whiten_params['window'],
+                        highpass=self.whiten_params['highpass'],
+                        shrink=self.whiten_params['shrink'],
+                        normed=self.whiten_params['normed']
                     )
                 if injections_per_snr == 1:
                     self.strains[clas][id_][snr_] = injected
                 else:
                     dictools.set_value_to_nested_dict(
-                        self.strains, [clas, id_, snr_, rep], injected,
+                        self.strains,
+                        [clas, id_, snr_, rep],
+                        injected,
                         add_missing_keys=True
                     )
 
                 if verbose:
                     pbar.update()
             
-            # Time arrays:
-            # - All SNR entries pointing to the SAME time array.
-            # - Enlarge if the strains were padded and no whitening followed.
             if self._track_times:
+                # Make all SNR entries point to the SAME time array.
+                # This keeps the shape of `self.times` consistent with strains
+                # while avoiding unnecessary data duplication.
                 times_i = self.get_times(clas, id_)
-                if pad_left+pad_right > 0 and not self.whitened:
-                    times_i = tat.pad_time_array(times_i, pad)
                 for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
                     if injections_per_snr == 1:
                         times_new[clas][id_][snr_] = times_i
@@ -1691,8 +1776,8 @@ class BaseInjected(Base):
                             times_new, [clas, id_, snr_, rep], times_i,
                             add_missing_keys=True
                         )
-        
 
+        #-----------------------
 
         if verbose:
             pbar.close()
@@ -1701,11 +1786,6 @@ class BaseInjected(Base):
             self.times = times_new
 
         self.snr_list += snr_list
-
-        for snr_ in snr_list:
-            # NOTE: Even if whitening is applied (and hence the length unaltered)
-            # pad values are still registered, just in case.
-            self.pad[snr_] = pad
 
         self.injections_per_snr = injections_per_snr
         if injections_per_snr > 1:
@@ -1781,7 +1861,14 @@ class BaseInjected(Base):
             if verbose:
                 print("Strain exported to", file)
     
-    def whiten(self, whiten_params=None, verbose=False):
+    def whiten(self,
+               *,
+               flength: int,
+               highpass: int = None,
+               normed=False,
+               shrink: int = 0,
+               window: str | tuple = 'hann',
+               verbose=False):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
@@ -1793,40 +1880,49 @@ class BaseInjected(Base):
         This is an irreversible action; if the original injections need
         to be preserved it is advised to make a copy of the instance before
         performing the whitening.
+
+        Parameters
+        ----------
+        flength : int
+            Length (in samples) of the time-domain FIR whitening.
+        
+        highpass : float, optional
+            Frequency cutoff.
+        
+        normed : bool
+            Normalization applied after the whitening filter.
+
+        shrink : int
+            Margin at each side of the strain to crop (for each strain ID), in
+            order to avoid edge effects. The corrupted area at each side is
+            `0.5 * flength`, which corresponds to the amount of samples it
+            takes for the whitening filter to settle.
+        
+        window : str | tuple, optional
+            Window to apply to timeseries prior to FFT, 'hann' by default.
+            see :func:`scipy.signal.get_window` for details on acceptable
+            formats.
         
         """
         if self.whitened:
             raise RuntimeError("dataset already whitened")
-        
-        if not self.whiten_params:
-            if not whiten_params:
-                raise RuntimeError("missing whitening parameters")
-            
-            self.whiten_params = whiten_params.copy()
-            self._patch_whiten_params()
 
         if self.strains is None:
             raise RuntimeError("no injections have been performed yet")
-
-        flength = self.whiten_params['flength']
-        asd_array = self.whiten_params['asd_array']
-        pad = self.whiten_params['pad']
-        unpad = self.whiten_params['unpad']
-        highpass = self.whiten_params['highpass']
         
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
             snr = keys[2]  # Shape of self.strains dict-> (class, id, snr[, rep])
 
             strain_w = tat.whiten(
-                strain, asd=asd_array, pad=pad, unpad=unpad[snr], sample_rate=self.sample_rate,
-                highpass=highpass, flength=flength
+                strain, asd=self.asd_array, shrink=shrink, sample_rate=self.sample_rate,
+                highpass=highpass, flength=flength, window=window, normed=normed
             )
             # Update strains attribute.
             dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
         # Shrink time arrays accordingly.
-        if self._track_times:
+        if self._track_times and shrink:
             clas_id_snr_layers = dictools.unroll_nested_dictionary_keys(
                 self.times,
                 max_depth=3
@@ -1838,13 +1934,18 @@ class BaseInjected(Base):
                 snr = clas_id_snr[2]
                 times_sublayer = self.get_times(*clas_id_snr)
                 time = dictools.get_next_item(times_sublayer)
-                time = tat.shrink_time_array(time, unpad[snr])
+                time = tat.shrink_time_array(time, shrink)
                 dictools.fill(times_sublayer, time, deepcopy=False)
-
-        
-        self.whitened = True
         
         # Side-effect attributes updated.
+        self.whitened = True
+        self.whiten_params = {
+            'flength': flength,
+            'highpass': highpass,
+            'normed': normed,
+            'shrink': shrink,
+            'window': window
+        }
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
@@ -2760,7 +2861,11 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
     - Train/Test split is still supported but is not stratified.
     
     """
-    def __init__(self, strains_array, strain_limits=None, sample_rate=None, random_seed=None):
+    def __init__(self,
+                 strains_array,
+                 strain_limits=None,
+                 sample_rate=None,
+                 random_seed=None):
         """Initialize an UnlabeledWaves dataset.
 
         This constructor processes a NumPy array of gravitational wave signals,
@@ -2808,6 +2913,8 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         self.max_length = self._find_max_length()
         self.random_seed = random_seed  # SKlearn train_test_split doesn't accept a Generator yet.
         self._track_times = False  # If True, self.times must be not None.
+
+        self.padding = {}
 
         # Whitening related attributes.
         self.whitened = False
@@ -2873,7 +2980,6 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
                  detector: str = '',
-                 whiten_params: dict = None,
                  random_seed: int = None):
         """Initialize an InjectedUnlabeledWaves dataset.
 
@@ -2925,19 +3031,6 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
             GW detector name.
             Not used, just for identification.
 
-        whiten_params : dict, optional
-            Parameters of the whitening filter (if used), with the following
-            entries:
-            
-            - 'flength' : int
-                Length (in samples) of the time-domain FIR whitening.
-            
-            - 'highpass' : float
-                Frequency cutoff.
-            
-            - 'normed' : bool
-                Normalization applied after the whitening filter.
-
         random_seed : int, optional
             Value passed to 'sklearn.model_selection.train_test_split' to
             generate the Train and Test subsets.
@@ -2966,6 +3059,7 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         self._track_times = clean_dataset._track_times
         if self._track_times:
             self.times = deepcopy(clean_dataset.times)
+        self.padding = clean_dataset.padding.copy()
         self.max_length = clean_dataset.max_length
 
         # Noise instance and related attributes.
@@ -2986,15 +3080,9 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         self.strains = None
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
-        self.pad = {}  # {snr: pad}
         self.injections_per_snr = 1  # Default value.
         self.whitened = False  # Switched to True after calling self.whiten().
-        self.whiten_params = whiten_params
-        # NOTE: I designed this while building the InjectedCoReWaves class, so
-        # chances are this is not general enough.
-        if self.whiten_params is not None:
-            self.whiten_params = self.whiten_params.copy()  # Avoid unintended effects
-            self._patch_whiten_params()
+        self.whiten_params = None
         
         # Train/Test subset views:
         #----------------------------------------------------------------------
@@ -3156,6 +3244,8 @@ class CoReWaves(Base):
 
         self.sample_rate = None  # Set up after resampling
         self.random_seed = None  # Set if calling the 'build_train_test_subsets' method.
+
+        self.padding = {}
 
         self.whitened = False
         self.whiten_params = {}
@@ -3380,21 +3470,25 @@ class CoReWaves(Base):
 
         This also updates the metadata column 'merger_pos'.
 
-        NOTE: This is an irreversible action.
+        Warning
+        -------
+        This is an irreversible action.
 
         Parameters
         ----------
         offset : int
-            Offset in samples relative to the merger position.
+            Offset in samples, relative to the merger position.
 
         """
-        limits = {}
-        for clas, id, *keys in self.keys():
+        # Compute the equivalent shrinkage padding to apply for each signal at
+        # the ID layer.
+        padding = {}
+        for id in self.metadata.index:
             i_merger = self.metadata.at[id, 'merger_pos']
             # Same shrinking limits for all possible strains below ID layer.
-            limits[id] = (i_merger+offset, -1)
+            padding[id] = (i_merger+offset, 0)
         
-        self.shrink_strains(limits)
+        self.shrink_strains(padding)
 
         # Update side-effect attributes.
         self._update_merger_positions()
@@ -3452,7 +3546,7 @@ class CoReWaves(Base):
         self.units = 'geometrized'
 
         # Update side-effect attributes.
-        if self.Xtrain is not None:
+        if self.Xtrain:
             self._update_train_test_subsets()
 
 
@@ -3487,7 +3581,6 @@ class InjectedCoReWaves(BaseInjected):
                  psd: np.ndarray | Callable,
                  detector: str,
                  noise_length: int,
-                 whiten_params: dict,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
                  random_seed: int):
@@ -3522,10 +3615,6 @@ class InjectedCoReWaves(BaseInjected):
             It should be at least longer than the longest signal
             expected to be injected.
         
-        whiten_params : dict
-            Parameters to be passed to the 'whiten' method of the
-            'BaseInjected' class.
-        
         freq_cutoff : int | float
             Frequency cutoff for the filter applied to the signal.
         
@@ -3537,9 +3626,13 @@ class InjectedCoReWaves(BaseInjected):
         
         """
         super().__init__(
-            clean_dataset, psd=psd, detector=detector, noise_length=noise_length,
-            whiten_params=whiten_params, freq_cutoff=freq_cutoff,
-            freq_butter_order=freq_butter_order, random_seed=random_seed
+            clean_dataset,
+            psd=psd,
+            detector=detector,
+            noise_length=noise_length,
+            freq_cutoff=freq_cutoff,
+            freq_butter_order=freq_butter_order,
+            random_seed=random_seed
         )
 
         self.whole_snr = {id_: {} for id_ in self.labels}
@@ -3561,7 +3654,7 @@ class InjectedCoReWaves(BaseInjected):
     
     def gen_injections(self,
                        snr: int|float|list,
-                       pad: int = 0,
+                       snr_offset: int = 0,
                        randomize_noise: bool = False,
                        random_seed: int = None,
                        injections_per_snr: int = 1,
@@ -3573,10 +3666,12 @@ class InjectedCoReWaves(BaseInjected):
         Parameters
         ----------
         snr : int | float | list
-        
-        pad : int
-            Number of zeros to pad the signal at both ends before the
-            injection.
+
+        snr_offset : int
+            An offset (relative to the position of the merger) added to the
+            start of the segment of the clean signal used for SNR calculation.
+            If the SNR computation needs to include a portion of signal BEFORE
+            the merger, the offset should be negative.
 
         randomize_noise : bool
             If True, the noise segment is randomly chosen before the injection.
@@ -3617,7 +3712,7 @@ class InjectedCoReWaves(BaseInjected):
         
         """
         super().gen_injections(
-            snr, pad=pad, randomize_noise=randomize_noise,
+            snr, snr_offset=snr_offset, randomize_noise=randomize_noise,
             random_seed=random_seed, injections_per_snr=injections_per_snr,
             verbose=verbose
         )
@@ -3645,12 +3740,12 @@ class InjectedCoReWaves(BaseInjected):
             Signal identifier (2nd layer of 'strains' dict).
         
         snr_offset : int
-            Offset (w.r.t. the merger) added to the start of the range for
-            computing the SNR.
+            An offset (relative to the position of the merger) added to the
+            start of the segment of the clean signal used for SNR calculation.
 
         pos : int, optional
-            Index position in the noise array where to inject the signal.
-            0 by default.
+            Index position in the noise array where to inject the signal. 0 by
+            default.
         
         Returns
         -------
@@ -3679,19 +3774,35 @@ class InjectedCoReWaves(BaseInjected):
 
         return injected
     
-    def whiten(self, verbose=False):
+    def whiten(self,
+               *,
+               flength,
+               highpass=None,
+               normed=False,
+               shrink=0,
+               window='hann',
+               verbose=False):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
         Strains are later cut to their original size before adding the pad,
         to remove the vigneting.
         
-        NOTE: This is an irreversible action; if the original injections need
+        Warning
+        -------
+        This is an irreversible action; if the original injections need
         to be preserved it is advised to make a copy of the instance before
         performing the whitening.
         
         """
-        super().whiten(verbose=verbose)
+        super().whiten(
+            flength=flength,
+            highpass=highpass,
+            normed=normed,
+            shrink=shrink,
+            window=window,
+            verbose=verbose
+        )
 
         self._update_merger_positions()
 

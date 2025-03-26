@@ -385,7 +385,7 @@ def convolve(strain, fir, window='hann'):
     fir : numpy.ndarray
         The FIR filter coefficients.
     
-    window : str, optional
+    window : str | tuple, optional
         The window function to apply to the boundaries (default: 'hann').
 
     Returns
@@ -461,8 +461,7 @@ def whiten(strain: np.ndarray,
            flength: int,
            window='hann',
            highpass: float = None,
-           pad: int = 0,
-           unpad: int = 0,
+           shrink: int = 0,
            normed: bool = True) -> np.ndarray:
     """Whiten a single strain signal using a FIR filter.
 
@@ -496,17 +495,11 @@ def whiten(strain: np.ndarray,
         see :func:`scipy.signal.get_window` for details on acceptable
         formats.
 
-    pad : int, optional
-        Margin at each side of the strain to add (zero-pad) in order to avoid
-        edge effects. The corrupted area at each side is `0.5 * fduration` in
-        GWpy's whiten().
-        Will be cropped afterwards, thus no samples are added at the end of
-        the call to this function.
-        If given, 'unpad' will be ignored.
-
-    unpad : int, optional
-        Margin at each side of the strain to crop.
-        Will be ignored if 'pad' is given.
+    shrink : int, optional
+        Margin at each side of the strain to crop, in order to avoid edge
+        effects. The corrupted area at each side is `0.5 * flength`,
+        which corresponds to the amount of samples it takes for the whitening
+        filter to settle. It is equivalent to the inverse of pad.
 
     highpass : float, optional
         Highpass corner frequency (in Hz) of the FIR whitening filter.
@@ -531,14 +524,11 @@ def whiten(strain: np.ndarray,
     if not isinstance(flength, int):
         raise TypeError("'flength' must be an integer")
     
-    # Handle padding
-    if pad > 0:
-        strain = np.pad(strain, pad, 'constant', constant_values=0)
-        unpad_slice = slice(pad, -pad)
-    elif unpad == 0:
-        unpad_slice = slice(None)
+    # Handle unpadding
+    if shrink == 0:
+        shrink_slice = slice(None)
     else:
-        unpad_slice = slice(unpad, -unpad)
+        shrink_slice = slice(shrink, -shrink)
 
     # Constant detrending
     strain_detrended = strain - np.mean(strain)
@@ -578,8 +568,8 @@ def whiten(strain: np.ndarray,
     strain_whitened = convolve(strain_detrended, fir_filter, window=window)
     strain_whitened *= np.sqrt(2 * dt)  # scaling factor
 
-    # Unpad
-    strain_whitened = strain_whitened[unpad_slice]
+    # Shrink
+    strain_whitened = strain_whitened[shrink_slice]
 
     # Normalize if needed
     if normed:
