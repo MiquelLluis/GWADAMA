@@ -673,17 +673,10 @@ class Base:
             If True, print information about the resampling.
         
         """
-        # Set up the time points associated to each strain in case it is not
-        # provided.
-        #
-        if self._track_times:
-            times = self.times
-        else:
-            if sample_rate == self.sample_rate:
-                raise ValueError("trying to resample to the same sampling rate")
-            if self.sample_rate is None:
-                raise ValueError("neither time samples nor a global sampling rate were defined")
+        if sample_rate == self.sample_rate:
+            raise ValueError("trying to resample to the same sampling rate")
             
+        if not self._track_times:
             self._gen_times()
 
         for *keys, strain in self.items():
@@ -692,7 +685,7 @@ class Base:
                 strain, time, sample_rate, full_output=True
             )
             dictools.set_value_to_nested_dict(self.strains, keys, strain_resampled)
-            dictools.set_value_to_nested_dict(times, keys, time_resampled)
+            dictools.set_value_to_nested_dict(self.times, keys, time_resampled)
             
             if verbose:
                 print(
