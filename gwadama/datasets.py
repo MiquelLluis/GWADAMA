@@ -685,7 +685,7 @@ class Base:
             self._track_times = True
 
         for *keys, strain in self.items():
-            time = dictools.get_value_from_nested_dict(times, keys)
+            time = dictools.get_value_from_nested_dict(self.times, keys)
             strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
