@@ -122,8 +122,9 @@ class Base:
         attribute to anything other than None.
     
     random_seed : int, optional
-        Value passed to 'sklearn.model_selection.train_test_split' to generate
-        the Train and Test subsets. Saved for reproducibility purposes.
+        Seed used to initialize the random number generator (RNG), as well as
+        for calling :func:`sklearn.model_selection.train_test_split` to
+        generate the Train and Test subsets.
     
     Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using SKLearn train_test_split
@@ -170,6 +171,7 @@ class Base:
 
         self.max_length = self._find_max_length()
         self.random_seed: int = None  # SKlearn train_test_split doesn't accept a Generator yet.
+        self.rng = np.random.default_rng(self.random_seed)
         self._track_times = False  # If True, self.times must be not None.
 
         #----------------------------------------------------------------------
@@ -741,7 +743,7 @@ class Base:
         if self.Xtrain:
             self._update_train_test_subsets()
 
-    def build_train_test_subsets(self, train_size: int | float, random_seed: int = None):
+    def build_train_test_subsets(self, train_size: int | float):
         """Generate a random Train and Test subsets.
 
         Only indices in the 'labels' attribute are considered independent
@@ -760,30 +762,8 @@ class Base:
             If int, represents the absolute number of train waves.
             
             Ref: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
-        
-        random_seed : int, optional
-            Passed directly to 'sklearn.model_selection.train_test_split'.
-            It is also saved in its homonymous attribute.
             
-        """
-        match (self.random_seed, random_seed):
-            case (int() as existing_seed, int() as new_seed):
-                if new_seed != existing_seed:
-                    warnings.warn(
-                        "'random_seed' was already set as attribute in this instance,"
-                        f" replacing it by the value {random_seed} passed as parameter."
-                    )
-                    self.random_seed = random_seed
-            case (None, int() as new_seed):
-                self.random_seed = new_seed
-            case (int(), None):
-                pass
-            case (None, None):
-                warnings.warn(
-                    "'random_seed' is not being manually set; this could result"
-                    " in unreproducible results."
-                )
-            
+        """            
         indices = list(self.labels)
         self.id_train, self.id_test = train_test_split(
             indices,
@@ -1209,9 +1189,9 @@ class BaseInjected(Base):
         Remember to update it if manually changing strains' length.
     
     random_seed : int
-        Value passed to 'sklearn.model_selection.train_test_split' to generate
-        the Train and Test subsets. Saved for reproducibility purposes.
-        Also used to initialize Numpy's default RandomGenerator.
+        Seed used to initialize the random number generator (RNG), as well as
+        for calling :func:`sklearn.model_selection.train_test_split` to
+        generate the Train and Test subsets.
 
     rng : np.random.Generator
         Random number generator used for sampling the background noise.
@@ -1346,10 +1326,9 @@ class BaseInjected(Base):
             Not used, just for identification.
 
         random_seed : int, optional
-            Value passed to 'sklearn.model_selection.train_test_split' to
+            Seed used to initialize the random number generator (RNG), as well as
+            for calling :func:`sklearn.model_selection.train_test_split` to
             generate the Train and Test subsets.
-            Saved for reproducibility purposes, and also used to initialize
-            Numpy's default RandomGenerator.
         
         """
         if not clean_dataset.sample_rate:
@@ -1650,8 +1629,16 @@ class BaseInjected(Base):
                 `noise_length > n_clean_strains * self.max_length * len(snr)`
         
         random_seed : int, optional
-            Random seed for the noise realization.
-            Only used when randomize_noise is True.
+            Random seed for noise realization, used only if `randomize_noise`
+            is True.
+            By default, the random number generator (RNG) created during
+            initialization is used.
+            
+            .. warning::
+                Setting this parameter creates a new RNG, replacing the one
+                initialized with the class.  
+                If this is unintended, do not provide this parameter.  
+                A warning will be issued when it is used.
 
         injections_per_snr : int
             Number of injections per SNR value. Defaults to 1.
@@ -1700,8 +1687,14 @@ class BaseInjected(Base):
                 # Redo the dictionary structure to include the SNR layer.
                 times_new = self._init_strains_dict()
 
-        if randomize_noise:
-            rng = np.random.default_rng(random_seed)
+        if randomize_noise and random_seed is not None:
+            if self.random_seed is not None:
+                warnings.warn(
+                    "Replacing the previous RNG by a new one with the provided "
+                    f"random_seed = {random_seed}."
+                )
+            # Replace the previous RNG by a new one.
+            self.rng = np.random.default_rng(random_seed)
         
         if verbose:
             n_injections = (
@@ -1729,7 +1722,7 @@ class BaseInjected(Base):
             for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
                 
                 if randomize_noise:
-                    pos0 = rng.integers(0, len(self.noise) - len(strain_clean))
+                    pos0 = self.rng.integers(0, len(self.noise) - len(strain_clean))
                 else:
                     pos0 = 0
 
@@ -2890,8 +2883,9 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
             tracking is disabled.
 
         random_seed : int, optional
-            Seed for random operations such as dataset splitting, ensuring 
-            reproducibility.
+            Seed used to initialize the random number generator (RNG), as well as
+            for calling :func:`sklearn.model_selection.train_test_split` to
+            generate the Train and Test subsets.
 
         Notes
         -----
@@ -2912,6 +2906,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
 
         self.max_length = self._find_max_length()
         self.random_seed = random_seed  # SKlearn train_test_split doesn't accept a Generator yet.
+        self.rng = np.random.default_rng(self.random_seed)
         self._track_times = False  # If True, self.times must be not None.
 
         self.padding = {}
@@ -3245,6 +3240,7 @@ class CoReWaves(Base):
 
         self.sample_rate = None  # Set up after resampling
         self.random_seed = None  # Set if calling the 'build_train_test_subsets' method.
+        self.rng = np.random.default_rng(self.random_seed)
 
         self.padding = {}
 
