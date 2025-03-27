@@ -304,25 +304,28 @@ class Base:
 
         return max_length
 
-    def _gen_times(self) -> dict:
+    def _gen_times(self, t0=0):
         """Generate the time arrays associated to the strains.
 
-        Assumes a constant sampling rate.
-        
-        Returns
-        -------
-        times : dict
-            Nested dictionary with the same shape as 'self.strains'.
+        Generate the time arrays associated to the strains, assuming a constant
+        sampling rate. All time arrays begin at `t0`, 0 by default.
         
         """
-        times = self._init_times_dict()
+        if self._track_times:
+            raise RuntimeError(
+                "Time arrays have already been generated. "
+                "Check if '_track_times' was accidentally set or modify logic "
+                "to avoid regenerating."
+            )
+
+        self.times = self._init_times_dict()
         for *keys, strain in self.items():
             length = len(strain)
-            t_end = (length - 1) / self.sample_rate
-            time = np.linspace(0, t_end, length)
-            dictools.set_value_to_nested_dict(times, keys, time)
+            t1 = t0 + length / self.sample_rate
+            times = tat.gen_time_array(t0, t1, self.sample_rate, length=length)
+            dictools.set_value_to_nested_dict(self.times, keys, times)
         
-        return times
+        self._track_times = True
 
     def keys(self, max_depth: int = None) -> list:
         """Return the unrolled combinations of all strain identifiers.
@@ -681,8 +684,7 @@ class Base:
             if self.sample_rate is None:
                 raise ValueError("neither time samples nor a global sampling rate were defined")
             
-            self.times = self._gen_times()
-            self._track_times = True
+            self._gen_times()
 
         for *keys, strain in self.items():
             time = dictools.get_value_from_nested_dict(self.times, keys)
