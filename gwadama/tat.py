@@ -86,37 +86,57 @@ def resample(strain: np.ndarray,
     return strain, time, sr_up, factor_down if full_output else strain
 
 
-def gen_time_array(t0, t1, sr):
-    """Generate a time array with constant sampling rate.
-    
-    Extension of numpy.arange which takes care of the case when an extra sample
-    is produced due to round-off errors. When this happens, the extra sample is
-    cut off.
+def gen_time_array(t0, t1, sample_rate, length=None):
+    """Generate a time array for a given time range and sampling rate.
+
+    Generate a time array for a given time range and sampling rate with an
+    optional consistency check.
+
+    Floating-point precision can cause `(t1 - t0) * sr` to yield an unexpected 
+    number of samples, leading to off-by-one errors in :func:`numpy.linspace`.
+    If `length` is provided, the function verifies that it matches the expected
+    length using `t1` as reference. A mismatch raises will raise `ValueError`,
+    ensuring consistency between the expected and actual number of samples.
+
+    If `length` is not provided, the function simply calls
+    :func:`numpy.linspace` without performing the safety check.
 
     Parameters
     ----------
-    t0, t1: float
-        Initial and final times of the array: [t0, t1).
+    t0 : float
+        Start time (inclusive).
     
-    sr: int
-        Sample rate.
+    t1 : float
+        Final time (exclusive).
     
-    length: int
-        Length of the final time array in samples.
-        If due to round-off errors the length of the array is longer, it will
-        be adjusted.
+    sample_rate : float
+        Sampling rate.
     
+    length : int, optional
+        If provided, must match `int((t1 - t0) * sample_rate)` exactly.
+        Acts as a safeguard against miscalculations due to floating-point
+        precision.
+
     Returns
     -------
-    times: NDArray
-        Time array.
+    numpy.ndarray
+        A 1D array of evenly spaced time values from `t0` (inclusive) to `t1`
+        (exclusive).
+
+    Raises
+    ------
+    ValueError
+        If `length` is provided and does not match the expected number of
+        samples.
     
     """
-    times = np.arange(t0, t1, 1/sr)
-    if times[-1] >= t1:
-        times = times[:-1]
+    expected_length = int((t1 - t0) * sample_rate)
+    if length is not None and length != expected_length:
+        raise ValueError(
+            f"Inconsistent input: Expected {expected_length} samples, got {length}."
+        )
     
-    return times
+    return np.linspace(t0, t1, expected_length, endpoint=False)
 
 
 def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:

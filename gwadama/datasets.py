@@ -62,7 +62,9 @@ class Base:
     dataset into train and test susbsets, only combinations of (Class, Id) will
     be considered.
 
-    NOTE: This class shall not be called directly. Use one of its subclasses.
+    Warning
+    -------
+        This class shall not be called directly. Use one of its subclasses.
     
     Attributes
     ----------
@@ -112,14 +114,16 @@ class Base:
         up to the second depth level: {class: {id: time_points} }
         Useful when the sampling rate is variable or different between strains.
         If None, all strains are assumed to be constantly sampled to the
-        sampling rate indicated by the 'sample_rate' attribute.
+        sampling rate indicated by the 'sample_rate' attribute, which must be
+        provided.
     
     sample_rate : int, optional
         If the 'times' attribute is present, this value is ignored. Otherwise
         it is assumed all strains are constantly sampled to this value.
         
-        NOTE: If dealing with variable sampling rates, avoid setting this
-        attribute to anything other than None.
+        .. note::
+            If dealing with variable sampling rates, avoid setting this
+            attribute to anything other than None.
     
     random_seed : int, optional
         Seed used to initialize the random number generator (RNG), as well as
@@ -143,12 +147,15 @@ class Base:
         1D Array containing the id of the signals in the same order as
         'Xtrain' and 'Xtest' respectively.
     
-    Caveats
-    -------
+    Notes
+    -----
     - The additional depths in the strains nested dictionary can't be directly
       tracked by the metadata Dataframe.
     - If working with two polarizations, they can be stored with just an
       extra depth layer.
+    - TODO: Always check self.times (when provided) to determine wether the
+      sampling rate is variable. Depending on the result, act accordingly with
+      the current value of `self.sample_rate`.
     
     """
     def __init__(self):
@@ -411,7 +418,7 @@ class Base:
         
         """
         if len(indices) != self._dict_depth:
-            raise ValueError("indices must match the depth of 'self.strains'")
+            raise ValueError("indices do not match the layout of 'self.strains'")
 
         strain = dictools.get_value_from_nested_dict(self.strains, indices)
         if normalize:
@@ -451,17 +458,26 @@ class Base:
     def get_times(self, *indices) -> np.ndarray:
         """Get a single time array from the complete index coordinates.
         
-        This is just a shortcut to avoid having to write several squared
-        brackets.
+        If there is no time tracking (thus no stored times), a new time array
+        is generated using `self.sample_rate` and the length of the
+        correspoinding strain stored at the same index coordinates.
 
-        NOTE: The returned strain is not a copy; if its contents are modified,
-        the changes will be reflected inside the 'times' attribute.
+        .. warning::
+            The returned array is not a copy; if its contents are modified,
+            the changes will be reflected inside the 'times' attribute.
         
         """        
         if len(indices) != self._dict_depth:
-            raise ValueError("indices must match the depth of 'self.strains'")
+            raise ValueError("indices do not match the layout of 'self.strains'")
         
-        return dictools.get_value_from_nested_dict(self.times, indices)
+        if self._track_times:
+            times = dictools.get_value_from_nested_dict(self.times, indices)
+        else:
+            length = len(self.get_strain(*indices))
+            duration = length / self.sample_rate
+            times = tat.gen_time_array(0, duration, self.sample_rate, length=length)
+        
+        return times
 
     def _format_padding(self, padding) -> dict:
         """Format the padding into a dict of (left, right) padding per ID.
@@ -1572,18 +1588,6 @@ class BaseInjected(Base):
             dictools.set_value_to_nested_dict(strains_dict, indices, {})
 
         return strains_dict
-    
-    def get_times(self, *indices) -> np.ndarray:
-        """Get a single time array from the complete index coordinates.
-        
-        This is just a shortcut to avoid having to write several squared
-        brackets.
-
-        NOTE: The returned strain is not a copy; if its contents are modified,
-        the changes will be reflected inside the 'times' attribute.
-        
-        """
-        return dictools.get_value_from_nested_dict(self.times, indices)
     
     def gen_injections(self,
                        snr: int|float|list|tuple,
@@ -2821,6 +2825,16 @@ class UnlabeledBaseMixin:
         return super().get_strain(*indices, normalize=normalize)
     get_strain.__doc__ = Base.get_strain.__doc__
 
+    def get_times(self, *indices) -> np.ndarray:
+        # Add the dummy class name (if ommited) as the first index, so that the
+        # user does not need to write it explicitly:
+        class_label = next(iter(self.classes.keys()))
+        if indices[0] != class_label:
+            indices = (next(iter(self.classes.keys())), *indices)
+        
+        return super().get_times(*indices)
+    get_times.__doc__ = Base.get_times.__doc__
+
 
 class UnlabeledWaves(UnlabeledBaseMixin, Base):
     """Dataset class for clean gravitational wave signals without labels.
@@ -2855,9 +2869,10 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
     
     """
     def __init__(self,
-                 strains_array,
+                 strains_array: np.ndarray,
+                 *,
+                 sample_rate: int,
                  strain_limits=None,
-                 sample_rate=None,
                  random_seed=None):
         """Initialize an UnlabeledWaves dataset.
 
@@ -2873,14 +2888,13 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
             A 2D array containing gravitational wave signals, where each row 
             represents a separate waveform, possibly zero-padded.
 
+        sample_rate : int
+            The assumed constant sampling rate for the waveforms.
+
         strain_limits : list[tuple[int, int]] | None, optional
             A list of (start, end) indices defining the valid range for each 
             waveform in `strains_array`. If None, waveforms are assumed to 
             contain no unnecessary padding.
-
-        sample_rate : int, optional
-            The assumed constant sampling rate for the waveforms. If None, time 
-            tracking is disabled.
 
         random_seed : int, optional
             Seed used to initialize the random number generator (RNG), as well as
@@ -2894,11 +2908,14 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         - Metadata is omitted in this class.
         - The dataset structure supports train/test splitting, but labels are 
           ignored.
+        - TODO: Implement optional explicit time arrays as argument for time
+          varying sampling (and all corresponding checks).
         
         """
         self.classes = {'unique': 1}  # Dummy class.
         self.strains = self._unpack_strains(strains_array, strain_limits)
         self.labels = self._gen_labels()  # Dummy labels.
+        self.sample_rate = sample_rate
         # self.metadata: pd.DataFrame = None  # OMMITED IN THIS CLASS
         
         # Number of nested layers in strains' dictionary. Keep updated always:
@@ -2907,7 +2924,6 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         self.max_length = self._find_max_length()
         self.random_seed = random_seed  # SKlearn train_test_split doesn't accept a Generator yet.
         self.rng = np.random.default_rng(self.random_seed)
-        self._track_times = False  # If True, self.times must be not None.
 
         self.padding = {}
 
@@ -2917,7 +2933,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         self.nonwhiten_strains = None
 
         # Time tracking related attributes.
-        self.sample_rate = sample_rate
+        self._track_times = False  # If True, self.times must be not None.
         self.times: dict = None
         
         # Train/Test subset splits (views into the same 'self.strains').
