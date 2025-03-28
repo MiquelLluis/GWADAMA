@@ -483,10 +483,10 @@ class Base:
         return times
 
     def _format_padding(self, padding) -> dict:
-        """Format the padding into a dict of (left, right) padding per ID.
+        """Format the padding into a dict of [left, right] padding per ID.
 
         This method standardizes the padding input into a dictionary mapping 
-        each signal ID to a tuple of (left_pad, right_pad) values.
+        each signal ID to a list of [left_pad, right_pad] values.
         
         Parameters
         ----------
@@ -494,27 +494,27 @@ class Base:
             The padding specification. Allowed types:
         
             - **int**: Symmetrical padding (same left/right) for all signals.
-            - **tuple/list/numpy.ndarray**: Sequence with exactly 2 elements
-              interpreted as (left_pad, right_pad) for all signals.
+            - **ArrayLike**: Sequence with exactly 2 elements interpreted as
+              [left_pad, right_pad] for all signals.
             - **dict**: Pre-formatted dictionary with signal IDs as keys and
-              (left, right) padding tuples as values. Returned directly without
+              [left, right] padding tuples as values. Returned directly without
               validation.
 
         Returns
         -------
         padding_dict : dict
-            Dictionary mapping each signal ID to its (left_pad, right_pad)
-            tuple.
+            Dictionary mapping each signal ID to its [left_pad, right_pad]
+            list.
 
         """
         if isinstance(padding, int):
-            padding_dict = {id: (padding, padding) for id in self.labels}
+            padding_dict = {id: [padding, padding] for id in self.labels}
         elif isinstance(padding, tuple|list|np.ndarray):
-            padding_dict = {id: padding for id in self.labels}
+            padding_dict = {id: list(padding) for id in self.labels}
         elif isinstance(padding, dict):
             padding_dict = padding
         else:
-            raise TypeError("padding must be an integer, a tuple or a dictionary")
+            raise TypeError("padding must be an integer, an ArrayLike or a dictionary")
         
         return padding_dict
 
