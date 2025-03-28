@@ -1901,7 +1901,7 @@ class BaseInjected(Base):
             takes for the whitening filter to settle.
         
         window : str | tuple, optional
-            Window to apply to timeseries prior to FFT, 'hann' by default.
+            Window to apply to the strain prior to FFT, 'hann' by default.
             see :func:`scipy.signal.get_window` for details on acceptable
             formats.
         
