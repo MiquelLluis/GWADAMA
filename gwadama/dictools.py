@@ -371,27 +371,20 @@ def filter_nested_dict(dict_, condition, layer) -> dict:
     return filter_layer(dict_, 0)
 
 
-def get_next_item(dict_):
-    """Get the next item in a nested dictionary.
+def get_first_value(dict_):
+    """Get the first value in a nested dictionary.
+    
+    If `dict_` is not a python dictionary, the argument is returned as is.
 
     Returns
     -------
     value : Any
-        Value of the next item in the dictionary.
-
+        Next value in `dict_`.
+    
     """
-    if not isinstance(dict_, dict):
-        raise TypeError("'dict_' must be a dictionary")
-
-    try:
-        value = next(iter(dict_.values()))
-    except StopIteration:
-        # Empty dictionary.
-        return None
-
-    if isinstance(value, dict):
-        return get_next_item(value)
-    return value
+    while isinstance(dict_, dict) and dict_:
+        dict_ = next(iter(dict_.values()))
+    return dict_
 
 
 def get_number_of_elements(dict_):
