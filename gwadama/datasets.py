@@ -726,11 +726,15 @@ class Base:
         for *keys, strain in loop_aux:
             strain_w = tat.whiten(
                 strain, asd=asd_array, sample_rate=self.sample_rate, flength=flength,
-                highpass=highpass, shrink=shrink, normed=normed
+                highpass=highpass, normed=normed
             )
             # Update strains attribute.
             dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
+        if shrink > 0:
+            self.shrink_strains(shrink)
+            self.max_length = self._find_max_length()
+
         self.whitened = True
         self.whiten_params = {
             "asd_array": asd_array,  # Only saved in Base (clean).
@@ -740,18 +744,8 @@ class Base:
             "shrink": shrink,
             "window": window
         }
-        
-        # If strains were shrunk after whitening, update the padding attribute.
-        if shrink > 0:
-            if self.padding:
-                # Subtract from previous padding the shrunk part
-                for id in self.padding:
-                    self.padding[id][0] -= shrink
-            else:
-                # Initialize the padding attribute.
-                self.padding = {id: (-shrink, 0) for id in self.labels}
 
-        if self.Xtrain:
+        if self.Xtrain is not None:
             self._update_train_test_subsets()
 
     def build_train_test_subsets(self, train_size: int | float):
@@ -1904,32 +1898,17 @@ class BaseInjected(Base):
         
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
-            snr = keys[2]  # Shape of self.strains dict-> (class, id, snr[, rep])
-
             strain_w = tat.whiten(
-                strain, asd=self.asd_array, shrink=shrink, sample_rate=self.sample_rate,
+                strain, asd=self.asd_array, sample_rate=self.sample_rate,
                 highpass=highpass, flength=flength, window=window, normed=normed
             )
             # Update strains attribute.
             dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
-        # Shrink time arrays accordingly.
-        if self._track_times and shrink:
-            clas_id_snr_layers = dictools.unroll_nested_dictionary_keys(
-                self.times,
-                max_depth=3
-            )
-            for clas_id_snr in clas_id_snr_layers:
-                # Since all time arrays below SNR layer are the same,
-                # get the first one, shrink it to its corresponding SNR-unpad,
-                # and set it to all subsequent layers.
-                snr = clas_id_snr[2]
-                times_sublayer = self.get_times(*clas_id_snr)
-                time = dictools.get_next_item(times_sublayer)
-                time = tat.shrink_time_array(time, shrink)
-                dictools.fill(times_sublayer, time, deepcopy=False)
-        
-        # Side-effect attributes updated.
+        if shrink > 0:
+            self.shrink_strains(shrink)
+            self.max_length = self._find_max_length()
+
         self.whitened = True
         self.whiten_params = {
             'flength': flength,
@@ -1938,7 +1917,7 @@ class BaseInjected(Base):
             'shrink': shrink,
             'window': window
         }
-        self.max_length = self._find_max_length()
+
         if self.Xtrain is not None:
             self._update_train_test_subsets()
 

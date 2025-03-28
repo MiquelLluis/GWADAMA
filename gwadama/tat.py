@@ -481,13 +481,11 @@ def whiten(strain: np.ndarray,
            flength: int,
            window='hann',
            highpass: float = None,
-           shrink: int = 0,
            normed: bool = True) -> np.ndarray:
     """Whiten a single strain signal using a FIR filter.
 
     Whiten a strain using the input amplitude spectral density 'asd' to
-    design the FIR filter, and shrinking signals afterwards to account for the
-    edge effects introduced by the filter windowing.
+    design the FIR filter.
 
     This is a standalone implementation of GWpy's whiten method.[1]_
 
@@ -515,12 +513,6 @@ def whiten(strain: np.ndarray,
         see :func:`scipy.signal.get_window` for details on acceptable
         formats.
 
-    shrink : int, optional
-        Margin at each side of the strain to crop, in order to avoid edge
-        effects. The corrupted area at each side is `0.5 * flength`,
-        which corresponds to the amount of samples it takes for the whitening
-        filter to settle. It is equivalent to the inverse of pad.
-
     highpass : float, optional
         Highpass corner frequency (in Hz) of the FIR whitening filter.
 
@@ -543,12 +535,6 @@ def whiten(strain: np.ndarray,
         raise ValueError("frequency points in 'asd[0]' must be ascending with constant increment")
     if not isinstance(flength, int):
         raise TypeError("'flength' must be an integer")
-    
-    # Handle unpadding
-    if shrink == 0:
-        shrink_slice = slice(None)
-    else:
-        shrink_slice = slice(shrink, -shrink)
 
     # Constant detrending
     strain_detrended = strain - np.mean(strain)
@@ -587,9 +573,6 @@ def whiten(strain: np.ndarray,
     # Convolve with filter
     strain_whitened = convolve(strain_detrended, fir_filter, window=window)
     strain_whitened *= np.sqrt(2 * dt)  # scaling factor
-
-    # Shrink
-    strain_whitened = strain_whitened[shrink_slice]
 
     # Normalize if needed
     if normed:
