@@ -177,24 +177,6 @@ def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
     return np.linspace(t0, t1, length)
 
 
-def shrink_time_array(times: np.ndarray, unpad: int) -> np.ndarray:
-    """Shrink a time array on both sides by 'unpad' number of samples.
-    
-    NOTES
-    -----
-    - Computes again the entire time array.
-    - Due to round-off errors some intermediate time values might be slightly
-      different.
-    
-    """
-    l = len(times) - 2*unpad
-    dt = times[1] - times[0]
-    t0 = times[0] + unpad*dt
-    t1 = t0 + (l-1)*dt
-
-    return np.linspace(t0, t1, l)
-
-
 def find_time_origin(times: np.ndarray) -> int:
     """Find the index position of the origin of a time array.
     
