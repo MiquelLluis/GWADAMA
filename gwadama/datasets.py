@@ -1170,7 +1170,8 @@ class BaseInjected(Base):
         - The 'snr' key is an integer indicating the signal-to-noise ratio of
           the injection.
 
-        - A fourth depth can be added below as additional injections per SNR.
+        - A fourth depth will be added below as additional injections per SNR
+          if specified when performing the injections.
         
     labels : dict
         Indices of the class of each wave ID, inherited from a clean
@@ -1658,36 +1659,15 @@ class BaseInjected(Base):
             this exception.
         
         """
-        if isinstance(snr, (int, float)):
-            snr_list = [snr]
-        elif isinstance(snr, (list,tuple)):
-            snr_list = snr
-        else:
-            raise TypeError(f"'{type(snr)}' is not a valid 'snr' type")
+        snr_list = self._validate_and_process_snr_input(snr)
         
         if set(snr_list) & set(self.snr_list):
             raise ValueError("one or more SNR values are already present in the dataset")
 
-        if self._track_times:
-            # Replaced temporarily because when injecting for the first time
-            # we need to keep the original time arrays.
-            times_new = self.times
+        times_new = self._initialize_strains_and_times()
 
-        # 1st time making injections.
-        if self.strains is None:
-            self.strains = self._init_strains_dict()
-            if self._track_times:
-                # Redo the dictionary structure to include the SNR layer.
-                times_new = self._init_strains_dict()
-
-        if randomize_noise and random_seed is not None:
-            if self.random_seed is not None:
-                warnings.warn(
-                    "Replacing the previous RNG by a new one with the provided "
-                    f"random_seed = {random_seed}."
-                )
-            # Replace the previous RNG by a new one.
-            self.rng = np.random.default_rng(random_seed)
+        if randomize_noise:
+            self._setup_rng(random_seed)
         
         if verbose:
             n_injections = (
@@ -1697,9 +1677,50 @@ class BaseInjected(Base):
             )
             pbar = tqdm(total=n_injections)
 
-        # Perform the injections
-        #-----------------------
+        self._perform_injections(randomize_noise, injections_per_snr, verbose,
+                                 inject_kwargs, snr_list, times_new, pbar)
 
+        if verbose:
+            pbar.close()
+
+        if self._track_times:
+            self.times = times_new
+
+        self.snr_list += snr_list
+        self.injections_per_snr = injections_per_snr
+        if injections_per_snr > 1:
+            self._dict_depth = dictools.get_depth(self.strains)
+        
+        # Side-effect attributes updated.
+        self.max_length = self._find_max_length()
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
+
+    def _setup_rng(self, random_seed):
+        """Set up or replace the RNG if necessary."""
+        if random_seed is not None:
+            if self.random_seed is not None:
+                warnings.warn(
+                        "Replacing the previous RNG by a new one with the provided "
+                        f"random_seed = {random_seed}."
+                    )
+                # Replace the previous RNG by a new one.
+            self.rng = np.random.default_rng(random_seed)
+
+    def _initialize_strains_and_times(self):
+        """Initialize strains and times dictionaries if it's the 1st time injecting."""
+        times_new = self.times
+        if self.strains is None:
+            # 1st time making injections.
+            self.strains = self._init_strains_dict()
+            if self._track_times:
+                # Redo the dictionary structure to include the SNR layer.
+                times_new = self._init_strains_dict()
+        return times_new
+
+    def _perform_injections(self, randomize_noise, injections_per_snr, verbose,
+                            inject_kwargs, snr_list, times_new, pbar):
+        """Main injection processing loop."""
         for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_clean):
             # Highpass filter to the clean signal.
             # It is performed before injection to avoid wheight errors when
@@ -1713,76 +1734,71 @@ class BaseInjected(Base):
 
             # Strain injections
             for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
-                
                 if randomize_noise:
                     pos0 = self.rng.integers(0, len(self.noise) - len(strain_clean))
                 else:
                     pos0 = 0
 
-                injected = self._inject(
-                    strain_clean,
-                    snr_,
-                    id=id_,
-                    pos=pos0,
-                    **inject_kwargs
-                )
-                if self.whitened:
-                    injected = tat.whiten(
-                        injected,
-                        asd=self.asd_array,
-                        sample_rate=self.sample_rate,
-                        flength=self.whiten_params['flength'],
-                        window=self.whiten_params['window'],
-                        highpass=self.whiten_params['highpass'],
-                        shrink=self.whiten_params['shrink'],
-                        normed=self.whiten_params['normed']
-                    )
-                if injections_per_snr == 1:
-                    self.strains[clas][id_][snr_] = injected
-                else:
-                    dictools.set_value_to_nested_dict(
-                        self.strains,
-                        [clas, id_, snr_, rep],
-                        injected,
-                        add_missing_keys=True
-                    )
+                injected = self._inject_signal_and_whiten(strain_clean, snr_, id_, pos0, **inject_kwargs)
+                
+                indices = [clas, id_, snr_]
+                if injections_per_snr > 1:
+                    indices.append(rep)
+                dictools.set_value_to_nested_dict(self.strains, indices, injected, add_missing_keys=True)
 
                 if verbose:
                     pbar.update()
             
+            # Update times.
             if self._track_times:
                 # Make all SNR entries point to the SAME time array.
                 # This keeps the shape of `self.times` consistent with strains
                 # while avoiding unnecessary data duplication.
-                times_i = self.get_times(clas, id_)
+                times_i = self.times[clas][id_]
                 for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
-                    if injections_per_snr == 1:
-                        times_new[clas][id_][snr_] = times_i
-                    else:
-                        dictools.set_value_to_nested_dict(
-                            times_new, [clas, id_, snr_, rep], times_i,
-                            add_missing_keys=True
-                        )
+                    indices = [clas, id_, snr_]
+                    if injections_per_snr > 1:
+                        indices.append(rep)
+                    dictools.set_value_to_nested_dict(times_new, indices, times_i, add_missing_keys=True)
 
-        #-----------------------
+            # Shrink strains and times.
+            if self.whitened:
+                shrink = self.whiten_params['shrink']
+                if shrink:
+                    self.shrink_strains(shrink)
 
-        if verbose:
-            pbar.close()
+    def _inject_signal_and_whiten(self, strain_clean, snr_, id_, pos0, **inject_kwargs):
+        """Perform signal injection and optional whitening."""
 
-        if self._track_times:
-            self.times = times_new
+        injected = self._inject(
+            strain_clean,
+            snr_,
+            id=id_,
+            pos=pos0,
+            **inject_kwargs
+        )
+        if self.whitened:
+            injected = tat.whiten(
+                injected,
+                asd=self.asd_array,
+                sample_rate=self.sample_rate,
+                flength=self.whiten_params['flength'],
+                window=self.whiten_params['window'],
+                highpass=self.whiten_params['highpass'],
+                shrink=self.whiten_params['shrink'],
+                normed=self.whiten_params['normed']
+            )
+            
+        return injected
 
-        self.snr_list += snr_list
-
-        self.injections_per_snr = injections_per_snr
-        if injections_per_snr > 1:
-            # Make sure the depth attribute is updated.
-            self._dict_depth = dictools.get_depth(self.strains)
-        
-        # Side-effect attributes updated.
-        self.max_length = self._find_max_length()
-        if self.Xtrain is not None:
-            self._update_train_test_subsets()
+    def _validate_and_process_snr_input(self, snr) -> list:
+        if isinstance(snr, (int, float)):
+            snr_list = [snr]
+        elif isinstance(snr, (list,tuple)):
+            snr_list = snr
+        else:
+            raise TypeError(f"'{type(snr)}' is not a valid 'snr' type")
+        return snr_list
     
     def _inject(self,
                 strain: np.ndarray,
