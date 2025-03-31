@@ -287,10 +287,10 @@ class Base:
         
         return labels
 
-    def _init_strains_dict(self) -> dict:
+    def _gen_empty_strains_dict(self) -> dict:
         return {clas: {} for clas in self.classes}
     
-    def _init_times_dict(self) -> dict:
+    def _gen_empty_times_dict(self) -> dict:
         return dictools._replicate_structure_nested_dict(self.strains)
 
     def _find_max_length(self) -> int:
@@ -318,7 +318,7 @@ class Base:
                 "to avoid regenerating."
             )
 
-        self.times = self._init_times_dict()
+        self.times = self._gen_empty_times_dict()
         for *keys, strain in self.items():
             length = len(strain)
             t1 = t0 + length / self.sample_rate
@@ -1566,7 +1566,7 @@ class BaseInjected(Base):
 
         return noise
     
-    def _init_strains_dict(self) -> dict[dict[dict]]:
+    def _gen_empty_strains_dict(self) -> dict[dict[dict]]:
         """Initializes the nested dictionary of strains.
         
         Initializes the nested dictionary of strains following the hierarchy
@@ -1712,7 +1712,7 @@ class BaseInjected(Base):
         times_new = self.times
         if self.strains is None:
             # 1st time making injections.
-            self.strains = self._init_strains_dict()
+            self.strains = self._gen_empty_strains_dict()
             if self._track_times:
                 # Redo the dictionary structure to include the SNR layer.
                 times_new = self._init_strains_dict()
@@ -2624,7 +2624,7 @@ class SyntheticWaves(Base):
         if self.metadata is None:
             raise AttributeError("'metadata' needs to be generated first!")
 
-        self.strains = self._init_strains_dict()
+        self.strains = self._gen_empty_strains_dict()
 
         t_max = (self.max_length - 1) / self.sample_rate
         times = np.linspace(0, t_max, self.max_length)
@@ -3285,8 +3285,8 @@ class CoReWaves(Base):
             of strains up to the second depth level (the id.).
         
         """
-        strains = self._init_strains_dict()
-        times = self._init_strains_dict()
+        strains = self._gen_empty_strains_dict()
+        times = self._gen_empty_strains_dict()
         # Metadata columns/keys:
         index: list[str] = []
         mass: list[float] = []
