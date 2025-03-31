@@ -1664,7 +1664,8 @@ class BaseInjected(Base):
         if set(snr_list) & set(self.snr_list):
             raise ValueError("one or more SNR values are already present in the dataset")
 
-        times_new = self._initialize_strains_and_times()
+        times_old = deepcopy(self.times)
+        self._initialize_strains_and_times()
 
         if randomize_noise:
             self._setup_rng(random_seed)
@@ -1678,13 +1679,10 @@ class BaseInjected(Base):
             pbar = tqdm(total=n_injections)
 
         self._perform_injections(randomize_noise, injections_per_snr, verbose,
-                                 inject_kwargs, snr_list, times_new, pbar)
+                                 inject_kwargs, snr_list, times_old, pbar)
 
         if verbose:
             pbar.close()
-
-        if self._track_times:
-            self.times = times_new
 
         self.snr_list += snr_list
         self.injections_per_snr = injections_per_snr
@@ -1708,18 +1706,16 @@ class BaseInjected(Base):
             self.rng = np.random.default_rng(random_seed)
 
     def _initialize_strains_and_times(self):
-        """Initialize strains and times dictionaries if it's the 1st time injecting."""
-        times_new = self.times
+        """Initialize strains and times dictionaries."""
         if self.strains is None:
             # 1st time making injections.
             self.strains = self._gen_empty_strains_dict()
             if self._track_times:
                 # Redo the dictionary structure to include the SNR layer.
-                times_new = self._init_strains_dict()
-        return times_new
+                self.times = self._gen_empty_times_dict()
 
     def _perform_injections(self, randomize_noise, injections_per_snr, verbose,
-                            inject_kwargs, snr_list, times_new, pbar):
+                            inject_kwargs, snr_list, times_old, pbar):
         """Main injection processing loop."""
         for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_clean):
             # Highpass filter to the clean signal.
@@ -1754,12 +1750,12 @@ class BaseInjected(Base):
                 # Make all SNR entries point to the SAME time array.
                 # This keeps the shape of `self.times` consistent with strains
                 # while avoiding unnecessary data duplication.
-                times_i = self.times[clas][id_]
+                times_i = times_old[clas][id_]  # TODO: This hardcoded indexing is not general enough!
                 for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
                     indices = [clas, id_, snr_]
                     if injections_per_snr > 1:
                         indices.append(rep)
-                    dictools.set_value_to_nested_dict(times_new, indices, times_i, add_missing_keys=True)
+                    dictools.set_value_to_nested_dict(self.times, indices, times_i, add_missing_keys=True)
 
             # Shrink strains and times.
             if self.whitened:
