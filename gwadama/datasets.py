@@ -3059,8 +3059,7 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         self.classes = clean_dataset.classes.copy()  # Dummy class.
         self.labels = self.labels = clean_dataset.labels.copy()  # Dummy labels.
         self._track_times = clean_dataset._track_times
-        if self._track_times:
-            self.times = deepcopy(clean_dataset.times)
+        self.times = deepcopy(clean_dataset.times) if self._track_times else None
         self.padding = clean_dataset.padding.copy()
         self.max_length = clean_dataset.max_length
 
