@@ -1148,11 +1148,10 @@ class BaseInjected(Base):
         - The 'id' is a unique identifier for each strain, and must exist in
           the index of the 'metadata' (DataFrame) attribute.
         
-        NOTE: These strains should be not modified. If new clean strains are
-        needed, create a new clean dataset instance first, and then initialise
-        this class with it.
-
-        TODO: Accept extra layers in the clean_strains dictionary.
+        .. warning::
+            These strains should be not modified. If new clean strains are
+            needed, create a new clean dataset instance first, and then
+            initialise this class with it.
     
     strains : dict[dict]
         Injected trains stored as a nested dictionary, with each strain in an
@@ -1258,7 +1257,16 @@ class BaseInjected(Base):
         1D Array containing the labels in the same order as 'Xtrain' and
         'Xtest' respectively.
         
-        NOTE: Does not include the SNR layer, therefore labels are not repeated.
+        .. warning::
+            Does not include the SNR layer, therefore labels are not repeated.
+    
+    NOTES
+    -----
+    - TODO: Right now this class is oriented to simulate the background noise
+      and apply the whitening using the same PSD and other parameters. This
+      needs further generalization so that it can explicitly accept any
+      pre-computed noise and a different PSD for whitening, as well as the
+      possibility to estimate the PSD from the data in a programatically way.
 
     """
     def __init__(self,
@@ -1299,12 +1307,12 @@ class BaseInjected(Base):
             Power Spectral Density of the detector's sensitivity in the range
             of frequencies of interest. Can be given as a callable function
             whose argument is expected to be an array of frequencies, or as a
-            2d-array with shape (2, psd_length) so that
+            2d-array with shape (2, psd_length) so that:
             
             ```
             psd[0] = frequency_samples
             psd[1] = psd_samples
-            ```.
+            ```
             
             .. note::
                 `psd` is also used to compute the 'asd' attribute (ASD).
