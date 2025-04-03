@@ -10,6 +10,11 @@ There are two basic type of datasets, clean and injected:
 - Injected datasets' classes inherit from the BaseInjected class, and
   optionally from other UserDefined(Base) classes.
 
+Notes
+-----
+- TODO: The Base and BaseInjected couple should be more general, building from
+  unlabeled data as in UnlabeledWaves. 
+
 """
 from copy import deepcopy
 import itertools
@@ -1228,6 +1233,10 @@ class BaseInjected(Base):
     injections_per_snr : int
         Number of injections per SNR value.
     
+    injection_snr_scales : dict
+        Scaling factors used for generating the injections, stored as a nested
+        dictionary with the same structure as `self.strains`.
+    
     whitened : bool
         Flat indicating whether the dataset has been whitened. Initially will
         be set to False, and changed to True after calling the 'whiten' method.
@@ -1267,6 +1276,9 @@ class BaseInjected(Base):
       needs further generalization so that it can explicitly accept any
       pre-computed noise and a different PSD for whitening, as well as the
       possibility to estimate the PSD from the data in a programatically way.
+
+    - TODO: Implement optioni in `gen_injections` to return (or store) the
+      scaling factors.
 
     """
     def __init__(self,
@@ -1382,6 +1394,7 @@ class BaseInjected(Base):
         self.strains = None
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
+        self.injection_snr_scales = None
         self.injections_per_snr = 1  # Default value.
         self.whitened = False  # Switched to True after calling self.whiten().
         self.whiten_params = None
@@ -1668,16 +1681,12 @@ class BaseInjected(Base):
         
         """
         snr_list = self._validate_and_process_snr_input(snr)
-        
         if set(snr_list) & set(self.snr_list):
             raise ValueError("one or more SNR values are already present in the dataset")
 
         times_old = deepcopy(self.times)
-        self._initialize_strains_and_times()
-
         if randomize_noise:
             self._setup_rng(random_seed)
-        
         if verbose:
             n_injections = (
                 dictools.get_number_of_elements(self.strains_clean)
@@ -1685,13 +1694,14 @@ class BaseInjected(Base):
                 * injections_per_snr
             )
             pbar = tqdm(total=n_injections)
+        
+        self._initialize_injection_structures()
 
         self._perform_injections(randomize_noise, injections_per_snr, verbose,
                                  inject_kwargs, snr_list, times_old, pbar)
 
         if verbose:
             pbar.close()
-
         self.snr_list += snr_list
         self.injections_per_snr = injections_per_snr
         if injections_per_snr > 1:
@@ -1713,14 +1723,15 @@ class BaseInjected(Base):
                 # Replace the previous RNG by a new one.
             self.rng = np.random.default_rng(random_seed)
 
-    def _initialize_strains_and_times(self):
-        """Initialize strains and times dictionaries."""
+    def _initialize_injection_structures(self):
+        """Initialize injection-related attributes."""
         if self.strains is None:
             # 1st time making injections.
             self.strains = self._gen_empty_strains_dict()
             if self._track_times:
                 # Redo the dictionary structure to include the SNR layer.
                 self.times = self._gen_empty_times_dict()
+            self.injection_snr_scales = dictools._replicate_structure_nested_dict(self.strains)
 
     def _perform_injections(self, randomize_noise, injections_per_snr, verbose,
                             inject_kwargs, snr_list, times_old, pbar):
@@ -1743,12 +1754,16 @@ class BaseInjected(Base):
                 else:
                     pos0 = 0
 
-                injected = self._inject_signal_and_whiten(strain_clean, snr_, id_, pos0, **inject_kwargs)
+                injected, scale = self._inject_signal_and_whiten(
+                    strain_clean, snr_, id_, pos0, **inject_kwargs
+                )
                 
+                # Save injected strains and scale factors.
                 indices = [clas, id_, snr_]
                 if injections_per_snr > 1:
                     indices.append(rep)
                 dictools.set_value_to_nested_dict(self.strains, indices, injected, add_missing_keys=True)
+                dictools.set_value_to_nested_dict(self.injection_snr_scales, indices, scale, add_missing_keys=True)
 
                 if verbose:
                     pbar.update()
@@ -1774,7 +1789,7 @@ class BaseInjected(Base):
     def _inject_signal_and_whiten(self, strain_clean, snr_, id_, pos0, **inject_kwargs):
         """Perform signal injection and optional whitening."""
 
-        injected = self._inject(
+        injected, scale = self._inject(
             strain_clean,
             snr_,
             id=id_,
@@ -1793,7 +1808,7 @@ class BaseInjected(Base):
                 normed=self.whiten_params['normed']
             )
             
-        return injected
+        return injected, scale
 
     def _validate_and_process_snr_input(self, snr) -> list:
         if isinstance(snr, (int, float)):
@@ -1832,10 +1847,13 @@ class BaseInjected(Base):
         injected : NDArray
             Injected signal.
         
+        scale : float
+            Scale factor applied to the signal.
+        
         """
-        injected, _ = self.noise.inject(strain, snr=snr, pos=pos)
+        injected, scale = self.noise.inject(strain, snr=snr, pos=pos)
 
-        return injected
+        return injected, scale
     
     def export_strains_to_gwf(self,
                               path: str,
@@ -3085,6 +3103,7 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         self.strains = None
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
+        self.injection_snr_scales = None
         self.injections_per_snr = 1  # Default value.
         self.whitened = False  # Switched to True after calling self.whiten().
         self.whiten_params = None
@@ -3756,6 +3775,9 @@ class InjectedCoReWaves(BaseInjected):
         -------
         injected : NDArray
             Injected signal.
+
+        scale : float
+            Scale factor applied to the signal.
         
         NOTES
         -----
@@ -3777,7 +3799,7 @@ class InjectedCoReWaves(BaseInjected):
         # Compute the equivalent SNR over the entire waveform.
         self.whole_snr[id][snr] = self.noise.snr(strain*scale)
 
-        return injected
+        return injected, scale
     
     def whiten(self,
                *,
