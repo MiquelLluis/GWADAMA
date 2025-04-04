@@ -176,7 +176,7 @@ class Base:
         self.classes: dict[str] = None
         self._check_classes_dict(self.classes)
         self.metadata: pd.DataFrame = None
-        self.labels: dict[int] = self._gen_labels()
+        self._gen_labels()  # sets `self.labels`
         
         # Number of nested layers in strains' dictionary. Keep updated always:
         self._dict_depth: int = dictools.get_depth(self.strains)
@@ -274,23 +274,20 @@ class Base:
 
         return dictools.get_number_of_elements(self.strains)
 
-    def _gen_labels(self) -> dict:
-        """Constructs the labels' dictionary.
+    def _gen_labels(self):
+        """Generate the `self.labels` attribute
 
         The labels attribute maps each ID to the integer value of its class,
-        mapped in the 'classes' attribute.
-        
-        Returns
-        -------
-        labels : dict
-            Shape {id: class_label} for each GW in the dataset.
+        mapped in the 'classes' attribute:
+            {id: class_label} for each GW in the dataset
         
         """
-        labels = {}
+        if hasattr(self, 'labels') and self.labels is not None:
+            raise AttributeError("`labels` attribute already present.")
+
+        self.labels = {}
         for clas, id_ in self.keys(max_depth=2):
-            labels[id_] = self.classes[clas]
-        
-        return labels
+            self.labels[id_] = self.classes[clas]
 
     def _gen_empty_strains_dict(self) -> dict:
         return {clas: {} for clas in self.classes}
@@ -2583,7 +2580,7 @@ class SyntheticWaves(Base):
         self._gen_metadata()
         self._track_times = False
         self._gen_dataset()
-        self.labels = self._gen_labels()
+        self._gen_labels()
 
         self.Xtrain = None
         self.Xtest = None
@@ -2926,7 +2923,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         """
         self.classes = {'unique': 1}  # Dummy class.
         self.strains = self._unpack_strains(strains_array, strain_limits)
-        self.labels = self._gen_labels()  # Dummy labels.
+        self._gen_labels()  # Dummy labels.
         self.sample_rate = sample_rate
         # self.metadata: pd.DataFrame = None  # OMMITED IN THIS CLASS
         
@@ -3263,7 +3260,7 @@ class CoReWaves(Base):
         self.strains, self.times, self.metadata = self._get_strain_and_metadata(coredb)
         self._track_times = True
         self._dict_depth = dictools.get_depth(self.strains)
-        self.labels = self._gen_labels()
+        self._gen_labels()
         self.max_length = self._find_max_length()
 
         self.sample_rate = None  # Set up after resampling
