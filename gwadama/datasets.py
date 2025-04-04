@@ -91,8 +91,8 @@ class Base:
         
         - Shape: {class: {id: strain} }
         
-        - The 'class' key is the name of the class, a string which must exist
-          in the 'classes' list.
+        - The 'class' key is the name of the class, which must exist in the
+          'classes' list.
         
         - The 'id' is a unique identifier for each strain, and must exist in
           the index of the 'metadata' (DataFrame) attribute.
@@ -260,8 +260,8 @@ class Base:
         if not isinstance(classes, dict):
             raise TypeError("'classes' must be a dictionary")
         
-        if not all(isinstance(k, str) for k in classes.keys()):
-            raise TypeError("'classes' keys must be strings")
+        if not all(isinstance(k, (str,int)) for k in classes.keys()):
+            raise TypeError("'classes' keys must be strings or integers")
         
         labels = classes.values()
         if not all(isinstance(label, int) for label in labels):
