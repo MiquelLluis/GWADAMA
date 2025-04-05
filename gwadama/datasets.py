@@ -293,7 +293,7 @@ class Base:
         return {clas: {} for clas in self.classes}
     
     def _gen_empty_times_dict(self) -> dict:
-        return dictools._replicate_structure_nested_dict(self.strains)
+        return dictools.replicate_structure(self.strains)
 
     def _find_max_length(self) -> int:
         """Return the length of the longest signal present in strains."""
@@ -396,7 +396,7 @@ class Base:
             Class key associated to the strain 'id'.
         
         """
-        return dictools._find_level0_of_level1(self.strains, id)
+        return dictools.find_parent_key_of_nested_key(self.strains, id)
 
     def get_strain(self, *indices, normalize=False) -> np.ndarray:
         """Get a single strain from the complete index coordinates.
@@ -1591,7 +1591,7 @@ class BaseInjected(Base):
         in the clean strains attribute, and adding the SNR layer.
         
         """
-        strains_dict = dictools._replicate_structure_nested_dict(self.strains_clean)
+        strains_dict = dictools.replicate_structure(self.strains_clean)
         for indices in dictools.unroll_nested_dictionary_keys(strains_dict):
             dictools.set_value_to_nested_dict(strains_dict, indices, {})
 
@@ -1728,7 +1728,7 @@ class BaseInjected(Base):
             if self._track_times:
                 # Redo the dictionary structure to include the SNR layer.
                 self.times = self._gen_empty_times_dict()
-            self.injection_snr_scales = dictools._replicate_structure_nested_dict(self.strains)
+            self.injection_snr_scales = dictools.replicate_structure(self.strains)
 
     def _perform_injections(self, randomize_noise, injections_per_snr, verbose,
                             inject_kwargs, snr_list, times_old, pbar):
@@ -2796,10 +2796,10 @@ class InjectedSyntheticWaves(BaseInjected):
         # Initialize the Train/Test subsets inheriting the indices of the input
         # clean dataset instance.
         if clean_dataset.Xtrain is not None:
-            self.Xtrain = dictools._replicate_structure_nested_dict(clean_dataset.Xtrain)
-            self.Xtest = dictools._replicate_structure_nested_dict(clean_dataset.Xtest)
-            self.Ytrain = dictools._replicate_structure_nested_dict(clean_dataset.Ytrain)
-            self.Ytest = dictools._replicate_structure_nested_dict(clean_dataset.Ytest)
+            self.Xtrain = dictools.replicate_structure(clean_dataset.Xtrain)
+            self.Xtest = dictools.replicate_structure(clean_dataset.Xtest)
+            self.Ytrain = dictools.replicate_structure(clean_dataset.Ytrain)
+            self.Ytest = dictools.replicate_structure(clean_dataset.Ytest)
         else:
             self.Xtrain = None
             self.Xtest = None

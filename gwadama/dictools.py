@@ -178,7 +178,7 @@ def __fill(dict_: dict, value, deepcopy=False):
 
 
 
-def _replicate_structure_nested_dict(dict_: dict) -> dict:
+def replicate_structure(dict_: dict) -> dict:
     """Create a new nested dictionary with the same structure as the input.
 
     Values of the new dictionary are set to None.
@@ -190,7 +190,7 @@ def _replicate_structure_nested_dict(dict_: dict) -> dict:
     replicated_dict = {}
     for key, value in dict_.items():
         if isinstance(value, dict):
-            replicated_dict[key] = _replicate_structure_nested_dict(value)
+            replicated_dict[key] = replicate_structure(value)
         else:
             replicated_dict[key] = None
 
@@ -269,7 +269,7 @@ def dict_to_stacked_array(dict_: dict, target_length: int = None) -> tuple[np.nd
     return stacked_arrays, lengths
 
 
-def _find_level0_of_level1(dict_, key: int|str) -> int | str:
+def find_parent_key_of_nested_key(dict_, key: int|str) -> int | str:
     """Finds the top level key containing the second level 'key'.
 
     Finds the key of the uppermost level of the nested 'dict_' which contains
