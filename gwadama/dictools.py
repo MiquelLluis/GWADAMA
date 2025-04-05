@@ -412,3 +412,37 @@ def get_number_of_elements(dict_):
             number += 1
     
     return number
+
+
+def get_types(d: dict):
+    """Get all element types in a nested dictionary.
+
+    Return all unique non-dict types from values in a (possibly nested)
+    dictionary.
+
+    Parameters
+    ----------
+    d : dict
+        Input dictionary.
+
+    Returns
+    -------
+    types : set
+        Set of non-dict Python types.
+
+    """
+    if not isinstance(d, dict):
+        raise TypeError(f"Expected a dictionary for 'd', got {type(d).__name__} instead.")
+
+    types = set()
+    stack = [d]
+
+    while stack:
+        current = stack.pop()
+        for value in current.values():
+            if isinstance(value, dict):
+                stack.append(value)  # keep traversing
+            else:
+                types.add(type(value))  # record type, don't traverse further
+
+    return types
