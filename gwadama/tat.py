@@ -139,6 +139,35 @@ def gen_time_array(t0, t1, sample_rate, length=None):
     return np.linspace(t0, t1, expected_length, endpoint=False)
 
 
+def time_array_like(array, sr=4096, t0=0.0):
+    """Generate a time array matching the length of the input array.
+
+    Computes a time array starting from `t0` with evenly spaced values based 
+    on the sampling rate `sr`, matching the length of the input 1D array.
+
+    Parameters
+    ----------
+    array : array_like
+        Input 1D array whose length determines the number of time samples.
+    
+    sr : float, optional
+        Sampling rate in Hz. Default is 4096.
+    
+    t0 : float, optional
+        Start time in seconds. Default is 0.0.
+
+    Returns
+    -------
+    numpy.ndarray
+        A 1D array of evenly spaced time values starting at `t0` with spacing
+        `1/sr` and the same length as the input array.
+    
+    """
+    n = len(array)
+    return np.linspace(t0, t0+n/sr, n, endpoint=False)
+
+
+
 def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
     """Extend a time array by 'pad' number of samples.
 
