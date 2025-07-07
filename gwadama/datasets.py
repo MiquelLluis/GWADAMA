@@ -322,9 +322,7 @@ class Base:
 
         self.times = self._gen_empty_times_dict()
         for *keys, strain in self.items():
-            length = len(strain)
-            t1 = t0 + length / self.sample_rate
-            times = tat.gen_time_array(t0, t1, self.sample_rate, length=length)
+            times = tat.time_array_like(strain, sr=self.sample_rate, t0=t0)
             dictools.set_value_to_nested_dict(self.times, keys, times)
         
         self._track_times = True
