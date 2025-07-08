@@ -681,7 +681,7 @@ class Base:
 
         for *keys, strain in self.items():
             time = dictools.get_value_from_nested_dict(self.times, keys)
-            strain_resampled, time_resampled, sf_up, factor_down = tat.resample(
+            strain_resampled, time_resampled, sr_interp, factor_up, factor_down = tat.resample(
                 strain, time, sample_rate, full_output=True
             )
             dictools.set_value_to_nested_dict(self.strains, keys, strain_resampled)
@@ -689,7 +689,7 @@ class Base:
             
             if verbose:
                 print(
-                    f"Strain {keys[0]}::{keys[1]} up. to {sf_up} Hz, down by factor {factor_down}"
+                    f"Strain {keys[0]}::{keys[1]} resampled {sr_interp} Hz → {sample_rate} Hz (factors up/down: {factor_up}, {factor_down})"
                 )
 
         self.sample_rate = sample_rate

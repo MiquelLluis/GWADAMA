@@ -11,9 +11,9 @@ from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 
 
 def resample(strain: np.ndarray,
-             time: np.ndarray | int,
+             times: np.ndarray,
              sample_rate: int,
-             full_output=True) -> tuple[np.ndarray, int, int]:
+             full_output=True) -> tuple[np.ndarray, np.array, int, int]:
     """Resample a single strain in time domain.
     
     Resample strain's sampling rate using an interpolation in the time domain
@@ -27,63 +27,59 @@ def resample(strain: np.ndarray,
     PARAMETERS
     ----------
     strain: 1d-array
-        Only one strain.
+        Input strain signal.
     
-    time: 1d-array | int | float
-        Time points. If an Int or Float is given, it is interpreted as the
-        former sampling rate, and assumed to be constant.
+    times : 1d-array
+        Original time points. Must be a NumPy array.
     
     sample_rate: int
-        Target sample rate.
-        NOTE: It cannot be fractional.
+        Target sample rate (Hz). Must be a possitive integer.
     
     full_output: bool, optional
-        If True, also returns the new time points, the upscaled sampling rate,
-        and the factor down.
+        If True, also returns the new time array, original sample rate,
+        and decimation factor.
     
         
     RETURNS
     -------
-    strain: 1d-array
-        Strain at the new sampling rate.
-    
-    time: 1d-array, optional
-        New time points.
-    
-    sr_up: int, optional
-        Upscaled sample rate.
-    
-    factor_down: int, optional
-        Factor at which the signal is decimated after the upscalling.
+    strain_resampled : 1d-array
+        Resampled strain.
+
+    times_resampled : 1d-array, optional
+        Time array at the new sampling rate.
+
+    sr_in : int, optional
+        Original (inferred) sample rate, after interpolation if performed.
+
+    up, down : int, optional
+        Up and down factors of the resampling.
     
     """
-    if isinstance(time, np.ndarray):
-        sr_max = 1 / np.min(np.diff(time))
-    elif isinstance(time, int):
-        sr_max = time
-        t1 = (len(strain) - 1) / sr_max
-        time = gen_time_array(0, t1, sr_max)
+    if not isinstance(times, np.ndarray):
+        raise TypeError("'times' must be a NumPy array.")
+    if sample_rate <= 0:
+        raise ValueError("Target 'sample_rate' must be positive.")
+
+    if not is_arithmetic_progression(times):
+        # Interpolate to a uniform time grid at the highest reasonable rate
+        sr_interp = int(np.ceil(1 / np.min(np.diff(times))))
+        times_uniform = np.arange(times[0], times[-1], 1 / sr_interp)
+        strain = sp_make_interp_spline(times, strain, k=2)(times_uniform)
+        times = times_uniform
     else:
-        raise TypeError("'time' type not recognized")
+        sr_interp = int(round(1 / (times[1] - times[0])))
 
-    # Upsample:
-    #
-    sr_up = int((sr_max // sample_rate + 1) * sample_rate)
-    # Intentionally skipping last time point to avoid extrapolation by round-off errors.
-    time_up = np.arange(time[0], time[-1], 1/sr_up)
-    strain = sp_make_interp_spline(time, strain, k=2)(time_up)  # len(strain) = len(strain) - 1
-    time = time_up
-
-    # Downsample (if needed):
-    #
-    factor_down = sr_up // sample_rate
-    if factor_down > 1:
-        time = time[::factor_down]
-        strain = sp.signal.decimate(strain, factor_down, ftype='fir')
-    elif factor_down < 1:
-        raise RuntimeError(f"factor_down = {factor_down} < 1")
+    # Compute up/down factors
+    g = np.gcd(sr_interp, sample_rate)
+    up = sample_rate // g
+    down = sr_interp // g
     
-    return strain, time, sr_up, factor_down if full_output else strain
+    strain_resampled = sp.signal.resample_poly(strain, up, down)
+    
+    if full_output:
+        times_resampled = time_array_like(strain_resampled, sr=sample_rate, t0=times[0])
+        return strain_resampled, times_resampled, sr_interp, up, down
+    return strain_resampled
 
 
 def gen_time_array(t0, t1, sample_rate, length=None):
