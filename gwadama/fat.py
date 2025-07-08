@@ -157,6 +157,29 @@ def highpass_filter(signal: np.ndarray,
     return filtered
 
 
+def bandpass_filter(signal: np.ndarray,
+                    *,
+                    f_low: int | float,
+                    f_high: int | float,
+                    f_order: int | float,
+                    sample_rate: int) -> np.ndarray:
+    """Apply a forward-backward digital bandpass filter.
+
+    Apply a forward-backward digital bandpass filter to 'signal'
+    between frequencies 'f_low' and 'f_high' with an order of 'f_order'.
+
+    Reference
+    ---------
+    Design: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
+    Filter: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
+
+    """
+    sos = sp.signal.butter(f_order, [f_low, f_high], btype='bandpass', fs=sample_rate, output='sos')
+    filtered = sp.signal.sosfiltfilt(sos, signal)
+
+    return filtered
+
+
 def instant_frequency(signal, *, sample_rate, phase_corrections=None):
     """Computes the instantaneous frequency of a time-domain signal.
 
