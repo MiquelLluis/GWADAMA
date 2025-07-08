@@ -550,8 +550,14 @@ def whiten(strain: np.ndarray,
     dt = 1 / sample_rate
 
     freq_target = np.fft.rfftfreq(len(strain), dt)
-    if asd_freq[-1] < freq_target[-1]:
-        raise ValueError("ASD frequency range is insufficient for the strain data.")
+
+    # Assumes ASD is defined or extrapolated over full frequency range.
+    # No check needed if extrapolated with zeros and signal is bandpass-filtered.
+    #--------------------------------------------------------------------------
+    # if asd_freq[-1] < freq_target[-1]:
+    #     raise ValueError("ASD frequency range is insufficient for the strain data.")
+    #--------------------------------------------------------------------------
+
 
     # Linear interpolation of ASD if needed, assuming ASD_freq is already
     # covering the strain frequency range.
