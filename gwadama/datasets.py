@@ -694,6 +694,42 @@ class Base:
 
         self.sample_rate = sample_rate
         self.max_length = self._find_max_length()
+
+    def bandpass(self,
+                 *,
+                 f_low: int | float,
+                 f_high: int | float,
+                 f_order: int | float,
+                 verbose=False):
+        """Apply a forward-backward digital bandpass filter.
+        
+        Apply a forward-backward digital bandpass filter to all clean strains
+        between frequencies 'f_low' and 'f_high' with an order of 'f_order'.
+
+        This method is intended to be used prior to any whitening.
+        
+        .. warning::
+            This is an irreversible operation. Original (non-bandpassed)
+            strains will be lost.
+        
+        """
+        if self.whitened:
+            raise RuntimeError("bandpass cannot be applied after whitening")
+
+        if self.strains is None:
+            raise RuntimeError("no strains have been given or generated yet")
+        
+        loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
+        for *keys, strain in loop_aux:
+            strain_filtered = fat.bandpass_filter(
+                strain, f_low=f_low, f_high=f_high, f_order=f_order,
+                sample_rate=self.sample_rate
+            )
+            # Update strains attribute.
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_filtered)
+
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
     
     def whiten(self,
                *,
