@@ -1646,13 +1646,9 @@ class BaseInjected(Base):
         - If the strain is in geometrized units, it will be converted first to
           the IS, then injected and converted back to geometrized units.
         
-        - After each injection, applies a highpass filter at the `freq_cutoff`
-          frequency specified at __init__.
-          Although both the clean signals and the injected noise are already
-          filtered, there could be residual low-frequency components near
-          the cutoff due to the filter's non-ideal roll-off characteristics,
-          which might be arbitrarily amplified after the injection. This
-          final highpass filter is a safeguard.
+        - The automatic highpass filter before each injection is not applied
+          anymore. It is now assumed that clean signals are also filtered
+          properly before.
         
         - If the method 'whiten' has been already called, all further
           injections will automatically be whitened with the same parameters,
@@ -1769,15 +1765,8 @@ class BaseInjected(Base):
                             inject_kwargs, snr_list, times_old, pbar):
         """Main injection processing loop."""
         for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_clean):
-            # Highpass filter to the clean signal.
-            # It is performed before injection to avoid wheight errors when
-            # computing the SNR.
-            strain_clean = fat.highpass_filter(
-                self.strains_clean[clas][id_],
-                f_cut=self.freq_cutoff,
-                f_order=self.freq_butter_order,
-                sample_rate=self.sample_rate
-            )
+            # Clean signals are assumed to be already filtered if necessary.
+            strain_clean = self.strains_clean[clas][id_]
 
             # Strain injections
             for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
