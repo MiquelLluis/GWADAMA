@@ -196,7 +196,7 @@ class Base:
         # Whitening related attributes.
         self.whitened = False
         self.whiten_params = {}
-        self.nonwhiten_strains = None  # No need to set it before whitening.
+        self.nonwhiten_strains = self.strains  # Initially assumed to be the same.
 
         # Time tracking related attributes.
         self.sample_rate: int = None
@@ -1137,7 +1137,8 @@ class BaseInjected(Base):
         multiple scallings of the same waveform when performing injections.
     
     strains_clean : dict[dict]
-        Strains inherited (copied) from a clean Class(Base) instance.
+        Strains inherited (copied) from the `nonwhiten_strains` attribute of
+        the Class(Base) instance.
         This copy is kept in order to perform new injections.
         
         - Shape: {class: {id: strain} }
@@ -1362,7 +1363,7 @@ class BaseInjected(Base):
         self._check_classes_dict(self.classes)
         self.labels = clean_dataset.labels.copy()
         self.metadata = deepcopy(clean_dataset.metadata)
-        self.strains_clean = deepcopy(clean_dataset.strains)
+        self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
         self._track_times = clean_dataset._track_times
         if self._track_times:
             self.times = deepcopy(clean_dataset.times)
@@ -2578,6 +2579,7 @@ class SyntheticWaves(Base):
         self._gen_metadata()
         self._track_times = False
         self._gen_dataset()
+        self.nonwhiten_strains = self.strains
         self._gen_labels()
 
         self.Xtrain = None
@@ -2937,7 +2939,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         # Whitening related attributes.
         self.whitened = False
         self.whiten_params = {}
-        self.nonwhiten_strains = None
+        self.nonwhiten_strains = self.strains
 
         # Time tracking related attributes.
         self._track_times = False  # If True, self.times must be not None.
@@ -3072,7 +3074,7 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         # Inherit clean strain instance attributes.
         #----------------------------------------------------------------------
         self.sample_rate = clean_dataset.sample_rate
-        self.strains_clean = deepcopy(clean_dataset.strains)
+        self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
         self.classes = clean_dataset.classes.copy()  # Dummy class.
         self.labels = self.labels = clean_dataset.labels.copy()  # Dummy labels.
         self._track_times = clean_dataset._track_times
@@ -3269,7 +3271,7 @@ class CoReWaves(Base):
 
         self.whitened = False
         self.whiten_params = {}
-        self.nonwhiten_strains = None
+        self.nonwhiten_strains = self.strains
 
         # Train/Test subset splits (views into the same 'self.strains').
         #   Timeseries:
