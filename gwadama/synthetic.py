@@ -12,6 +12,12 @@ class NonwhiteGaussianNoise:
 
     ¡¡¡OLD VERSION FROM MASTER'S THESIS!!! (Tweaked)
 
+    TODO: Implement SNR and injection methods into BaseInjected instead, and
+    use the PSD array-callable conversions from there (newer). Leave here the
+    methods needed only for generating the synthetic noise.
+    This will also make easier to integrate other noise scenarios, such as
+    real noise.
+
     I changed several things:
     - Now the PSD argument can be either a function or an array.
 
@@ -207,8 +213,11 @@ class NonwhiteGaussianNoise:
         """Compute the Signal to Noise Ratio.
         
         Due to the legacy code state, I need to compute a sample of the PSD
-        first. But in the future I plan to make it so that it can take both
-        a PSD estimation function or an array realization like I did here.
+        first, because in some old applications the self._psd may have values
+        outside the valid frequency band.
+        TODO: Currently the PSD is being interpolated twice (here and in
+        fat.snr). Try to simplify it by passing here directly self._psd, but be
+        sure to avoid the possible issue mentioned before.
 
         """
         freqs = np.linspace(self.freq_cutoff, self.freq_nyquist, 2*self.sample_rate)

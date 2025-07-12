@@ -286,8 +286,12 @@ def correct_phase(phase, time, jump_start, jump_end, correction_factor=1.0):
 
 
 def snr(strain, *, psd, at, window=('tukey',0.5)):
-    """Signal to Noise Ratio."""
+    """Signal to Noise Ratio.
 
+    TODO: Either remove the PSD interpolation here, or in NonwhiteGaussianNoise.
+    Right now, for noise injections, it's performed twice!
+    
+    """
     # rFFT
     strain = np.asarray(strain)
     ns = len(strain)
