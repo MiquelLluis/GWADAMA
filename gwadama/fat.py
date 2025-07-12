@@ -192,3 +192,88 @@ def snr(strain, *, psd, at, window=('tukey',0.5)):
     snr = np.sqrt(4 * at**2 * af * sum_)
 
     return snr
+
+
+def find_power_excess(strain, fs, nperseg=16, noverlap=15, return_time=False):
+    """
+    Estimate the index of maximum broadband power excess in a 1D signal.
+
+    This function provides a fast and simple estimate of the time region where
+    the total broadband power in the input signal is maximised. A spectrogram
+    is computed via Welch's method, and the time slice with the highest total
+    power (summed over all frequencies) is identified.
+
+    Formally, at each time step `t`, the total power is estimated as:
+
+        P(t) = ∑_f S(f, t)
+
+    where S(f, t) is the estimated power spectral density at frequency `f` and
+    time `t`.
+
+    The accuracy of this estimate is limited by the spectrogram parameters
+    chosen by the user (`nperseg`, `noverlap`), which determine the temporal
+    resolution and frequency leakage.
+
+    Parameters
+    ----------
+    strain : np.ndarray
+        Input signal (1D array).
+    fs : int
+        Sampling rate in Hz.
+    nperseg : int, optional
+        Length of each FFT segment (in samples).
+    noverlap : int, optional
+        Number of overlapping samples between segments.
+    return_time : bool, optional
+        If True, also return the estimated time (in seconds) corresponding to
+        the peak index.
+
+    Returns
+    -------
+    peak_index : int
+        Sample index (in the input array) corresponding to the centre of the
+        most power-concentrated region.
+    peak_time : float, optional
+        Time in seconds of the estimated peak, assuming the first sample occurs
+        at t=0. Only returned if `return_time=True`.
+
+    Notes
+    -----
+    - In real detector data, whitening or equalisation is recommended to avoid
+      biasing the result towards dominant background frequencies.
+    - The returned index refers to the *centre* of the peak time bin in the
+      spectrogram, mapped back to the corresponding sample index of the
+      original signal.
+    - Spectrogram time resolution is limited by `nperseg` and `noverlap`; high
+      accuracy is not guaranteed.
+    - This method assumes only one dominant transient is present in the input.
+      It is not suitable for detecting or resolving multiple events.
+    
+    """
+    # Compute spectrogram: PSD estimate over time
+    f, t, Sxx = sp.signal.spectrogram(
+        strain,
+        fs=fs,
+        nperseg=nperseg,
+        noverlap=noverlap,
+        scaling='spectrum',
+        mode='psd',
+        window='hann'
+    )
+
+    # Total power per time bin (sum over all frequencies)
+    power_per_time = Sxx.sum(axis=0)
+
+    # Identify time of maximum total power
+    peak_idx = np.argmax(power_per_time)
+    peak_time = t[peak_idx]
+
+    # Convert peak time (seconds) to sample index
+    peak_index = int(round(peak_time * fs))
+    peak_index = np.clip(peak_index, 0, len(strain) - 1)
+
+    if return_time:
+        return peak_index, peak_time
+    else:
+        return peak_index
+
