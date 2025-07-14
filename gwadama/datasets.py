@@ -731,6 +731,44 @@ class Base:
         if self.Xtrain is not None:
             self._update_train_test_subsets()
     
+    def apply_window(self, window, all=False):
+        """Apply a window to all strains.
+
+        Apply a window to `self.strains` recursively, and optionally to
+        `self.nonwhitened_strains` as well.
+
+        Parameters
+        ----------
+        window : str | tuple
+            Window to apply, formatted to be accepted by SciPy's `get_window`.
+
+        all : bool, optional
+            If True, apply the window also to `self.nonwhitened_strains`.
+
+        Notes
+        -----
+        - Since strains may have different lengths, a window is generated for
+          each one.
+        
+        """
+        for *keys, strain in self.items():
+            strain_windowed = strain * sp.signal.get_window(window, len(strain))
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_windowed)
+
+        if all and (self.nonwhiten_strains is not None):
+            for keys in dictools.unroll_nested_dictionary_keys(self.nonwhiten_strains):
+                strain = dictools.get_value_from_nested_dict(
+                    self.nonwhiten_strains,
+                    keys
+                )
+                strain_windowed = strain * sp.signal.get_window(window, len(strain))
+                dictools.set_value_to_nested_dict(
+                    self.nonwhiten_strains,
+                    keys,
+                    strain_windowed
+                )
+
+    
     def whiten(self,
                *,
                asd_array: np.ndarray,
