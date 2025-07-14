@@ -769,6 +769,42 @@ class Base:
                     strain_windowed
                 )
 
+    def normalise(self, mode='amplitude', all=False):
+        """Normalise strains.
+
+        Normalise strains to the indicated `mode`, and optionally to
+        `self.nonwhitened_strains` as well.
+
+        Parameters
+        ----------
+        mode : str, optional
+            Normalisation method. Available: amplitude, l2
+
+        all : bool, optional
+            If True, normalise also `self.nonwhitened_strains`.
+
+        Notes
+        -----
+        - TODO: Generalise this method to BaseInjected for when `all=True`.
+        
+        """
+        if mode == 'amplitude':
+            norm_coef_function = lambda x: 1/np.max(np.abs(x))
+        elif mode == 'l2':
+            norm_coef_function = lambda x: 1/np.linalg.norm(x)
+        else:
+            raise ValueError
+        
+        for *_, strain in self.items():
+            strain[:] *= norm_coef_function(strain)
+        
+        if all and (self.nonwhiten_strains is not None):
+            for keys in dictools.unroll_nested_dictionary_keys(self.nonwhiten_strains):
+                strain = dictools.get_value_from_nested_dict(
+                    self.nonwhiten_strains,
+                    keys
+                )
+                strain[:] *= norm_coef_function(strain)
     
     def whiten(self,
                *,
