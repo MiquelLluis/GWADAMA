@@ -63,30 +63,36 @@ def __unroll_nested_dictionary_keys(dict_: dict,
 
 
 def get_value_from_nested_dict(dict_, keys: list):
-    """Get a value from an arbitrarily-depth nested dictionary.
-    
+    """Access a value from a nested dictionary using a sequence of keys.
+
     Parameters
     ----------
-    dict_: dict
-        Nested dictionary.
-    
-    keys: list
-        Sequence of keys necessary to get to the element inside the nested
-        dictionary.
-    
+    dict_ : dict
+        A dictionary which may contain further nested dictionaries.
+    keys : list
+        A sequence of keys that defines the path to the target value.
+
     Returns
     -------
-    : Any
-        Value of the element inside the nested dictionary.
-    
+    Any
+        The value located at the nested key path.
+
+    Warnings
+    --------
+    The returned value is the original object stored in the dictionary, and can be
+    modified in-place. Use this behaviour with caution.
     """
     if not isinstance(dict_, dict):
         raise TypeError("'dict_' must be a dictionary")
 
     value = dict_
-    for key in keys:
-        if not isinstance((value:=value[key]), dict) and not hasattr(value, '__iter__'):
-            raise ValueError("the nested dictionary shape does not match with the input key sequence")
+    for i, key in enumerate(keys):
+        try:
+            value = value[key]
+        except KeyError:
+            raise KeyError(f"Key '{key}' not found at depth {i} in the nested dictionary")
+        except TypeError:
+            raise ValueError(f"Expected a dictionary at depth {i}, but got {type(value).__name__}")
 
     return value
 
