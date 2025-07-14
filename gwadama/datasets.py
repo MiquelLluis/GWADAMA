@@ -749,6 +749,7 @@ class Base:
         -----
         - Since strains may have different lengths, a window is generated for
           each one.
+        - TODO: Generalise this method to BaseInjected for when `all=True`.
         
         """
         for *keys, strain in self.items():
