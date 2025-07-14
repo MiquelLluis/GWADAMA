@@ -2946,6 +2946,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
                  *,
                  sample_rate: int,
                  strain_limits=None,
+                 whitened=False,
                  random_seed=None):
         """Initialize an UnlabeledWaves dataset.
 
@@ -2968,6 +2969,11 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
             A list of (start, end) indices defining the valid range for each 
             waveform in `strains_array`. If None, waveforms are assumed to 
             contain no unnecessary padding.
+        
+        whitened : bool, optional
+            If True, it is assumed that signals in `strains_array` have already
+            been whitened. This effectively changes some of the behaviour of
+            the class when treating data internally.
 
         random_seed : int, optional
             Seed used to initialize the random number generator (RNG), as well as
@@ -3001,9 +3007,9 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         self.padding = {}
 
         # Whitening related attributes.
-        self.whitened = False
+        self.whitened = whitened
         self.whiten_params = {}
-        self.nonwhiten_strains = self.strains
+        self.nonwhiten_strains = None if self.whitened else self.strains 
 
         # Time tracking related attributes.
         self._track_times = False  # If True, self.times must be not None.
