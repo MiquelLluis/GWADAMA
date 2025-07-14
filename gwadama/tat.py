@@ -530,6 +530,11 @@ def whiten(strain: np.ndarray,
     -------
     strain_w : NDArray
         Whitened strain (in time domain).
+
+    Notes
+    -----
+    Due to filter settle-in, a segment of length `0.5*fduration` will be
+    corrupted at the beginning and end of the output.
     
     References
     ----------
