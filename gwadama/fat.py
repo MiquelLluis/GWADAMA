@@ -159,37 +159,82 @@ def correct_phase(phase, time, jump_start, jump_end, correction_factor=1.0):
     return corrected_phase
 
 
-def snr(strain, *, psd, at, window=('tukey',0.5)):
-    """Signal to Noise Ratio.
+def snr(strain, *, at, psd=None, window=('tukey', 0.5), fbounds=None):
+    """Compute the signal-to-noise ratio (SNR) of a signal segment.
 
-    TODO: Either remove the PSD interpolation here, or in NonwhiteGaussianNoise.
-    Right now, for noise injections, it's performed twice!
-    
+    Compute the SNR of a signal with respect to a background spectrum
+    (`psd` provided), or assuming the signal is already whitened
+    (`psd=None`).
+
+    Parameters
+    ----------
+    strain : array_like
+        Time-domain signal segment.
+    at : float
+        Sampling interval (seconds per sample).
+    psd : array_like (freq_array, psd_array), optional
+        One-sided power spectral density of the background noise.
+        If provided, the SNR is computed using this PSD.
+        If None, the function assumes the signal is already whitened.
+    window : str, tuple, or array_like, optional
+        Window to apply before the FFT. Passed to `scipy.signal.get_window`
+        if a string/tuple. If an array, it must match the length of `strain`.
+    fbounds : array_like (f_min, f_max), optional
+        Frequency range (Hz) over which to compute the SNR. If None:
+        * with `psd`, uses the min and max of the PSD frequencies,
+        * otherwise uses (0, Nyquist).
+
+    Returns
+    -------
+    snr : float
+        The computed signal-to-noise ratio.
+
+    Notes
+    -----
+    - The function uses a one-sided rFFT and sums over positive frequencies.
+    - In whitened space, PSD is assumed to be identity and the formula
+      reduces to: ``sqrt(2 * Δt * Δf * Σ |h_w(f)|²)``.
+    - In non-whitened space, the formula used is:
+      ``sqrt(4 * Δt² * Δf * Σ |h(f)|² / S_n(f))``.
+
     """
-    # rFFT
     strain = np.asarray(strain)
     ns = len(strain)
-    if isinstance(window, tuple):
+
+    # Build window
+    if isinstance(window, (tuple, str)):
         window = sp.signal.windows.get_window(window, ns)
     else:
         window = np.asarray(window)
+        if window.shape != (ns,):
+            raise ValueError("Window length must match strain length.")
+
+    # rFFT
     hh = np.fft.rfft(strain * window)
     ff = np.fft.rfftfreq(ns, d=at)
-    af = ff[1]
+    af = ff[1]  # frequency spacing
 
-    # Lowest and highest frequency cut-off taken from the given psd
-    f_min, f_max = psd[0][[0,-1]]
-    i_min = np.argmin(ff < f_min)
-    i_max = np.argmin(ff < f_max)
-    if i_max == 0:
-        i_max = len(hh)
+    # Frequency range
+    if psd is None:
+        f_min, f_max = fbounds if fbounds is not None else (0, ff[-1])
+    else:
+        f_min, f_max = psd[0][[0,-1]]
+
+    i_min = np.searchsorted(ff, f_min, side='left')
+    i_max = np.searchsorted(ff, f_max, side='right')
     hh = hh[i_min:i_max]
     ff = ff[i_min:i_max]
 
     # SNR
-    psd_interp = sp.interpolate.interp1d(*psd, bounds_error=True)(ff)
-    sum_ = np.sum(np.abs(hh)**2 / psd_interp)
-    snr = np.sqrt(4 * at**2 * af * sum_)
+    if psd is None:
+        # Whitened case
+        sum_ = np.sum(np.abs(hh)**2)
+        snr = np.sqrt(2 * at * af * sum_)
+    else:
+        # Non-whitened case
+        psd_interp = sp.interpolate.interp1d(*psd, bounds_error=True)(ff)
+        sum_ = np.sum(np.abs(hh)**2 / psd_interp)
+        snr = np.sqrt(4 * at**2 * af * sum_)
 
     return snr
 
