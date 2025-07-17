@@ -1395,6 +1395,7 @@ class BaseInjected(Base):
                  noise_length: int,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
+                 noise_instance=None,
                  detector: str = '',
                  random_seed: int = None):
         """Base constructor for injected datasets.
@@ -1454,13 +1455,21 @@ class BaseInjected(Base):
             See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
             for more information.
 
+        noise_instance : NonwhiteGaussianNoise-like, optional
+            [Experimental] Instead of generating random Gaussian noise, an
+            already generated (or real) noise array can be given.
+
+            .. warning::
+                This option still needs to be properly integrated and tested.
+
         detector : str, optional
             GW detector name.
             Not used, just for identification.
 
         random_seed : int, optional
-            Seed used to initialize the random number generator (RNG), as well as
-            for calling :func:`sklearn.model_selection.train_test_split` to
+            Seed to initialize the random number generator (used for generating
+            synthetic noise and injecting into random noise positions), as well
+            as for calling :func:`sklearn.model_selection.train_test_split` to
             generate the Train and Test subsets.
         
         """
@@ -1470,14 +1479,22 @@ class BaseInjected(Base):
         # Inherit clean strain instance attributes.
         #----------------------------------------------------------------------
         self.sample_rate = clean_dataset.sample_rate
+
+        if clean_dataset.nonwhiten_strains is None:
+            # Whitened space case (no access to strains before whitening).
+            self._data_in_white_space = True
+            self.strains_clean = deepcopy(clean_dataset.strains)
+        else:
+            # Non-whitened case (access to original strains).
+            self._data_in_white_space = False
+            self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
+        
         self.classes = clean_dataset.classes.copy()
         self._check_classes_dict(self.classes)
         self.labels = clean_dataset.labels.copy()
         self.metadata = deepcopy(clean_dataset.metadata)
-        self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
         self._track_times = clean_dataset._track_times
-        if self._track_times:
-            self.times = deepcopy(clean_dataset.times)
+        self.times = deepcopy(clean_dataset.times) if self._track_times else None
         self.padding = clean_dataset.padding.copy()
         self.max_length = clean_dataset.max_length
 
@@ -1486,24 +1503,44 @@ class BaseInjected(Base):
         self.random_seed = random_seed
         self.rng = np.random.default_rng(random_seed)
         self.detector = detector
+
         # Highpass parameters applied when generating the noise array.
         self.freq_cutoff = freq_cutoff
         self.freq_butter_order = freq_butter_order
     
-        self._psd, self.psd_array = self._setup_psd(psd)
-        self._asd, self.asd_array = self._setup_asd_from_psd(psd)
-        self.noise = self._generate_background_noise(noise_length)
+        if self._data_in_white_space:
+            self._psd, self.psd_array = None, None
+            self._asd, self.asd_array = None, None
+        else:
+            self._psd, self.psd_array = self._setup_psd(psd)
+            self._asd, self.asd_array = self._setup_asd_from_psd(psd)
+
+        if noise_instance is None:
+            # Generate synthetic non-white Guassian noise.
+            if psd is None:
+                raise ValueError(
+                    "in order to generate synthetic background, 'psd' must be"
+                    " provided."
+                )
+            self.noise = self._generate_background_noise(noise_length)
+        else:
+            # EXPERIMENTAL OPTION TO ALLOW THE USE OF REAL OR PRE-GENERATED
+            # BACKGROUND NOISE.
+            if not isinstance(noise_instance, synthetic.NonwhiteGaussianNoise):
+                raise TypeError(
+                    "'noise_instance' must be a valid noise type"
+                    f" ({type(noise_instance)} was given)"
+                )
+            self.noise = noise_instance
 
         # Injection related:
         #----------------------------------------------------------------------
-        # TODO: ¿Implement the case when clean_dataset is already whitened?
-        # It should mark it and use the clean copy of nonwhitened data instead.
         self.strains = None
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
         self.injection_snr_scales = None
         self.injections_per_snr = 1  # Default value.
-        self.whitened = False  # Switched to True after calling self.whiten().
+        self.whitened = self._data_in_white_space
         self.whiten_params = None
 
         # Train/Test subset views:
@@ -1758,7 +1795,7 @@ class BaseInjected(Base):
                 If this is unintended, do not provide this parameter.  
                 A warning will be issued when it is used.
 
-        injections_per_snr : int
+        injections_per_snr : int, optional
             Number of injections per SNR value. Defaults to 1.
 
             This is useful to minimize the statistical impact of the noise
@@ -1876,8 +1913,10 @@ class BaseInjected(Base):
                         indices.append(rep)
                     dictools.set_value_to_nested_dict(self.times, indices, times_i, add_missing_keys=True)
 
-            # Shrink strains and times.
-            if self.whitened:
+            # Shrink strains and times automatically if whitened was performed
+            # alongside the injection. This will never occur when working in
+            # the whitened space.
+            if self.whitened and not self._data_in_white_space:
                 shrink = self.whiten_params['shrink']
                 if shrink:
                     self.shrink_strains(shrink)
@@ -1892,7 +1931,7 @@ class BaseInjected(Base):
             pos=pos0,
             **inject_kwargs
         )
-        if self.whitened:
+        if self.whitened and not self._data_in_white_space:
             injected = tat.whiten(
                 injected,
                 asd=self.asd_array,
@@ -3100,11 +3139,11 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
     """
     def __init__(self,
                  clean_dataset: UnlabeledWaves,
-                 *,
-                 psd: np.ndarray | Callable,
-                 noise_length: int,
-                 freq_cutoff: int | float,
-                 freq_butter_order: int | float,
+                 psd: np.ndarray | Callable = None,
+                 noise_length: int = None,
+                 freq_cutoff: int | float = None,
+                 freq_butter_order: int | float = None,
+                 noise_instance: synthetic.NonwhiteGaussianNoise = None,
                  detector: str = '',
                  random_seed: int = None):
         """Initialize an InjectedUnlabeledWaves dataset.
@@ -3124,7 +3163,7 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         ----------
         clean_dataset : UnlabeledWaves
 
-        psd : np.ndarray | Callable
+        psd : np.ndarray | Callable, optional
             Power Spectral Density of the detector's sensitivity in the range
             of frequencies of interest. Can be given as a callable function
             whose argument is expected to be an array of frequencies, or as a
@@ -3134,25 +3173,35 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
             psd[0] = frequency_samples
             psd[1] = psd_samples
             ```.
+
+            If not given, it will be assumed that the dataset lives in the
+            whitened space.
             
             .. note::
-                `psd` is also used to compute the 'asd' attribute (ASD).
+                `psd` is also used to compute the 'asd' attribute, if given.
         
-        noise_length : int
+        noise_length : int, optional
             Length of the background noise array to be generated for later use.
             It should be at least longer than the longest signal expected to be
             injected.
 
-        freq_cutoff : int | float
+        freq_cutoff : int | float, optional
             Frequency cutoff below which no noise bins will be generated in the
             frequency space, and also used for the high-pass filter applied to
             clean signals before injection.
 
-        freq_butter_order : int | float
+        freq_butter_order : int | float, optional
             Butterworth filter order. For signals above 100 Hz it's usually
             enough with order 4 to 6.
             See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
             for more information.
+
+        noise_instance : NonwhiteGaussianNoise-like, optional
+            [Experimental] Instead of generating random Gaussian noise, an
+            already generated (or real) noise array can be given.
+
+            .. warning::
+                This option still needs to be properly integrated and tested.
 
         detector : str, optional
             GW detector name.
@@ -3180,7 +3229,16 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         # Inherit clean strain instance attributes.
         #----------------------------------------------------------------------
         self.sample_rate = clean_dataset.sample_rate
-        self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
+
+        if clean_dataset.nonwhiten_strains is None:
+            # Whitened space case (no access to strains before whitening).
+            self._data_in_white_space = True
+            self.strains_clean = deepcopy(clean_dataset.strains)
+        else:
+            # Non-whitened case (access to original strains).
+            self._data_in_white_space = False
+            self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
+        
         self.classes = clean_dataset.classes.copy()  # Dummy class.
         self.labels = self.labels = clean_dataset.labels.copy()  # Dummy labels.
         self._track_times = clean_dataset._track_times
@@ -3193,13 +3251,35 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         self.random_seed = random_seed
         self.rng = np.random.default_rng(random_seed)
         self.detector = detector
+
         # Highpass parameters applied when generating the noise array.
         self.freq_cutoff = freq_cutoff
         self.freq_butter_order = freq_butter_order
-    
-        self._psd, self.psd_array = self._setup_psd(psd)
-        self._asd, self.asd_array = self._setup_asd_from_psd(psd)
-        self.noise = self._generate_background_noise(noise_length)
+
+        if self._data_in_white_space:
+            self._psd, self.psd_array = None, None
+            self._asd, self.asd_array = None, None
+        else:
+            self._psd, self.psd_array = self._setup_psd(psd)
+            self._asd, self.asd_array = self._setup_asd_from_psd(psd)
+
+        if noise_instance is None:
+            # Generate synthetic non-white Guassian noise.
+            if psd is None:
+                raise ValueError(
+                    "in order to generate synthetic background, 'psd' must be"
+                    " provided."
+                )
+            self.noise = self._generate_background_noise(noise_length)
+        else:
+            # EXPERIMENTAL OPTION TO ALLOW THE USE OF REAL OR PRE-GENERATED
+            # BACKGROUND NOISE.
+            if not isinstance(noise_instance, synthetic.NonwhiteGaussianNoise):
+                raise TypeError(
+                    "'noise_instance' must be a valid noise type"
+                    f" ({type(noise_instance)} was given)"
+                )
+            self.noise = noise_instance
 
         # Injection related:
         #----------------------------------------------------------------------
@@ -3208,7 +3288,7 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         self.snr_list = []
         self.injection_snr_scales = None
         self.injections_per_snr = 1  # Default value.
-        self.whitened = False  # Switched to True after calling self.whiten().
+        self.whitened = self._data_in_white_space
         self.whiten_params = None
         
         # Train/Test subset views:
