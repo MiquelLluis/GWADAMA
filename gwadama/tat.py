@@ -63,7 +63,8 @@ def resample(strain: np.ndarray,
     if not is_arithmetic_progression(times):
         # Interpolate to a uniform time grid at the highest reasonable rate
         sr_interp = int(np.ceil(1 / np.min(np.diff(times))))
-        times_uniform = np.arange(times[0], times[-1], 1 / sr_interp)
+        new_length = int((times[-1] - times[0]) * sr_interp) + 1
+        times_uniform = np.linspace(times[0], times[-1], new_length, endpoint=True)
         strain = sp_make_interp_spline(times, strain, k=2)(times_uniform)
         times = times_uniform
     else:
