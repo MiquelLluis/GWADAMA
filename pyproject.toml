@@ -19,19 +19,19 @@ classifiers = [
 ]
 
 dependencies = [
-    "bilby==2.3.0",
-    "h5py==3.10.0",
-    "numpy==1.26.4",
-    "pandas==2.0.3",
-    "scikit_learn==1.2.2",
-    "scipy==1.14.1",
-    "tqdm==4.66.1"
+    "bilby>=2.3.0",
+    "h5py>=3.10.0",
+    "numpy>=1.26.4",
+    "pandas>=2.0.3",
+    "scikit_learn>=1.2.2",
+    "scipy>=1.14.1",
+    "tqdm>=4.66.1"
 ]
 
 [project.optional-dependencies]
 optional = [
-    "core_watpy==0.1.1",
-    "gwpy==3.0.7"
+    "core_watpy>=0.1.1",
+    "gwpy>=3.0.7"
 ]
 
 [tool.setuptools]
