@@ -218,18 +218,18 @@ def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
 
 
 def find_time_origin(times: np.ndarray) -> int:
-    """Find the index position of the origin of a time array.
-    
-    It is just a shortcut for `np.argmin(np.abs(times))`.
+    """Return the index of the element closest to zero.
+
+    Finds the position in the time array whose value is nearest to 0.
     
     Parameters
     ----------
-    times : NDArray
+    times : np.ndarray
         Time array.
     
     Returns
     -------
-    _ : int
+    int
         Index position of the time origin (0).
     
     """
