@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 
 from gwadama.tat import (
-    resample, gen_time_array, time_array_like, pad_time_array
+    resample, gen_time_array, time_array_like, pad_time_array, find_time_origin
 )
 
 #------------------------------------------------------------------------------
@@ -348,3 +348,19 @@ def test_pad_time_array_uniform_but_floating_error_tolerance():
     padded = pad_time_array(times, 1)
     dt = times[1] - times[0]
     assert_allclose(np.diff(padded), dt)
+
+
+
+#------------------------------------------------------------------------------
+# Tests for time_araray_like()
+#------------------------------------------------------------------------------
+
+def test_find_time_origin_basic():
+    """Should return the index of the value closest to zero."""
+    times = np.array([-3.0, -0.1, 0.2, 4.0])
+    assert find_time_origin(times) == 1  # -0.1 is closest to zero
+
+def test_find_time_origin_exact_zero():
+    """Should return the index of an exact zero if present."""
+    times = np.array([-1.0, 0.0, 5.0])
+    assert find_time_origin(times) == 1  # exact zero at index 1
