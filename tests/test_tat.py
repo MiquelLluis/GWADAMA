@@ -2,7 +2,9 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from gwadama.tat import resample, gen_time_array
+from gwadama.tat import (
+    resample, gen_time_array, time_array_like, pad_time_array
+)
 
 #------------------------------------------------------------------------------
 # Fixtures for simple synthetic signals
@@ -191,3 +193,158 @@ def test_gen_time_array_zero_duration():
 
     assert isinstance(t, np.ndarray)
     assert t.size == 0
+
+
+
+#------------------------------------------------------------------------------
+# Tests for time_araray_like()
+#------------------------------------------------------------------------------
+
+def test_time_array_like_basic(simple_sine):
+    """
+    Generated time array should match the length of the input, sampling rate,
+    and time offset.
+    
+    """
+    fs = 100
+    t0 = 123
+    times = time_array_like(simple_sine, fs=fs, t0=t0)
+
+    assert len(times) == len(simple_sine)
+    assert_allclose(np.diff(times), 1/fs)
+    assert times[0] == t0
+    # Note: the last point is implicitly checked by the combination of the
+    # previous three assertions.
+
+
+@pytest.mark.parametrize("n", [1, 10, 1000])
+def test_time_array_like_lengths(n):
+    """Test edge case and different lengths."""
+
+    arr = np.zeros(n)
+    times = time_array_like(arr, fs=100.0, t0=5.0)
+    
+    assert len(times) == n
+    if n > 1:
+        assert_allclose(np.diff(times), 1/100.0)
+    assert times[0] == 5.0
+
+
+@pytest.mark.parametrize("input_array", [
+    [0, 1, 2, 3],
+    (0, 1, 2, 3),
+    np.arange(4)
+])
+def test_time_array_like_arraylike(input_array):
+    """Test input type flexibility."""
+
+    times = time_array_like(input_array, fs=10, t0=1.0)
+    expected = 1.0 + np.arange(len(input_array)) / 10
+    
+    assert_allclose(times, expected)
+
+
+def test_time_array_like_empty():
+    """Empty imput should return empty array without errors."""
+
+    times = time_array_like([], fs=123.0, t0=7.0)
+    
+    assert isinstance(times, np.ndarray)
+    assert times.size == 0
+
+
+def test_time_array_like_float_fs():
+    """Ensure floating-point `fs` is handled correctly."""
+
+    n = 3
+    fs = 2.5
+    t0 = 1.0
+    times = time_array_like(np.zeros(n), fs=fs, t0=t0)
+    expected = t0 + np.arange(n) / fs
+    assert_allclose(times, expected)
+
+
+
+#------------------------------------------------------------------------------
+# Tests for time_araray_like()
+#------------------------------------------------------------------------------
+
+def test_pad_time_array_with_int():
+    """
+    Padded array should add the same number of samples on both sides when pad
+    is an int.
+    """
+    times = np.linspace(0.0, 1.0, 6)  # 0,0.2,0.4,0.6,0.8,1.0
+    dt = times[1] - times[0]
+    padded = pad_time_array(times, 2)
+    
+    assert len(padded) == len(times) + 4
+    assert_allclose(padded[0], times[0] - 2 * dt)
+    assert_allclose(padded[-1], times[-1] + 2 * dt)
+
+
+def test_pad_time_array_with_tuple():
+    """
+    Padded array should add different numbers of samples on each side when pad
+    is a tuple.
+    """
+    times = np.linspace(10.0, 10.5, 6)  # spacing 0.1
+    padded = pad_time_array(times, (1, 3))
+    dt = times[1] - times[0]
+    
+    assert len(padded) == len(times) + 1 + 3
+    assert_allclose(padded[0], times[0] - 1 * dt)
+    assert_allclose(padded[-1], times[-1] + 3 * dt)
+
+
+def test_pad_time_array_zero_pad():
+    """
+    A null pad should yield a time array identical to the input.
+    """
+    times = np.linspace(5.0, 5.4, 5)
+    padded = pad_time_array(times, 0)
+    assert_allclose(padded, times)
+
+
+def test_pad_time_array_nonzero_start():
+    """
+    Padded array should correctly account for a non-zero starting time.
+    """
+    times = np.array([100.0, 100.5, 101.0])  # dt = 0.5
+    padded = pad_time_array(times, 1)
+    dt = 0.5
+    assert_allclose(padded[0], 100.0 - dt)
+    assert_allclose(padded[-1], 101.0 + dt)
+
+
+@pytest.mark.parametrize("pad", [1, (1, 1), (0, 2)])
+def test_pad_time_array_spacing_consistency(pad):
+    """
+    Padded array should preserve the original time step between samples.
+    """
+    times = np.linspace(0.0, 1.0, 6)  # dt = 0.2
+    padded = pad_time_array(times, pad)
+    # Check that all differences are equal to the original dt
+    dt = times[1] - times[0]
+    assert_allclose(np.diff(padded), dt)
+
+
+def test_pad_time_array_non_uniform_raises():
+    """
+    Non-uniformly spaced input times should raise a ValueError.
+    """
+    times = np.array([0.0, 0.1, 0.25])  # not uniform
+    with pytest.raises(ValueError, match="uniformly sampled"):
+        pad_time_array(times, 1)
+
+
+def test_pad_time_array_uniform_but_floating_error_tolerance():
+    """
+    Time arrays with minimal floating-point irregularities within tolerance
+    should still be accepted as uniform.
+    """
+    times = np.array([0.0, 0.1000000001, 0.2000000002])  # close to uniform
+    # Should not raise
+    padded = pad_time_array(times, 1)
+    dt = times[1] - times[0]
+    assert_allclose(np.diff(padded), dt)
