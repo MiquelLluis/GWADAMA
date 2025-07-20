@@ -101,7 +101,7 @@ def raw_strains():
 def unlabeled_dataset(raw_strains):
     ds = UnlabeledWaves(
         raw_strains[0],
-        sample_rate=4096,
+        fs=4096,
         random_seed=1999
     )
     return ds

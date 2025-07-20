@@ -40,11 +40,11 @@ def test_resample_basic_functionality(simple_sine):
     signal, t, fs_in, _ = simple_sine
     target_fs = 50
 
-    out, t_out, fs_interp, up, down = resample(signal, t, sample_rate=target_fs, full_output=True)
+    out, t_out, fs_interp, up, down = resample(signal, t, fs=target_fs, full_output=True)
 
     # Check new sampling rate
-    inferred_sr = int(round(1 / (t_out[1] - t_out[0])))
-    assert inferred_sr == target_fs
+    inferred_fs = int(round(1 / (t_out[1] - t_out[0])))
+    assert inferred_fs == target_fs
     assert np.allclose(np.diff(t_out), 1/target_fs)
 
     # Output length should match duration * target_fs
@@ -61,14 +61,14 @@ def test_resample_raises_on_negative_rate(simple_sine):
     """Target sample rate must be positive."""
     signal, t, _, _ = simple_sine
     with pytest.raises(ValueError):
-        resample(signal, t, sample_rate=-10)
+        resample(signal, t, fs=-10)
 
 
 def test_resample_raises_on_non_array_times(simple_sine):
     """Times must be a NumPy array."""
     signal, t, _, _ = simple_sine
     with pytest.raises(TypeError):
-        resample(signal, list(t), sample_rate=50)
+        resample(signal, list(t), fs=50)
 
 
 def test_resample_interpolates_nonuniform_times(simple_sine):
@@ -78,7 +78,7 @@ def test_resample_interpolates_nonuniform_times(simple_sine):
     t_jittered = t.copy()
     t_jittered[10] += 0.001  # break uniform spacing slightly
 
-    out, t_out, _, _, _ = resample(signal, t_jittered, sample_rate=fs_target, full_output=True)
+    out, t_out, _, _, _ = resample(signal, t_jittered, fs=fs_target, full_output=True)
 
     # Check output shape
     assert isinstance(out, np.ndarray)
@@ -91,7 +91,7 @@ def test_resample_interpolates_nonuniform_times(simple_sine):
 def test_resample_returns_only_signal_when_full_output_false(simple_sine):
     """When full_output=False, only the signal should be returned."""
     signal, t, _, _ = simple_sine
-    result = resample(signal, t, sample_rate=50, full_output=False)
+    result = resample(signal, t, fs=50, full_output=False)
     assert isinstance(result, np.ndarray)
 
 
@@ -99,9 +99,9 @@ def test_resample_preserves_signal_shape(simple_sine):
     """Resampling down and back up should roughly preserve signal shape."""
     signal, t, fs_in, _ = simple_sine
     # Downsample to 50 Hz
-    downsampled, t_down, _, _, _ = resample(signal, t, sample_rate=50, full_output=True)
+    downsampled, t_down, _, _, _ = resample(signal, t, fs=50, full_output=True)
     # Upsample back to 100 Hz
-    upsampled, t_up, _, _, _ = resample(downsampled, t_down, sample_rate=fs_in, full_output=True)
+    upsampled, t_up, _, _, _ = resample(downsampled, t_down, fs=fs_in, full_output=True)
 
     # Compare to original (allowing for some tolerance, and discarding edges)
     assert_allclose(upsampled[15:-15], signal[15:-15], atol=1e-3)
@@ -121,7 +121,7 @@ def test_gen_time_array_basic():
     fs = 100.0
     ts = 1/fs
 
-    t = gen_time_array(t0, t1, fs)
+    t = gen_time_array(t0, t1, fs=fs)
 
     # Check length
     expected_len = int((t1 - t0) * fs)
@@ -143,7 +143,7 @@ def test_gen_time_array_with_length_ok():
     ts = 1/fs
     length = int((t1 - t0) * fs)
 
-    t = gen_time_array(t0, t1, fs, length=length)
+    t = gen_time_array(t0, t1, fs=fs, length=length)
 
     assert len(t) == length
     assert t[0] == t0
@@ -159,7 +159,7 @@ def test_gen_time_array_with_length_mismatch():
     wrong_length = 9999  # deliberately incorrect
 
     with pytest.raises(ValueError) as e:
-        gen_time_array(t0, t1, fs, length=wrong_length)
+        gen_time_array(t0, t1, fs=fs, length=wrong_length)
     assert "Expected" in str(e.value)
 
 
@@ -168,7 +168,7 @@ def test_gen_time_array_non_integer_rate():
     t0 = 0.0
     t1 = 0.5
     fs = 44.1  # kHz in audio
-    t = gen_time_array(t0, t1, fs)
+    t = gen_time_array(t0, t1, fs=fs)
 
     expected_len = int((t1 - t0) * fs)
     assert len(t) == expected_len
@@ -187,7 +187,7 @@ def test_gen_time_array_zero_duration():
     t0 = 5.0
     t1 = 5.0
     fs = 100.0
-    t = gen_time_array(t0, t1, fs)
+    t = gen_time_array(t0, t1, fs=fs)
 
     assert isinstance(t, np.ndarray)
     assert t.size == 0

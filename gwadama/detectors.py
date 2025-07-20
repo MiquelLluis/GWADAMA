@@ -8,7 +8,7 @@ from . import tat
 def project(h_plus: np.ndarray, h_cros: np.ndarray,
             *,
             parameters: dict,
-            sf: int,
+            fs: int,
             nfft: int,
             detector: str) -> np.ndarray:
     """Project strain modes in a GW detector.
@@ -35,8 +35,8 @@ def project(h_plus: np.ndarray, h_cros: np.ndarray,
 
         REF: https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response
     
-    sf : int
-        Sample rate of the waveform.
+    fs : int
+        Sampling frequency of the waveform.
     
     nfft : int
         Length of the FFT window.
@@ -75,7 +75,7 @@ def project(h_plus: np.ndarray, h_cros: np.ndarray,
     i_merger_pad = tat.find_merger(h_plus_padded - 1j*h_cros_padded)
 
     # Bilby works in frequencies.
-    frequencies = np.fft.rfftfreq(nfft, d=1/sf)
+    frequencies = np.fft.rfftfreq(nfft, d=1/fs)
     waveform_polarizations = {
         'plus': np.fft.rfft(h_plus_padded),
         'cross': np.fft.rfft(h_cros_padded)

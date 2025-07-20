@@ -13,7 +13,7 @@ def highpass_filter(signal: np.ndarray,
                     *,
                     f_cut: int | float,
                     f_order: int | float,
-                    sample_rate: int) -> np.ndarray:
+                    fs: int) -> np.ndarray:
     """Apply a forward-backward digital highpass filter.
 
     Apply a forward-backward digital highpass filter to 'signal'
@@ -25,7 +25,7 @@ def highpass_filter(signal: np.ndarray,
     Filter: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
 
     """
-    sos = sp.signal.butter(f_order, f_cut, btype='highpass', fs=sample_rate, output='sos')
+    sos = sp.signal.butter(f_order, f_cut, btype='highpass', fs=fs, output='sos')
     filtered = sp.signal.sosfiltfilt(sos, signal)
 
     return filtered
@@ -36,7 +36,7 @@ def bandpass_filter(signal: np.ndarray,
                     f_low: int | float,
                     f_high: int | float,
                     f_order: int | float,
-                    sample_rate: int) -> np.ndarray:
+                    fs: int) -> np.ndarray:
     """Apply a forward-backward digital bandpass filter.
 
     Apply a forward-backward digital bandpass filter to 'signal'
@@ -48,13 +48,13 @@ def bandpass_filter(signal: np.ndarray,
     Filter: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
 
     """
-    sos = sp.signal.butter(f_order, [f_low, f_high], btype='bandpass', fs=sample_rate, output='sos')
+    sos = sp.signal.butter(f_order, [f_low, f_high], btype='bandpass', fs=fs, output='sos')
     filtered = sp.signal.sosfiltfilt(sos, signal)
 
     return filtered
 
 
-def instant_frequency(signal, *, sample_rate, phase_corrections=None):
+def instant_frequency(signal, *, fs, phase_corrections=None):
     """Computes the instantaneous frequency of a time-domain signal.
 
     Computes the instantaneous frequency of a time-domain signal using the
@@ -66,8 +66,8 @@ def instant_frequency(signal, *, sample_rate, phase_corrections=None):
     signal : ndarray
         The input time-domain signal.
     
-    sample_rate : float
-        The sampling rate of the signal (in Hz).
+    fs : float
+        The sampling frequency of the signal (in Hz).
 
     phase_corrections : list of tuples, optional
         A list of phase corrections.
@@ -90,14 +90,14 @@ def instant_frequency(signal, *, sample_rate, phase_corrections=None):
     # Step 2: Apply multiple phase corrections if provided
     if phase_corrections is not None:
         # Get the time array corresponding to the signal length
-        time = np.arange(len(signal)) / sample_rate
+        time = np.arange(len(signal)) / fs
         
         for (jump_start, jump_end, correction_factor) in phase_corrections:
-            inst_phase = correct_phase(inst_phase, np.arange(len(signal)) / sample_rate, 
+            inst_phase = correct_phase(inst_phase, np.arange(len(signal)) / fs, 
                                        jump_start, jump_end, correction_factor)
     
     # Step 3: Compute the instantaneous frequency by differentiating the phase
-    dt = 1.0 / sample_rate
+    dt = 1.0 / fs
     inst_phase_diff = (inst_phase[2:] - inst_phase[:-2]) / (2 * dt)
     
     # Convert phase difference to frequency
@@ -264,7 +264,7 @@ def find_power_excess(strain, fs, nperseg=16, noverlap=15, return_time=False):
     strain : np.ndarray
         Input signal (1D array).
     fs : int
-        Sampling rate in Hz.
+        sampling frequency in Hz.
     nperseg : int, optional
         Length of each FFT segment (in samples).
     noverlap : int, optional

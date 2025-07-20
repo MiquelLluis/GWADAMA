@@ -117,17 +117,17 @@ class Base:
     times : dict, optional
         Time samples associated with the strains, following the same structure
         up to the second depth level: {class: {id: time_points} }
-        Useful when the sampling rate is variable or different between strains.
+        Useful when the sampling frequency is variable or different between strains.
         If None, all strains are assumed to be constantly sampled to the
-        sampling rate indicated by the 'sample_rate' attribute, which must be
+        sampling frequency indicated by the 'fs' attribute, which must be
         provided.
     
-    sample_rate : int, optional
+    fs : int, optional
         If the 'times' attribute is present, this value is ignored. Otherwise
         it is assumed all strains are constantly sampled to this value.
         
         .. note::
-            If dealing with variable sampling rates, avoid setting this
+            If dealing with variable sampling frequencies, avoid setting this
             attribute to anything other than None.
     
     random_seed : int, optional
@@ -159,8 +159,8 @@ class Base:
     - If working with two polarizations, they can be stored with just an
       extra depth layer.
     - TODO: Always check self.times (when provided) to determine wether the
-      sampling rate is variable. Depending on the result, act accordingly with
-      the current value of `self.sample_rate`.
+      sampling frequency is variable. Depending on the result, act accordingly with
+      the current value of `self.fs`.
     
     """
     def __init__(self):
@@ -199,7 +199,7 @@ class Base:
         self.nonwhiten_strains = self.strains  # Initially assumed to be the same.
 
         # Time tracking related attributes.
-        self.sample_rate: int = None
+        self.fs: int = None
         self.times: dict = None
         
         # Train/Test subset splits (views into the same 'self.strains').
@@ -224,7 +224,7 @@ class Base:
         num_classes = len(self.classes) if self.classes else 0
         num_strains = len(self) if self.strains else 0
         max_length = self.max_length if hasattr(self, 'max_length') else 0
-        sample_rate = self.sample_rate if hasattr(self, 'sample_rate') else None
+        fs = self.fs if hasattr(self, 'fs') else None
         whitened = self.whitened if hasattr(self, 'whitened') else False
         train_test_split = (self.Xtrain is not None and self.Xtest is not None)
         
@@ -246,7 +246,7 @@ class Base:
             f"  Classes: {num_classes}",
             f"  Strains: {num_strains}",
             f"  Max Strain Length: {max_length} samples",
-            f"  Sample Rate: {sample_rate} Hz" if sample_rate else "  Sample Rate: Not specified",
+            f"  Sampling frequency: {fs} Hz" if fs else "  Sampling frequency: Not specified",
             f"  Time Tracking: {'Enabled' if time_tracking else 'Disabled'}",
             f"  Whitening: {whitening_info}",
             f"  Train/Test Split: {split_info}",
@@ -310,7 +310,7 @@ class Base:
         """Generate the time arrays associated to the strains.
 
         Generate the time arrays associated to the strains, assuming a constant
-        sampling rate. All time arrays begin at `t0`, 0 by default.
+        sampling frequency. All time arrays begin at `t0`, 0 by default.
         
         """
         if self._track_times:
@@ -322,7 +322,7 @@ class Base:
 
         self.times = self._gen_empty_times_dict()
         for *keys, strain in self.items():
-            times = tat.time_array_like(strain, sr=self.sample_rate, t0=t0)
+            times = tat.time_array_like(strain, fs=self.fs, t0=t0)
             dictools.set_value_to_nested_dict(self.times, keys, times)
         
         self._track_times = True
@@ -462,7 +462,7 @@ class Base:
         """Get a single time array from the complete index coordinates.
         
         If there is no time tracking (thus no stored times), a new time array
-        is generated using `self.sample_rate` and the length of the
+        is generated using `self.fs` and the length of the
         correspoinding strain stored at the same index coordinates.
 
         .. warning::
@@ -477,8 +477,8 @@ class Base:
             times = dictools.get_value_from_nested_dict(self.times, indices)
         else:
             length = len(self.get_strain(*indices))
-            duration = length / self.sample_rate
-            times = tat.gen_time_array(0, duration, self.sample_rate, length=length)
+            duration = length / self.fs
+            times = tat.gen_time_array(0, duration, self.fs, length=length)
         
         return times
 
@@ -655,26 +655,26 @@ class Base:
         if self.Xtrain:
             self._update_train_test_subsets()
 
-    def resample(self, sample_rate, verbose=False) -> None:
+    def resample(self, fs, verbose=False) -> None:
         """Resample strain and time arrays to a constant rate.
 
         This assumes time tracking either with time arrays or with the
-        sampling rate provided during initialization, which will be used to
+        sampling frequency provided during initialization, which will be used to
         generate the time arrays previous to the resampling.
 
-        This method updates the sample_rate and the max_length.
+        This method updates the sampling frequency and the maximum length attributes.
 
         Parameters
         ----------
-        sample_rate : int
-            The new sampling rate in Hz.
+        fs : int
+            The new sampling frequency in Hz.
 
         verbose : bool
             If True, print information about the resampling.
         
         """
-        if sample_rate == self.sample_rate:
-            raise ValueError("trying to resample to the same sampling rate")
+        if fs == self.fs:
+            raise ValueError("trying to resample to the same sampling frequency")
             
         if not self._track_times:
             self._gen_times()
@@ -682,17 +682,17 @@ class Base:
         for *keys, strain in self.items():
             time = dictools.get_value_from_nested_dict(self.times, keys)
             strain_resampled, time_resampled, sr_interp, factor_up, factor_down = tat.resample(
-                strain, time, sample_rate, full_output=True
+                strain, time, fs, full_output=True
             )
             dictools.set_value_to_nested_dict(self.strains, keys, strain_resampled)
             dictools.set_value_to_nested_dict(self.times, keys, time_resampled)
             
             if verbose:
                 print(
-                    f"Strain {keys[0]}::{keys[1]} resampled {sr_interp} Hz → {sample_rate} Hz (factors up/down: {factor_up}, {factor_down})"
+                    f"Strain {keys[0]}::{keys[1]} resampled {sr_interp} Hz → {fs} Hz (factors up/down: {factor_up}, {factor_down})"
                 )
 
-        self.sample_rate = sample_rate
+        self.fs = fs
         self.max_length = self._find_max_length()
 
     def bandpass(self,
@@ -723,7 +723,7 @@ class Base:
         for *keys, strain in loop_aux:
             strain_filtered = fat.bandpass_filter(
                 strain, f_low=f_low, f_high=f_high, f_order=f_order,
-                sample_rate=self.sample_rate
+                fs=self.fs
             )
             # Update strains attribute.
             dictools.set_value_to_nested_dict(self.strains, keys, strain_filtered)
@@ -836,7 +836,7 @@ class Base:
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
             strain_w = tat.whiten(
-                strain, asd=asd_array, sample_rate=self.sample_rate, flength=flength,
+                strain, asd=asd_array, fs=self.fs, flength=flength,
                 highpass=highpass, normed=normed
             )
             # Update strains attribute.
@@ -1294,11 +1294,11 @@ class BaseInjected(Base):
 
     times : dict, optional
         Time samples associated with the strains, following the same structure.
-        Useful when the sampling rate is variable or different between strains.
+        Useful when the sampling frequency is variable or different between strains.
         If None, all strains are assumed to be constantly sampled to the
-        sampling rate indicated by the 'sample_rate' attribute.
+        sampling frequency indicated by the 'fs' attribute.
     
-    sample_rate : int
+    fs : int
         Inherited from the parent Class(Base) instance.
     
     max_length : int
@@ -1473,12 +1473,12 @@ class BaseInjected(Base):
             generate the Train and Test subsets.
         
         """
-        if not clean_dataset.sample_rate:
-            raise ValueError("`sample_rate` must be defined in order to perform injections")
+        if not clean_dataset.fs:
+            raise ValueError("`fs` must be defined in order to perform injections")
 
         # Inherit clean strain instance attributes.
         #----------------------------------------------------------------------
-        self.sample_rate = clean_dataset.sample_rate
+        self.fs = clean_dataset.fs
 
         if clean_dataset.nonwhiten_strains is None:
             # Whitened space case (no access to strains before whitening).
@@ -1571,7 +1571,7 @@ class BaseInjected(Base):
         num_classes = len(self.classes) if self.classes else 0
         num_strains = len(self) if self.strains else 0
         max_length = self.max_length if hasattr(self, 'max_length') else 0
-        sample_rate = self.sample_rate if hasattr(self, 'sample_rate') else None
+        fs = self.fs if hasattr(self, 'fs') else None
         whitened = self.whitened if hasattr(self, 'whitened') else False
         train_test_split = (self.Xtrain is not None and self.Xtest is not None)
         
@@ -1599,7 +1599,7 @@ class BaseInjected(Base):
             f"  Classes: {num_classes}",
             f"  Strains: {num_strains}",
             f"  Max Strain Length: {max_length} samples",
-            f"  Sample Rate: {sample_rate} Hz" if sample_rate else "  Sample Rate: Not specified",
+            f"  Sampling frequency: {fs} Hz" if fs else "  Sampling frequency: Not specified",
             f"  Time Tracking: {'Enabled' if time_tracking else 'Disabled'}",
             f"  Whitening: {whitening_info}",
             f"  Noise realization lenght: {noise_length}",
@@ -1636,6 +1636,8 @@ class BaseInjected(Base):
         however Pickle is not able to serialize encapsulated functions.
         This is solved by removing said functions and computing the
         interpolants from their array representations when unpickling.
+
+        Convert legacy attribute name 'sample_rate' to 'fs'.
         
         NOTE: The loss of accuracy over repeated (de)serialization using this
         method has not been studied, use at your own discretion.
@@ -1645,6 +1647,8 @@ class BaseInjected(Base):
         _asd, _ = self._setup_asd_from_psd(state['psd_array'])
         state['_psd'] = _psd
         state['_asd'] = _asd
+        if 'sample_rate' in state:
+            state['fs'] = state.pop('sample_rate')
         self.__dict__.update(state)
     
     def _setup_psd(self, psd: np.ndarray | Callable) -> tuple[Callable, np.ndarray]:
@@ -1659,7 +1663,7 @@ class BaseInjected(Base):
             # Compute a realization of the PSD function with 16 bins per
             # integer frequency to ensure the numerical representation has
             # enough precision.
-            freqs = np.linspace(0, self.sample_rate//2, self.sample_rate*8)
+            freqs = np.linspace(0, self.fs//2, self.fs*8)
             psd_array = np.stack([freqs, psd(freqs)])
         
         elif isinstance(psd, np.ndarray):
@@ -1684,7 +1688,7 @@ class BaseInjected(Base):
             # Compute a realization of the ASD function with 16 bins per
             # integer frequency to ensure the numerical representation has
             # enough precision.
-            freqs = np.linspace(0, self.sample_rate//2, self.sample_rate*8)
+            freqs = np.linspace(0, self.fs//2, self.fs*8)
             asd_array = np.stack([freqs, asd_fun(freqs)])
         
         elif isinstance(psd, np.ndarray):
@@ -1723,9 +1727,9 @@ class BaseInjected(Base):
     def _generate_background_noise(self, noise_length: int) -> synthetic.NonwhiteGaussianNoise:
         """The noise realization is generated by NonwhiteGaussianNoise."""
 
-        d: float = noise_length / self.sample_rate
+        d: float = noise_length / self.fs
         noise = synthetic.NonwhiteGaussianNoise(
-            duration=d, psd=self.psd, sample_rate=self.sample_rate,
+            duration=d, psd=self.psd, fs=self.fs,
             rng=self.rng, freq_cutoff=self.freq_cutoff
         )
 
@@ -1935,7 +1939,7 @@ class BaseInjected(Base):
             injected = tat.whiten(
                 injected,
                 asd=self.asd_array,
-                sample_rate=self.sample_rate,
+                fs=self.fs,
                 flength=self.whiten_params['flength'],
                 window=self.whiten_params['window'],
                 highpass=self.whiten_params['highpass'],
@@ -2072,7 +2076,7 @@ class BaseInjected(Base):
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
             strain_w = tat.whiten(
-                strain, asd=self.asd_array, sample_rate=self.sample_rate,
+                strain, asd=self.asd_array, fs=self.fs,
                 highpass=highpass, flength=flength, window=window, normed=normed
             )
             # Update strains attribute.
@@ -2660,7 +2664,7 @@ class SyntheticWaves(Base):
                  peak_time_max_length: float,
                  amp_threshold: float,
                  tukey_alpha: float,
-                 sample_rate: int,
+                 fs: int,
                  random_seed: int = None):
         """
         Parameters
@@ -2698,7 +2702,7 @@ class SyntheticWaves(Base):
             make sure their values end at the exact duration determined by either
             the duration parameter or the amplitude threshold.
         
-        sample_rate : int
+        fs : int
         
         random_seed : int, optional.
         
@@ -2706,7 +2710,7 @@ class SyntheticWaves(Base):
         self._check_classes_dict(classes)
         self.classes = classes
         self.n_waves_per_class = n_waves_per_class
-        self.sample_rate = sample_rate
+        self.fs = fs
         self.wave_parameters_limits = wave_parameters_limits
         self.max_length = max_length
         self.peak_time_max_length = peak_time_max_length
@@ -2784,7 +2788,7 @@ class SyntheticWaves(Base):
 
         self.strains = self._gen_empty_strains_dict()
 
-        t_max = (self.max_length - 1) / self.sample_rate
+        t_max = (self.max_length - 1) / self.fs
         times = np.linspace(0, t_max, self.max_length)
         
         for id in range(len(self.metadata)):
@@ -2886,7 +2890,7 @@ class SyntheticWaves(Base):
         for i in range(len(self)):
             clas = self.metadata.at[i,'Class']
             duration = self.metadata.at[i,'duration']
-            ref_length = int(duration * self.sample_rate)
+            ref_length = int(duration * self.fs)
             
             if clas == 'RD':
                 # Ring-Down waves begin at the center. However we want to
@@ -2911,7 +2915,7 @@ class SyntheticWaves(Base):
             # Shrink and window
             self.strains[clas][i] = self.strains[clas][i][i0:i1] * window
 
-            self.metadata.at[i,'duration'] = new_lenght / self.sample_rate
+            self.metadata.at[i,'duration'] = new_lenght / self.fs
 
 
 class InjectedSyntheticWaves(BaseInjected):
@@ -3003,8 +3007,8 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
     max_length : int
         Length of the longest waveform in the dataset.
 
-    sample_rate : int, optional
-        The constant sampling rate for the waveforms, if provided.
+    fs : int, optional
+        The constant sampling frequency for the waveforms, if provided.
 
     Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using `train_test_split`, if 
@@ -3019,7 +3023,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
     def __init__(self,
                  strains_array: np.ndarray,
                  *,
-                 sample_rate: int,
+                 fs: int,
                  strain_limits=None,
                  whitened=False,
                  random_seed=None):
@@ -3037,8 +3041,8 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
             A 2D array containing gravitational wave signals, where each row 
             represents a separate waveform, possibly zero-padded.
 
-        sample_rate : int
-            The assumed constant sampling rate for the waveforms.
+        fs : int
+            The assumed constant sampling frequency for the waveforms.
 
         strain_limits : list[tuple[int, int]] | None, optional
             A list of (start, end) indices defining the valid range for each 
@@ -3069,7 +3073,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         self.classes = {'unique': 1}  # Dummy class.
         self.strains = self._unpack_strains(strains_array, strain_limits)
         self._gen_labels()  # Dummy labels.
-        self.sample_rate = sample_rate
+        self.fs = fs
         # self.metadata: pd.DataFrame = None  # OMMITED IN THIS CLASS
         
         # Number of nested layers in strains' dictionary. Keep updated always:
@@ -3223,12 +3227,12 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
           a single (dummy) class.
         
         """
-        if not clean_dataset.sample_rate:
-            raise ValueError("`sample_rate` must be defined in order to perform injections")
+        if not clean_dataset.fs:
+            raise ValueError("`fs` must be defined in order to perform injections")
 
         # Inherit clean strain instance attributes.
         #----------------------------------------------------------------------
-        self.sample_rate = clean_dataset.sample_rate
+        self.fs = clean_dataset.fs
 
         if clean_dataset.nonwhiten_strains is None:
             # Whitened space case (no access to strains before whitening).
@@ -3356,7 +3360,7 @@ class CoReWaves(Base):
     
     times : dict {class: {id: gw_time_points} }
         Time samples associated with the strains, following the same structure.
-        Useful when the sampling rate is variable or different between strains.
+        Useful when the sampling frequency is variable or different between strains.
     
     metadata : pandas.DataFrame
         All parameters and data related to the strains.
@@ -3380,10 +3384,10 @@ class CoReWaves(Base):
     units : str
         Flag indicating whether the data is in 'geometrized' or 'IS' units.
     
-    sample_rate : int, optional
+    fs : int, optional
         Initially this attribute is None because the initial GW from CoRe are
-        sampled at different and non-constant sampling rates. After the
-        resampling, this attribute will be set to the new global sampling rate.
+        sampled at different and non-constant sampling frequencies. After the
+        resampling, this attribute will be set to the new global sampling frequency.
 
         Caveat: If the 'times' attribute is present, this value is ignored.
         Otherwise it is assumed all strains are constantly sampled to this.
@@ -3449,7 +3453,7 @@ class CoReWaves(Base):
         self._gen_labels()
         self.max_length = self._find_max_length()
 
-        self.sample_rate = None  # Set up after resampling
+        self.fs = None  # Set up after resampling
         self.random_seed = None  # Set if calling the 'build_train_test_subsets' method.
         self.rng = np.random.default_rng(self.random_seed)
 
@@ -3590,24 +3594,24 @@ class CoReWaves(Base):
                 times = dictools.get_first_value(times)
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
-    def resample(self, sample_rate, verbose=False) -> None:
+    def resample(self, fs, verbose=False) -> None:
         """Resample strain and time arrays to a constant rate.
 
         Resample CoRe strains (from NR simulations) to a constant rate.
 
-        This method updates the sample_rate, the max_length and the merger_pos
-        inside the metadata attribute.
+        This method updates the sampling frequency, the max_length and the
+        merger_pos inside the metadata attribute.
 
         Parameters
         ----------
-        sample_rate : int
-            The new sampling rate in Hz.
+        fs : int
+            The new sampling frequency in Hz.
 
         verbose : bool
             If True, print information about the resampling.
         
         """
-        super().resample(sample_rate, verbose)
+        super().resample(fs, verbose)
 
         # Update side-effect attributes.
         self._update_merger_positions()
@@ -3651,17 +3655,17 @@ class CoReWaves(Base):
             
             # Drop the polarization layer.
             strain = detectors.project(
-                hp, hc, parameters=project_pars, sf=self.sample_rate, 
-                nfft=2*self.sample_rate, detector=detector
+                hp, hc, parameters=project_pars, fs=self.fs, 
+                nfft=2*self.fs, detector=detector
             )
             self.strains[clas][id_] = strain
             
             # Regenerate the time array with the merger located at the origin.
-            duration = len(strain) / self.sample_rate
-            t_merger = self.find_merger(strain) / self.sample_rate
+            duration = len(strain) / self.fs
+            t_merger = self.find_merger(strain) / self.fs
             t0 = -t_merger
             t1 = duration - t_merger
-            self.times[clas][id_] = tat.gen_time_array(t0, t1, self.sample_rate)
+            self.times[clas][id_] = tat.gen_time_array(t0, t1, self.fs)
         
         # Update side-effect attributes
         self._dict_depth = dictools.get_depth(self.strains)

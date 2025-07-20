@@ -12,16 +12,16 @@ from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 
 def resample(strain: np.ndarray,
              times: np.ndarray,
-             sample_rate: int,
+             fs: int,
              full_output=True) -> tuple[np.ndarray, np.array, int, int]:
     """Resample a single strain in time domain.
     
-    Resample strain's sampling rate using an interpolation in the time domain
+    Resample strain's sampling frequency using an interpolation in the time domain
     for upscalling to a constant rate, and then decimate it to the target rate.
 
-    The upscaled sample rate is chosen as the minimum common multiple between
-    the next integer value of the maximum sampling rate found in the original
-    strain, and the target sample rate.
+    The upscaled sampling frequency is chosen as the minimum common multiple between
+    the next integer value of the maximum sampling frequency found in the original
+    strain, and the target sampling frequency.
 
 
     PARAMETERS
@@ -32,11 +32,11 @@ def resample(strain: np.ndarray,
     times : 1d-array
         Original time points. Must be a NumPy array.
     
-    sample_rate: int
-        Target sample rate (Hz). Must be a possitive integer.
+    fs: int
+        Target sampling frequency (Hz). Must be a possitive integer.
     
     full_output: bool, optional
-        If True, also returns the new time array, original sample rate,
+        If True, also returns the new time array, original sampling frequency,
         and decimation factor.
     
         
@@ -46,10 +46,10 @@ def resample(strain: np.ndarray,
         Resampled strain.
 
     times_resampled : 1d-array, optional
-        Time array at the new sampling rate.
+        Time array at the new sampling frequency.
 
-    sr_in : int, optional
-        Original (inferred) sample rate, after interpolation if performed.
+    fs_in : int, optional
+        Original (inferred) sampling frequency, after interpolation if performed.
 
     up, down : int, optional
         Up and down factors of the resampling.
@@ -57,39 +57,39 @@ def resample(strain: np.ndarray,
     """
     if not isinstance(times, np.ndarray):
         raise TypeError("'times' must be a NumPy array.")
-    if sample_rate <= 0:
-        raise ValueError("Target 'sample_rate' must be positive.")
+    if fs <= 0:
+        raise ValueError("Target 'fs' must be positive.")
 
     if not is_arithmetic_progression(times):
         # Interpolate to a uniform time grid at the highest reasonable rate
-        sr_interp = int(np.ceil(1 / np.min(np.diff(times))))
-        new_length = int((times[-1] - times[0]) * sr_interp) + 1
+        fs_interp = int(np.ceil(1 / np.min(np.diff(times))))
+        new_length = int((times[-1] - times[0]) * fs_interp) + 1
         times_uniform = np.linspace(times[0], times[-1], new_length, endpoint=True)
         strain = sp_make_interp_spline(times, strain, k=2)(times_uniform)
         times = times_uniform
     else:
-        sr_interp = int(round(1 / (times[1] - times[0])))
+        fs_interp = int(round(1 / (times[1] - times[0])))
 
     # Compute up/down factors
-    g = np.gcd(sr_interp, sample_rate)
-    up = sample_rate // g
-    down = sr_interp // g
+    g = np.gcd(fs_interp, fs)
+    up = fs // g
+    down = fs_interp // g
     
     strain_resampled = sp.signal.resample_poly(strain, up, down)
     
     if full_output:
-        times_resampled = time_array_like(strain_resampled, sr=sample_rate, t0=times[0])
-        return strain_resampled, times_resampled, sr_interp, up, down
+        times_resampled = time_array_like(strain_resampled, fs=fs, t0=times[0])
+        return strain_resampled, times_resampled, fs_interp, up, down
     return strain_resampled
 
 
-def gen_time_array(t0, t1, sample_rate, length=None):
-    """Generate a time array for a given time range and sampling rate.
+def gen_time_array(t0, t1, *, fs, length=None):
+    """Generate a time array for a given time range and sampling frequency.
 
-    Generate a time array for a given time range and sampling rate with an
+    Generate a time array for a given time range and sampling frequency with an
     optional consistency check.
 
-    Floating-point precision can cause `(t1 - t0) * sr` to yield an unexpected 
+    Floating-point precision can cause `(t1 - t0) * fs` to yield an unexpected 
     number of samples, leading to off-by-one errors in :func:`numpy.linspace`.
     If `length` is provided, the function verifies that it matches the expected
     length using `t1` as reference. A mismatch raises will raise `ValueError`,
@@ -106,11 +106,11 @@ def gen_time_array(t0, t1, sample_rate, length=None):
     t1 : float
         Final time (exclusive).
     
-    sample_rate : float
-        Sampling rate.
+    fs : float
+        sampling frequency.
     
     length : int, optional
-        If provided, must match `int((t1 - t0) * sample_rate)` exactly.
+        If provided, must match `int((t1 - t0) * fs)` exactly.
         Acts as a safeguard against miscalculations due to floating-point
         precision.
 
@@ -127,7 +127,7 @@ def gen_time_array(t0, t1, sample_rate, length=None):
         samples.
     
     """
-    expected_length = int((t1 - t0) * sample_rate)
+    expected_length = int((t1 - t0) * fs)
     if length is not None and length != expected_length:
         raise ValueError(
             f"Inconsistent input: Expected {expected_length} samples, got {length}."
@@ -136,19 +136,19 @@ def gen_time_array(t0, t1, sample_rate, length=None):
     return np.linspace(t0, t1, expected_length, endpoint=False)
 
 
-def time_array_like(array, sr=4096, t0=0.0):
+def time_array_like(array, fs=4096, t0=0.0):
     """Generate a time array matching the length of the input array.
 
     Computes a time array starting from `t0` with evenly spaced values based 
-    on the sampling rate `sr`, matching the length of the input 1D array.
+    on the sampling frequency `fs`, matching the length of the input 1D array.
 
     Parameters
     ----------
     array : array_like
         Input 1D array whose length determines the number of time samples.
     
-    sr : float, optional
-        Sampling rate in Hz. Default is 4096.
+    fs : float, optional
+        sampling frequency in Hz. Default is 4096.
     
     t0 : float, optional
         Start time in seconds. Default is 0.0.
@@ -157,11 +157,11 @@ def time_array_like(array, sr=4096, t0=0.0):
     -------
     numpy.ndarray
         A 1D array of evenly spaced time values starting at `t0` with spacing
-        `1/sr` and the same length as the input array.
+        `1/fs` and the same length as the input array.
     
     """
     n = len(array)
-    return np.linspace(t0, t0+n/sr, n, endpoint=False)
+    return np.linspace(t0, t0+n/fs, n, endpoint=False)
 
 
 
@@ -485,7 +485,7 @@ def convolve(strain, fir, window='hann'):
 def whiten(strain: np.ndarray,
            *,
            asd: np.ndarray,
-           sample_rate: int,
+           fs: int,
            flength: int,
            window='hann',
            highpass: float = None,
@@ -509,8 +509,8 @@ def whiten(strain: np.ndarray,
         - asd[1] = ASD points
         NOTE: It must have a linear and constant sampling frequency!
 
-    sample_rate : int
-        The sampling rate of the strain data.
+    fs : int
+        The sampling frequency of the strain data.
 
     flength : int
         Length (in samples) of the time-domain FIR whitening filter.
@@ -553,7 +553,7 @@ def whiten(strain: np.ndarray,
     strain_detrended = strain - np.mean(strain)
 
     asd_freq, asd_vals = asd
-    dt = 1 / sample_rate
+    dt = 1 / fs
 
     freq_target = np.fft.rfftfreq(len(strain), dt)
 
@@ -579,7 +579,7 @@ def whiten(strain: np.ndarray,
     transfer_function[np.isinf(transfer_function)] = 0  # Handle division by zero
 
     # Handle highpass
-    duration = len(strain) / sample_rate
+    duration = len(strain) / fs
     delta_f = 1 / duration
     if highpass:
         ncorner = int(highpass / delta_f)
