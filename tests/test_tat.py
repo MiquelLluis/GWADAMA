@@ -3,7 +3,8 @@ import pytest
 from numpy.testing import assert_allclose
 
 from gwadama.tat import (
-    resample, gen_time_array, time_array_like, pad_time_array, find_time_origin
+    resample, gen_time_array, time_array_like, pad_time_array, find_time_origin,
+    find_merger, planck, truncate_transfer
 )
 
 #------------------------------------------------------------------------------
@@ -364,3 +365,146 @@ def test_find_time_origin_exact_zero():
     """Should return the index of an exact zero if present."""
     times = np.array([-1.0, 0.0, 5.0])
     assert find_time_origin(times) == 1  # exact zero at index 1
+
+
+
+#------------------------------------------------------------------------------
+# Tests for time_araray_like()
+#------------------------------------------------------------------------------
+
+def test_find_merger_returns_peak_index():
+    """Should return the index of the element with maximum absolute value."""
+    h = np.array([-0.1, 0.3, -0.5, 0.4])
+    # absolute values: [0.1, 0.3, 0.5, 0.4]
+    assert find_merger(h) == 2  # 0.5 at index 2 is the maximum
+
+
+
+#------------------------------------------------------------------------------
+# Tests for time_araray_like()
+#------------------------------------------------------------------------------
+
+def test_planck_basic_properties():
+    """The window should have max value 1 and be non-negative."""
+    w = planck(128, nleft=10, nright=10)
+    assert np.all(w >= 0)
+    assert np.isclose(w.max(), 1.0)
+
+
+@pytest.mark.parametrize("N,nleft,nright", [
+    (16, 0, 0),   # no taper
+    (16, 4, 0),   # left taper only
+    (16, 0, 4),   # right taper only
+    (16, 4, 4),   # both tapers
+])
+def test_planck_shapes_and_length(N, nleft, nright):
+    """Output length should match N for all parameter combinations."""
+    w = planck(N, nleft, nright)
+    
+    assert len(w) == N
+    
+    # Edge behaviour depending on taper
+    if nleft > 0:
+        assert w[0] == 0
+    else:
+        assert_allclose(w[0], 1)
+    if nright > 0:
+        assert w[-1] == 0
+    else:
+        assert_allclose(w[-1], 1)
+
+    # Flat region (if exists) should be all ones
+    if nleft + nright < N:
+        assert_allclose(w[nleft:-nright], 1)
+
+
+def test_planck_left_taper_monotonicity():
+    """Left taper should smoothly increase from 0 to 1."""
+    N = 16
+    nleft = 5
+    w = planck(N, nleft, 0)
+    left = w[:nleft]
+    # Starts at 0
+    assert np.isclose(left[0], 0.0)
+    # Should be strictly increasing
+    assert np.all(np.diff(left) > 0)
+
+
+def test_planck_right_taper_monotonicity():
+    """Right taper should smoothly decrease from 1 to 0."""
+    N = 16
+    nright = 5
+    w = planck(N, 0, nright)
+    right = w[-nright:]
+    # Ends at 0
+    assert np.isclose(right[-1], 0.0)
+    # Should be strictly decreasing
+    assert np.all(np.diff(right) < 0)
+
+
+def test_planck_flat_region_equals_one():
+    """The middle (untapered) region should equal 1."""
+    N = 16
+    nleft = 4
+    nright = 4
+    w = planck(N, nleft, nright)
+    middle = w[nleft:N-nright]
+    assert np.allclose(middle, 1.0)
+
+
+
+#------------------------------------------------------------------------------
+# Tests for truncate_transfer()
+#------------------------------------------------------------------------------
+
+def test_truncate_transfer_basic():
+    """
+    Verifies that applying `truncate_transfer` to a flat transfer function:
+    * forces the first and last samples to zero (due to the Planck taper),
+    * preserves values in the central flat region between the taper edges.
+    
+    """
+    series = np.ones(64)
+
+    # test truncate_transfer
+    trunc1 = truncate_transfer(series)
+    assert trunc1[0] == 0
+    assert trunc1[-1] == 0
+    # central region should remain equal (taper does nothing here)
+    assert_allclose(trunc1[5:59], series[5:59])
+
+
+def test_truncate_transfer_with_ncorner():
+    """First `ncorner` samples should be forced to zero."""
+    series = np.ones(64)
+    ncorner = 3
+    trunc = truncate_transfer(series, ncorner=ncorner)
+    # first ncorner samples zeroed
+    assert np.all(trunc[:ncorner] == 0)
+    # region after ncorner still follows taper behaviour
+    assert trunc[ncorner+1] > 0  # taper rising after corner zeroing
+    assert trunc[-1] == 0
+
+
+@pytest.mark.parametrize("ncorner", [None, 0, 3, 10])
+def test_truncate_transfer_preserves_length(ncorner):
+    """Output should have the same shape as the input."""
+    series = np.ones(128)
+    trunc = truncate_transfer(series, ncorner=ncorner)
+    assert trunc.shape == series.shape
+
+
+def test_truncate_transfer_nonnegative_and_bounded():
+    """Output should be non-negative and not exceed input amplitude."""
+    series = np.ones(64)
+    trunc = truncate_transfer(series, ncorner=5)
+    assert np.all(trunc >= 0)
+    assert np.all(trunc <= 1)
+
+
+def test_truncate_transfer_none_vs_zero():
+    """ncorner=None and ncorner=0 should produce identical results."""
+    series = np.ones(64)
+    trunc_none = truncate_transfer(series, ncorner=None)
+    trunc_zero = truncate_transfer(series, ncorner=0)
+    np.testing.assert_allclose(trunc_none, trunc_zero)
