@@ -166,29 +166,44 @@ def time_array_like(array, fs=4096, t0=0.0):
 
 
 def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
-    """Extend a time array by 'pad' number of samples.
+    """Extend a uniformly sampled time array by 'pad' number of samples.
 
     Parameters
     ----------
-    times: NDArray
-        Time array.
+    times: numpy.ndarray
+        1D array of time samples. Must be uniformly sampled.
     
-    pad: int | ArrayLike
-        If int, number of samples to add on both sides.
-        If ArrayLike, number of samples to add on each side.
+    pad: int or array_like of two ints
+        Number of samples to add.
+        * If int, the same number of samples is added on both sides.
+        * If array_like of length 2, interpreted as (pad_before, pad_after).
     
-    Returns
-    -------
-    NDArray
-        Padded time array.
+    numpy.ndarray
+        New time array with the specified padding, using the same time step
+        as the input.
+
+    Raises
+    ------
+    ValueError
+        If `times` is not uniformly sampled.
     
-    NOTES
+    Notes
     -----
-    - Computes again the entire time array.
-    - Due to round-off errors some intermediate time values might be slightly
-      different.
+    - The function recomputes the entire time array using
+      :func:`numpy.linspace`.
+    - Due to floating-point round-off, intermediate values may differ
+      slightly from the input.
+
+    Examples
+    --------
+    >>> t = np.array([0.0, 0.1, 0.2])
+    >>> pad_time_array(t, 1)
+    array([-0.1, 0.0, 0.1, 0.2, 0.3])
     
     """
+    if not is_arithmetic_progression(times):
+        raise ValueError("Input time array must be uniformly sampled.")
+
     if isinstance(pad, int):
         pad0, pad1 = pad, pad
     else:
@@ -196,7 +211,6 @@ def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
 
     length = len(times) + pad0 + pad1
     dt = times[1] - times[0]
-
     t0 = times[0] - pad0*dt
     t1 = t0 + (length-1)*dt
 
