@@ -237,34 +237,43 @@ def find_time_origin(times: np.ndarray) -> int:
 
 
 def find_merger(h: np.ndarray) -> int:
-    """Estimate the index position of the merger in the given strain.
+    """Estimate the index of the merger in a gravitational-wave strain.
 
-    This function provides a rough estimate of the merger index position by
-    locating the maximum of the absolute amplitude of the gravitational wave
-    signal in the time domain. It assumes that the merger roughly corresponds
-    to this peak, which holds for certain clean or high-SNR simulated CBC
-    gravitational waves.
-
-    :warning:
-    This function may be replaced in the near future by a more formal estimator
-    with a better model, such as a Gaussian fit for binary mergers.
-    
-    :caution:
-    This is a very ad-hoc method and may not be accurate for all datasets,
-    especially depending on the sensitivity of the detector. This method
-    assumes that the peak amplitude in the time domain corresponds closely to
-    the merger, which may not hold for lower-SNR signals or noisy data.
+    This function provides a rough estimate of the merger time index by finding
+    the position of the maximum absolute amplitude in the time-domain strain
+    data. It assumes that the merger approximately coincides with this peak,
+    which is often valid for certain clean or high‑SNR simulated CBC
+    (compact binary coalescence) signals.
 
     Parameters
     ----------
-    h : np.ndarray
-        The gravitational wave strain data.
+    h : numpy.ndarray
+        1D array containing the gravitational-wave strain.
 
     Returns
     -------
     int
-        The index of the estimated merger position in the strain data.
-    
+        Index of the estimated merger position in `h`.
+
+    Warnings
+    --------
+    This method is **ad hoc** and may give misleading results on some data,
+    particularly low-SNR or real detector data where noise fluctuations
+    dominate the peak amplitude.
+
+    Notes
+    -----
+    * Assumes that the peak amplitude in the time domain corresponds to
+      the merger, which is a simplification.
+    * This function is a **temporary placeholder** and will be replaced in
+      future versions by a more formal estimator (for example, a Gaussian
+      fit around the expected merger region).
+
+    Examples
+    --------
+    >>> h = np.array([0.0, 0.2, -0.1, 0.5, 0.3])
+    >>> find_merger(h)
+    3
     """
     return np.argmax(np.abs(h))
 
