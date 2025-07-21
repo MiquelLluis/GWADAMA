@@ -579,7 +579,7 @@ def whiten(strain: np.ndarray,
     .. [1] Based on :meth:`gwpy.timeseries.TimeSeries.whiten`.
 
     """
-    if asd.ndim != 2:
+    if asd.ndim != 2 or asd.shape[0] != 2:
         raise ValueError("'asd' must have 2 dimensions")
     if not is_arithmetic_progression(asd[0]):
         raise ValueError("frequency points in 'asd[0]' must be ascending with constant increment")
