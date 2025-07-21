@@ -1,10 +1,12 @@
 import numpy as np
-import pytest
 from numpy.testing import assert_allclose
+import pytest
+import scipy as sp
 
 from gwadama.tat import (
     resample, gen_time_array, time_array_like, pad_time_array, find_time_origin,
-    find_merger, planck, truncate_transfer
+    find_merger, planck, truncate_transfer, truncate_impulse, fir_from_transfer,
+    convolve, whiten, is_arithmetic_progression
 )
 
 #------------------------------------------------------------------------------
@@ -508,3 +510,359 @@ def test_truncate_transfer_none_vs_zero():
     trunc_none = truncate_transfer(series, ncorner=None)
     trunc_zero = truncate_transfer(series, ncorner=0)
     np.testing.assert_allclose(trunc_none, trunc_zero)
+
+
+
+#------------------------------------------------------------------------------
+# Tests for truncate_impulse()
+#------------------------------------------------------------------------------
+
+def test_truncate_impulse_basic():
+    """Output length should match input and middle section should be zeroed."""
+    impulse = np.ones(32)
+    ntaps = 8
+    out = truncate_impulse(impulse, ntaps)
+
+    # output must keep same shape
+    assert out.shape == impulse.shape
+
+    # middle region (ntaps/2 to size-ntaps/2) should be zeroed
+    trunc_start = ntaps // 2
+    trunc_stop = impulse.size - trunc_start
+    assert np.all(out[trunc_start:trunc_stop] == 0)
+
+    # edges should not be all zero (window tapers smoothly)
+    assert np.any(out[:trunc_start] > 0)
+    assert np.any(out[-trunc_start:] > 0)
+
+
+def test_truncate_impulse_correct_window_halves():
+    """Left and right edges should match their respective window halves."""
+    impulse = np.ones(32)
+    ntaps = 8
+    out = truncate_impulse(impulse, ntaps)
+    window = sp.signal.get_window('hann', ntaps)
+    trunc_start = ntaps // 2
+
+    # Left edge scaled by second half of window
+    assert_allclose(out[:trunc_start], window[trunc_start:])
+    # Right edge scaled by first half of window
+    assert_allclose(out[-trunc_start:], window[:trunc_start])
+
+
+def test_truncate_impulse_with_custom_window():
+    """Custom window should be applied directly to edges."""
+    impulse = np.arange(1, 33, dtype=float)  # non-constant to detect scaling
+    ntaps = 8
+    custom_window = np.ones(ntaps)  # rectangular: no tapering
+    out = truncate_impulse(impulse, ntaps, window=custom_window)
+
+    # middle region still zero
+    trunc_start = ntaps // 2
+    trunc_stop = impulse.size - trunc_start
+    assert np.all(out[trunc_start:trunc_stop] == 0)
+
+    # edges should be unchanged because window = ones
+    assert_allclose(out[:trunc_start], impulse[:trunc_start])
+    assert_allclose(out[-trunc_start:], impulse[-trunc_start:])
+
+
+@pytest.mark.parametrize("ntaps", [2, 4, 6])
+def test_truncate_impulse_preserves_shape_for_various_ntaps(ntaps):
+    """Check shape and zeroed region for various tap sizes."""
+    impulse = np.ones(16)
+    out = truncate_impulse(impulse, ntaps)
+    trunc_start = ntaps // 2
+    trunc_stop = impulse.size - trunc_start
+    assert out.shape == impulse.shape
+    assert np.all(out[trunc_start:trunc_stop] == 0)
+
+
+
+#------------------------------------------------------------------------------
+# Tests for fir_from_transfer()
+#------------------------------------------------------------------------------
+
+def test_fir_from_transfer_basic_properties():
+    """Output should have correct length, be real-valued, and non-negative where expected."""
+    transfer = np.ones(64)  # flat frequency response
+    ntaps = 16
+    out = fir_from_transfer(transfer, ntaps=ntaps)
+
+    # length must match ntaps
+    assert out.shape == (ntaps,)
+    # result must be real-valued
+    assert np.isrealobj(out)
+
+
+def test_fir_from_transfer_ncorner_effect():
+    """Using ncorner should alter the resulting filter compared to no corner."""
+    transfer = np.ones(64)
+    ntaps = 16
+    out_default = fir_from_transfer(transfer, ntaps=ntaps)
+    out_corner = fir_from_transfer(transfer, ntaps=ntaps, ncorner=4)
+
+    # filters should not be identical
+    assert not np.allclose(out_default, out_corner)
+
+
+def test_fir_from_transfer_window_effect():
+    """Different windows should lead to different filters."""
+    transfer = np.ones(64)
+    ntaps = 16
+    rect_window = np.ones(ntaps)
+
+    out_hann = fir_from_transfer(transfer, ntaps=ntaps, window='hann')
+    out_rect = fir_from_transfer(transfer, ntaps=ntaps, window=rect_window)
+
+    assert not np.allclose(out_hann, out_rect)
+
+
+@pytest.mark.parametrize("ntaps", [8, 16, 32])
+def test_fir_from_transfer_various_lengths(ntaps):
+    """Output should have the requested length."""
+    transfer = np.ones(64)
+    out = fir_from_transfer(transfer, ntaps=ntaps)
+    assert out.shape == (ntaps,)
+
+
+def test_fir_from_transfer_with_precomputed_window():
+    """Precomputed window should be accepted and applied."""
+    transfer = np.ones(64)
+    ntaps = 16
+    precomputed = np.hanning(ntaps)
+    out = fir_from_transfer(transfer, ntaps=ntaps, window=precomputed)
+    assert out.shape == (ntaps,)
+    # basic property: result differs from using rectangular window
+    rect = fir_from_transfer(transfer, ntaps=ntaps, window=np.ones(ntaps))
+    assert not np.allclose(out, rect)
+
+
+def test_fir_from_transfer_edges_are_tapered():
+    """First and last coefficients should be near zero compared to maximum."""
+    fseries = np.cos(2 * np.pi * np.arange(64))
+    fir = fir_from_transfer(fseries, ntaps=10)
+
+    # edges should be almost zero compared to peak
+    maxval = np.max(np.abs(fir))
+    assert abs(fir[0]) <= 1e-2 * maxval
+    assert abs(fir[-1]) <= 1e-2 * maxval
+
+    # output length
+    assert fir.size == 10
+
+
+
+#------------------------------------------------------------------------------
+# Tests for convolve()
+#------------------------------------------------------------------------------
+
+def test_convolve_with_impulse_fir():
+    """Convolution with a delta FIR should return the original signal (after windowing)."""
+    N = 64
+    strain = np.random.rand(N)
+    fir = np.array([1.0])  # true delta FIR
+    out = convolve(strain, fir, window='boxcar')  # disable boundary windowing
+
+    assert_allclose(out, strain)
+
+
+@pytest.mark.parametrize("fir_len", [4, 8, 16])
+def test_convolve_length_preservation(fir_len):
+    """Output length must equal input length for any FIR length."""
+    strain = np.ones(128)
+    fir = np.hanning(fir_len)
+    out = convolve(strain, fir)
+    assert out.shape == strain.shape
+
+
+def test_convolve_constant_signal():
+    """Convolution of constant signal with normalized FIR yields constant output in central region."""
+    strain = np.ones(128)
+    fir = np.hanning(8)
+    fir /= fir.sum()  # normalize FIR to unit gain
+    out = convolve(strain, fir, window='boxcar')
+
+    pad = len(fir) // 2
+    # Check central region remains ~1
+    assert_allclose(out[pad:-pad], 1.0, atol=1e-6)
+
+
+def test_convolve_window_effect():
+    """Changing boundary window should alter output near edges."""
+    strain = np.ones(128)
+    fir = np.hanning(16)
+
+    out_hann = convolve(strain, fir, window='hann')
+    out_boxcar = convolve(strain, fir, window='boxcar')
+
+    # They should differ in the first/last few samples
+    pad = len(fir) // 2
+    assert not np.allclose(out_hann[:pad], out_boxcar[:pad])
+    assert not np.allclose(out_hann[-pad:], out_boxcar[-pad:])
+
+
+def test_convolve_matches_fftconvolve_when_nfft_large():
+    """When nfft is large enough, result should match direct fftconvolve (with same windowing)."""
+    N = 64
+    strain = np.random.randn(N)
+    fir = np.hanning(8)
+
+    # Manually apply window to boundaries
+    pad = int(np.ceil(len(fir)/2))
+    win = sp.signal.get_window('hann', len(fir))
+    padded_data = strain.copy()
+    padded_data[:pad] *= win[:pad]
+    padded_data[-pad:] *= win[-pad:]
+
+    expected = sp.signal.fftconvolve(padded_data, fir, mode='same')
+    out = convolve(strain, fir, window='hann')
+
+    assert_allclose(out, expected, atol=1e-12)
+
+
+def test_convolve_fir_longer_than_input():
+    """Output remains valid when FIR is longer than input."""
+    strain = np.ones(32)
+    fir = np.hanning(64)  # FIR longer than input
+    out = convolve(strain, fir)
+    assert out.shape == strain.shape
+    assert np.all(np.isfinite(out))
+
+
+#------------------------------------------------------------------------------
+# Tests for whiten()
+#------------------------------------------------------------------------------
+
+# Input validation tests
+#-----------------------
+
+def test_whiten_asd_not_2d_raises():
+    """Passing a non-2D `asd` should raise a ValueError."""
+    strain = np.random.randn(1024)
+    asd = np.array([np.linspace(0, 256, 512)])  # shape (1,512), not (2,N)
+    with pytest.raises(ValueError, match="must have 2 dimensions"):
+        whiten(strain, asd=asd, fs=512, flength=16)
+
+
+def test_whiten_asd_freq_not_arithmetic():
+    """Non-uniform frequency points in `asd[0]` should raise ValueError."""
+    strain = np.random.randn(1024)
+    freqs = np.array([0, 1, 2, 4, 5])          # non-uniform
+    vals = np.ones_like(freqs)
+    asd = np.vstack([freqs, vals])
+    with pytest.raises(ValueError, match="ascending with constant increment"):
+        whiten(strain, asd=asd, fs=512, flength=16)
+
+
+def test_whiten_flength_type_error():
+    """Non-integer `flength` should raise TypeError."""
+    strain = np.random.randn(1024)
+    freqs = np.linspace(0, 256, 512)
+    vals = np.ones_like(freqs)
+    asd = np.vstack([freqs, vals])
+    with pytest.raises(TypeError, match="must be an integer"):
+        whiten(strain, asd=asd, fs=512, flength=16.5)
+
+
+# Shape and invariant tests
+#--------------------------
+
+def test_whiten_output_length_matches_input():
+    """Whitened signal should have the same length as input."""
+    N = 1024
+    strain = np.random.randn(N)
+    freqs = np.linspace(0, 256, N//2+1)
+    vals = np.ones_like(freqs)
+    asd = np.vstack([freqs, vals])
+    out = whiten(strain, asd=asd, fs=512, flength=32)
+    assert out.shape == strain.shape
+
+
+def test_whiten_normalization():
+    """Output should be normalized to unit maximum when normed=True."""
+    N = 1024
+    strain = np.random.randn(N)
+    freqs = np.linspace(0, 256, N//2+1)
+    vals = np.ones_like(freqs)
+    asd = np.vstack([freqs, vals])
+    out = whiten(strain, asd=asd, fs=512, flength=32, normed=True)
+    assert np.max(np.abs(out)) == pytest.approx(1.0, rel=1e-6)
+
+
+def test_whiten_no_normalization():
+    """Output should not be normalized when normed=False."""
+    N = 1024
+    strain = np.random.randn(N)
+    freqs = np.linspace(0, 256, N//2+1)
+    vals = np.ones_like(freqs)
+    asd = np.vstack([freqs, vals])
+    out = whiten(strain, asd=asd, fs=512, flength=32, normed=False)
+    # Typically max abs != 1.0 after whitening
+    assert not np.isclose(np.max(np.abs(out)), 1.0)
+
+
+# Test actual whitening property
+#-------------------------------
+
+def test_whiten_psd_flat_with_window():
+    fs = 512
+    N = 40960  # Large for low statistical variance
+    white = np.random.randn(N)
+
+    # ASD with large dynamic range (1 → 100).
+    slope = np.linspace(1, 100, N//2+1)
+    coloured_fft = np.fft.rfft(white) * slope
+    coloured = np.fft.irfft(coloured_fft, n=N)
+
+    freqs = np.fft.rfftfreq(N, 1/fs)
+    asd = np.vstack([freqs, slope])
+
+    out = whiten(coloured, asd=asd, fs=fs, flength=512, normed=False)
+
+    # Welch PSD estimate (for lower statistical variance)
+    f, psd_out = sp.signal.welch(out, fs=fs, nperseg=512, noverlap=256, window="hann")
+    valid = (f > 5) & (f < fs/4)  # avoid DC and Nyquist edges
+    rel_std = np.std(psd_out[valid]) / np.mean(psd_out[valid])
+
+    assert rel_std < 0.1, f"PSD variation too large: {rel_std:.3f}"
+
+
+#------------------------------------------------------------------------------
+# Tests for is_arithmetic_progression()
+#------------------------------------------------------------------------------
+
+def test_arithmetic_progression_trivial():
+    """Empty or single-element arrays should always return True."""
+    assert is_arithmetic_progression(np.array([]))
+    assert is_arithmetic_progression(np.array([42.0]))
+
+
+def test_arithmetic_progression_perfect():
+    """A perfect arithmetic progression should return True."""
+    arr = np.array([0, 1, 2, 3, 4, 5], dtype=float)
+    assert is_arithmetic_progression(arr)
+
+
+def test_arithmetic_progression_with_tolerance():
+    """Small floating-point deviations should still return True within tolerance."""
+    arr = np.array([0.0, 1.0, 2.0, 3.00000001, 4.00000002])
+    assert is_arithmetic_progression(arr, rtol=1e-5, atol=1e-6)
+
+
+def test_arithmetic_progression_false_wrong_step():
+    """Array with varying increments should return False."""
+    arr = np.array([0.0, 1.0, 3.0, 6.0])  # steps: 1,2,3
+    assert not is_arithmetic_progression(arr)
+
+
+def test_arithmetic_progression_false_last_element():
+    """Array with constant step but inconsistent last element should return False."""
+    arr = np.array([0.0, 1.0, 2.0, 3.1])  # last step off by 0.1
+    assert not is_arithmetic_progression(arr, rtol=1e-5, atol=1e-8)
+
+
+def test_arithmetic_progression_negative_step():
+    """Arithmetic progression with a negative step should return True."""
+    arr = np.array([5.0, 4.0, 3.0, 2.0, 1.0])
+    assert is_arithmetic_progression(arr)
