@@ -379,10 +379,18 @@ def truncate_impulse(impulse, ntaps, window='hann'):
     Based on :func:`gwpy.signal.filter_design.truncate_impulse`.
 
     """
+    # Set up window:
+    if isinstance(window, np.ndarray):
+        if window.ndim != 1:
+            raise ValueError("`window` must be a 1‑D array")
+        if window.size != ntaps:
+            raise ValueError("`window` length must equal `ntaps`")
+    else:
+        window = sp.signal.get_window(window, ntaps)
+
     out = impulse.copy()
     trunc_start = ntaps // 2
     trunc_stop = out.size - trunc_start
-    window = sp.signal.get_window(window, ntaps)
     out[:trunc_start] *= window[trunc_start:]
     out[trunc_stop:] *= window[:trunc_start]
     out[trunc_start:trunc_stop] = 0
