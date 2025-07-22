@@ -223,7 +223,6 @@ def test_time_array_like_basic(simple_sine):
 @pytest.mark.parametrize("n", [1, 10, 1000])
 def test_time_array_like_lengths(n):
     """Test edge case and different lengths."""
-
     arr = np.zeros(n)
     times = time_array_like(arr, fs=100.0, t0=5.0)
     
@@ -240,7 +239,6 @@ def test_time_array_like_lengths(n):
 ])
 def test_time_array_like_arraylike(input_array):
     """Test input type flexibility."""
-
     times = time_array_like(input_array, fs=10, t0=1.0)
     expected = 1.0 + np.arange(len(input_array)) / 10
     
@@ -249,7 +247,6 @@ def test_time_array_like_arraylike(input_array):
 
 def test_time_array_like_empty():
     """Empty imput should return empty array without errors."""
-
     times = time_array_like([], fs=123.0, t0=7.0)
     
     assert isinstance(times, np.ndarray)
@@ -258,7 +255,6 @@ def test_time_array_like_empty():
 
 def test_time_array_like_float_fs():
     """Ensure floating-point `fs` is handled correctly."""
-
     n = 3
     fs = 2.5
     t0 = 1.0

@@ -309,7 +309,6 @@ class CoReManager:
     @staticmethod
     def cast_to_float(string):
         """Cast a string to float, considering '' also a NaN."""
-
         if string in ['', None]:
             n = np.nan
         else:
@@ -414,7 +413,6 @@ class CoReManager:
 
     def _read_eccentricity(self, file):
         """Get the value of eccentricity from a metadata file."""
-
         with open(file) as f:
             for line in f:
                 if 'id_eccentricity' in line:

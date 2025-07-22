@@ -81,7 +81,6 @@ class NonwhiteGaussianNoise:
     
     def __getstate__(self):
         """Avoid error when trying to pickle PSD interpolator."""
-
         state = self.__dict__.copy()
         del state['psd']  # Delete the encapsulated (unpickable) function
         
@@ -114,7 +113,6 @@ class NonwhiteGaussianNoise:
 
     def _setup_psd(self, psd: np.ndarray | Callable) -> Callable:
         """Return the PSD array AND an interpolating function."""
-
         if callable(psd):
             psd_fun = psd
             # Compute a realization of the PSD function with 1 bin per
