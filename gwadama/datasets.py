@@ -255,6 +255,17 @@ class Base:
         
         return "\n".join(summary)
 
+    def __setstate__(self, state):
+        """Convert legacy attribute name 'sample_rate' to 'fs'.
+        
+        It's possible that when loading with Pickle an old instance of this
+        class, 'fs' was instead 'sample_rate', which was renamed in v0.4.0.
+
+        """
+        if 'sample_rate' in state:
+            state['fs'] = state.pop('sample_rate')
+        self.__dict__.update(state)
+
     def _check_classes_dict(self, classes: dict[str]):
         if not isinstance(classes, dict):
             raise TypeError("'classes' must be a dictionary")
