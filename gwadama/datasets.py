@@ -1651,10 +1651,14 @@ class BaseInjected(Base):
         method has not been studied, use at your own discretion.
         
         """
-        _psd, _ = self._setup_psd(state['psd_array'])
-        _asd, _ = self._setup_asd_from_psd(state['psd_array'])
-        state['_psd'] = _psd
-        state['_asd'] = _asd
+        if state['_data_in_white_space']:
+            state['_psd'] = None
+            state['_asd'] = None
+        else:
+            _psd, _ = self._setup_psd(state['psd_array'])
+            _asd, _ = self._setup_asd_from_psd(state['psd_array'])
+            state['_psd'] = _psd
+            state['_asd'] = _asd
         if 'sample_rate' in state:
             state['fs'] = state.pop('sample_rate')
         self.__dict__.update(state)
