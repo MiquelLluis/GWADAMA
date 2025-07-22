@@ -175,10 +175,10 @@ def plot_spectrogram_with_instantaneous_features(
         ax.set_ylim(*outfreq)
     # ...labels.
     ax.set_xlabel('Time [ms]')
-    ax.set_ylabel('Frequency [kHz]')
+    ax.set_ylabel('Frequency [Hz]')
     cbar.set_label('Normalized energy')
-    # ...Y ticks to kHz
-    ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: f'{x / 1000:.0f}'))
+    # # ...Y ticks to kHz
+    # ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: f'{x / 1000:.0f}'))
     # ...X ticks to milliseconds and avoid roundoff errors.
     # ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))  # Set style first, for new ticklabels.
     xticks = ax.get_xticks()
