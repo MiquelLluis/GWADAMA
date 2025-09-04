@@ -486,7 +486,7 @@ class Base:
         else:
             length = len(self.get_strain(*indices))
             duration = length / self.fs
-            times = tat.gen_time_array(0, duration, self.fs, length=length)
+            times = tat.gen_time_array(0, duration, fs=self.fs, length=length)
         
         return times
 
