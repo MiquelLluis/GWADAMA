@@ -736,6 +736,17 @@ class Base:
         verbose : bool
             If True, print information about the resampling.
         
+        Warnings
+        --------
+        This method will generate time arrays if time tracking was not enabled.
+        This can lead to inconsistent results when combined with padding-like
+        operations followed by :meth:`get_times`. In particular, if resampling
+        is performed *before* padding, a time origin will be set automatically,
+        and subsequent padding will preserve it. If resampling is performed
+        *after* padding, however, :meth:`get_times` will generate time arrays
+        with origin at 0. Thus, the final time arrays may differ depending on
+        the order of operations. This side effect is temporary and may be
+        removed in a future release.
         """
         if fs == self.fs:
             raise ValueError("trying to resample to the same sampling frequency")
