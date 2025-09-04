@@ -606,6 +606,62 @@ class Base:
         if self.Xtrain:
             self._update_train_test_subsets()
 
+    def pad_to_length(self, length: int, *, window=None) -> None:
+        """Centre-pad all strains to a common target length.
+
+        Computes, for each strain, the number of samples to pad on the left and
+        right so that its final length equals ``length``. Once the per-strain
+        padding dictionary is built, this method calls :meth:`pad_strains`.
+
+        Parameters
+        ----------
+        length : int
+            Target total length (in samples) for all strains **after** padding.
+            Must be greater than or equal to the current length of every strain.
+        window : str | tuple | Callable, optional
+            Window to apply before padding, passed through to
+            :meth:`pad_strains`. See that method for details.
+
+        Raises
+        ------
+        ValueError
+            If any existing strain length exceeds ``length``. This method only
+            pads; it does not truncate.
+
+        Notes
+        -----
+        - If time arrays are tracked (``self._track_times is True``), their
+        padding is handled by :meth:`pad_strains`.
+
+        See Also
+        --------
+        pad_strains : Apply explicit per-strain left/right padding.
+        """
+        if not isinstance(length, int) or length <= 0:
+            raise ValueError("`length` must be a positive integer (samples).")
+
+        padding_dict = {}
+        too_long = []
+
+        for clas, id, *keys in self.keys():
+            n = len(self.get_strain(clas, id, *keys))
+            if n > length:
+                too_long.append((id, n))
+                continue
+            delta = length - n
+            left = delta // 2
+            right = delta - left  # puts the extra sample (if any) on the right
+            padding_dict[id] = (left, right)
+
+        if too_long:
+            ids = ", ".join(f"{id} (len={n})" for id, n in too_long)
+            raise ValueError(
+                "Cannot centre-pad: some strains are longer than the target "
+                f"length {length} samples: {ids}."
+            )
+
+        self.pad_strains(padding_dict, window=window)
+
     def shrink_strains(self, padding: int | tuple | dict) -> None:
         """Shrink strains by a specified padding.
 
