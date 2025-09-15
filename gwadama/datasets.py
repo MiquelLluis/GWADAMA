@@ -789,6 +789,10 @@ class Base:
         
         """
         if self.whitened:
+            # Whitening assumes white, unit-variance noise in the chosen band.  
+            # A bandpass applied afterwards re-colours the data and breaks this
+            # assumption.  
+            # Always band-limit before PSD estimation and whitening, not after.
             raise RuntimeError("bandpass cannot be applied after whitening")
 
         if self.strains is None:
