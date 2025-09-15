@@ -848,7 +848,7 @@ class Base:
                     strain_windowed
                 )
 
-    def normalise(self, mode='amplitude', all=False):
+    def normalise(self, mode='amplitude', all_strains=False):
         """Normalise strains.
 
         Normalise strains to the indicated `mode`, and optionally to
@@ -859,7 +859,7 @@ class Base:
         mode : str, optional
             Normalisation method. Available: amplitude, l2
 
-        all : bool, optional
+        all_strains : bool, optional
             If True, normalise also `self.nonwhitened_strains`.
 
         Notes
@@ -877,7 +877,7 @@ class Base:
         for *_, strain in self.items():
             strain[:] *= norm_coef_function(strain)
         
-        if all and (self.nonwhiten_strains is not None):
+        if all_strains and (self.nonwhiten_strains is not None):
             for keys in dictools.unroll_nested_dictionary_keys(self.nonwhiten_strains):
                 strain = dictools.get_value_from_nested_dict(
                     self.nonwhiten_strains,
