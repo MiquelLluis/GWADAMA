@@ -713,7 +713,7 @@ class Base:
         else:
             # If no previous pad wass added, store the current with negative
             # values (since we're shrinking, not enlarging).
-            self.padding = {id: (-pad[0], -pad[1]) for id, pad in padding}
+            self.padding = {id: (-pad[0], -pad[1]) for id, pad in padding.items()}
         
         self.max_length = self._find_max_length()
         if self.Xtrain:
