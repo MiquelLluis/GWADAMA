@@ -887,16 +887,22 @@ class Base:
     
     def whiten(self,
                *,
-               asd_array: np.ndarray,
                flength: int,
+               asd_array: np.ndarray = None,
                highpass: int = None,
                normed=False,
                shrink: int = 0,
                window: str | tuple = 'hann',
                verbose=False):
         """Whiten the strains.
+
+        TODO
         
         Calling this method performs the whitening of all strains.
+
+        If `asd_array` is None, the ASD will be estimated for each strain using
+        SciPy's Welch method with median average and the same parameters used
+        for whitening.
         
         Note
         ----
@@ -914,6 +920,21 @@ class Base:
         
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
+            if asd_array is None:
+                freqs, psd = sp.signal.welch(
+                    strain,
+                    fs=self.fs,
+                    window=window,
+                    nperseg=flength,
+                    noverlap=None, # default (nperseg // 2)
+                    detrend='constant',  # default
+                    return_onesided=True,  # default
+                    scaling='density',  # default
+                    average='median'
+                )
+                asd_array = np.stack((freqs, psd))
+                asd_array[1] **= 0.5
+
             strain_w = tat.whiten(
                 strain, asd=asd_array, fs=self.fs, flength=flength,
                 highpass=highpass, normed=normed
