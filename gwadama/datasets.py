@@ -688,6 +688,10 @@ class Base:
                 If extra layers below ID are present, they will be shrunk
                 using the same pad in cascade.
 
+        Notes
+        -----
+        This method shrinks `nonwhiten_strains` as well.
+
         """
         padding = self._format_padding(padding)
 
@@ -702,6 +706,15 @@ class Base:
                 times = self.get_times(clas, id, *keys)
                 times = times[pad_left:-pad_right]
                 dictools.set_value_to_nested_dict(self.times, [clas,id,*keys], times)
+            
+            if self.whitened:
+                # Repeat top block for nonwhiten_strains.
+                strainw = dictools.get_value_from_nested_dict(
+                    self.nonwhiten_strains,
+                    [clas,id,*keys]
+                )
+                strainw = strainw[pad_left:-pad_right]
+                dictools.set_value_to_nested_dict(self.nonwhiten_strains, [clas,id,*keys], strainw)
 
         if self.padding:
             # Subtract from previous padding the shrunk parts here.
