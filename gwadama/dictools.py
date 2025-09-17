@@ -4,8 +4,10 @@ Collection of utility functions related to nested Python dictionaries.
 
 """
 # from copy import deepcopy  # Lazy import
+import warnings
 
 import numpy as np
+import pandas as pd
 
 
 def unroll_nested_dictionary_keys(dict_: dict, max_depth: int = None) -> list:
@@ -452,3 +454,91 @@ def get_types(d: dict):
                 types.add(type(value))  # record type, don't traverse further
 
     return types
+
+
+def deepcopy(obj, *, array_writeable=True, _memo=None):
+    """Deep-copy a nested structure.
+
+    This is intended to substitute the use of Python's func::copy.deepcopy when
+    possible, since `deepcopy` is less efficient when copying atomic elements
+    such as NumPy arrays and Pandas dataframes.
+
+    Parameters
+    ----------
+    obj
+        Arbitrary Python object composed of dicts/lists/tuples and NumPy arrays.
+    
+    array_writeable : bool, default=True
+        Whether cloned arrays should be writeable. If False, arrays are marked
+        read-only (`arr.setflags(write=False)`).
+
+    _memo : dict[int, Any], optional
+        Internal memo to preserve aliasing and break cycles (like
+        :func:`copy.deepcopy`). Do not set in user code.
+
+    Returns
+    -------
+    cloned
+        A new structure with fresh containers and fresh NumPy array buffers.
+
+    Notes
+    -----
+    - Dict/tuple/list containers are rebuilt; scalars/strings are reused.
+    - Arrays are copied with `array.copy()`.
+    """
+    if _memo is None:
+        _memo = {}
+
+    oid = id(obj)
+    if oid in _memo:
+        return _memo[oid]
+
+    # Atomics / immutables
+    if obj is None or isinstance(obj, (str, bytes, int, float, complex, np.generic)):
+        return obj
+
+    if isinstance(obj, np.ndarray):
+        arr = obj.copy()
+        if not array_writeable:
+            arr.setflags(write=False)
+        _memo[oid] = arr
+        return arr
+    
+    if isinstance(obj, pd.DataFrame):
+        df = obj.copy(deep=True)
+        _memo[oid] = df
+        if not array_writeable:
+            warnings.warn(
+                "`array_writeable=False` requested, but Pandas objects cannot be "
+                "made read-only; the flag is ignored for DataFrames."
+            )
+        return df
+
+    if isinstance(obj, dict):
+        # Pre-allocate > memoise > fill
+        out = {}
+        _memo[oid] = out
+        for k, v in obj.items():
+            out[k] = deepcopy(v, array_writeable=array_writeable, _memo=_memo)
+        return out
+    
+    if isinstance(obj, list):
+        # Pre-allocate > memoise > fill
+        out = []
+        _memo[oid] = out
+        for v in obj:
+            out.append(deepcopy(v, array_writeable=array_writeable, _memo=_memo))
+        return out
+    
+    if isinstance(obj, tuple):
+        # Pre-allocate > memoise > fill
+        tmp_list = []
+        _memo[oid] = tmp_list
+        for v in obj:
+            tmp_list.append(deepcopy(v, array_writeable=array_writeable, _memo=_memo))
+        out = tuple(tmp_list)
+        _memo[oid] = out
+        return out
+
+    # Fallback: treat as atomic
+    return obj

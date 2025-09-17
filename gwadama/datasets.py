@@ -196,6 +196,7 @@ class Base:
         self.whitened = False
         self.whiten_params = {}
         self.nonwhiten_strains = self.strains  # Initially assumed to be the same.
+        self._data_in_white_space = False  # Flag indicating whether the white-space mode is enabled.
 
         # Time tracking related attributes.
         self.fs: int = None
@@ -916,7 +917,7 @@ class Base:
         if self.strains is None:
             raise RuntimeError("no strains have been given or generated yet")
         
-        self.nonwhiten_strains = deepcopy(self.strains)
+        self.nonwhiten_strains = dictools.deepcopy(self.strains)
         
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
@@ -958,6 +959,31 @@ class Base:
 
         if self.Xtrain is not None:
             self._update_train_test_subsets()
+    
+    def enter_white_space(self, *, forget_original=False):
+        """Switch the dataset to 'white-space mode'.
+
+        This flags the instance so downstream injected datasets will not
+        require a PSD nor access to pre-whitened strains.
+
+        Parameters
+        ----------
+        forget_original : bool, optional
+            If True, drop references to non-whitened strains by setting
+            `self.nonwhiten_strains = None`. Defaults to False.
+
+        Notes
+        -----
+        - Sets `self.whitened = True`.
+        - Adds `self._data_in_white_space = True` for clarity/compatibility.
+        - Most injection classes detect white-space mode by checking
+        `clean_dataset.nonwhiten_strains is None`; this method, however,
+        provides an explicit way to get there.
+        """
+        self.whitened = True
+        if forget_original:
+            self.nonwhiten_strains = None
+        self._data_in_white_space = True
 
     def build_train_test_subsets(self, train_size: int | float):
         """Generate a random Train and Test subsets.
@@ -1491,13 +1517,14 @@ class BaseInjected(Base):
     def __init__(self,
                  clean_dataset: Base,
                  *,
-                 psd: np.ndarray | Callable,
-                 noise_length: int,
                  freq_cutoff: int | float,
                  freq_butter_order: int | float,
-                 noise_instance=None,
-                 detector: str = '',
-                 random_seed: int = None):
+                 psd: np.ndarray | Callable = None,
+                 noise_instance: synthetic.NonwhiteGaussianNoise = None,
+                 noise_length: int = None,
+                 noise_std: float = 1.0,
+                 random_seed: int = None,
+                 detector: str = ''):
         """Base constructor for injected datasets.
 
         TODO: Update docstring.
@@ -1523,7 +1550,7 @@ class BaseInjected(Base):
         clean_dataset : Base
             Instance of a Class(Base) with noiseless signals.
 
-        psd : np.ndarray | Callable
+        psd : np.ndarray | Callable, optional
             Power Spectral Density of the detector's sensitivity in the range
             of frequencies of interest. Can be given as a callable function
             whose argument is expected to be an array of frequencies, or as a
@@ -1533,6 +1560,9 @@ class BaseInjected(Base):
             psd[0] = frequency_samples
             psd[1] = psd_samples
             ```
+
+            If not provided, the input clean dataset must be in white-space
+            mode (where no PSD is needed).
             
             .. note::
                 `psd` is also used to compute the 'asd' attribute (ASD).
@@ -1580,21 +1610,35 @@ class BaseInjected(Base):
         #----------------------------------------------------------------------
         self.fs = clean_dataset.fs
 
-        if clean_dataset.nonwhiten_strains is None:
-            # Whitened space case (no access to strains before whitening).
+        # Decide white-space mode from the explicit flag if present; otherwise fall back.
+        ws_flag = getattr(clean_dataset, "_data_in_white_space", None)
+        if ws_flag is True:
             self._data_in_white_space = True
-            self.strains_clean = deepcopy(clean_dataset.strains)
-        else:
-            # Non-whitened case (access to original strains).
+            # Use whitened strains as the clean reference in white space.
+            self.strains_clean = dictools.deepcopy(clean_dataset.strains)
+        elif ws_flag is False:
             self._data_in_white_space = False
-            self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
+            if clean_dataset.nonwhiten_strains is None:
+                raise RuntimeError(
+                    "'clean_dataset' indicates coloured-space mode but "
+                    "'nonwhiten_strains' is missing. Either call the clean "
+                    "dataset's, or keep 'nonwhiten_strains' available."
+                )
+            self.strains_clean = dictools.deepcopy(clean_dataset.nonwhiten_strains)
+        else:
+            # Backwards-compatibility path: keep old heuristic.
+            self._data_in_white_space = (clean_dataset.nonwhiten_strains is None)
+            self.strains_clean = dictools.deepcopy(
+                clean_dataset.strains if self._data_in_white_space else clean_dataset.nonwhiten_strains
+            )
+
         
         self.classes = clean_dataset.classes.copy()
         self._check_classes_dict(self.classes)
         self.labels = clean_dataset.labels.copy()
-        self.metadata = deepcopy(clean_dataset.metadata)
+        self.metadata = dictools.deepcopy(clean_dataset.metadata)
         self._track_times = clean_dataset._track_times
-        self.times = deepcopy(clean_dataset.times) if self._track_times else None
+        self.times = dictools.deepcopy(clean_dataset.times) if self._track_times else None
         self.padding = clean_dataset.padding.copy()
         self.max_length = clean_dataset.max_length
 
@@ -1607,31 +1651,24 @@ class BaseInjected(Base):
         # Highpass parameters applied when generating the noise array.
         self.freq_cutoff = freq_cutoff
         self.freq_butter_order = freq_butter_order
-    
-        if self._data_in_white_space:
-            self._psd, self.psd_array = None, None
-            self._asd, self.asd_array = None, None
-        else:
-            self._psd, self.psd_array = self._setup_psd(psd)
-            self._asd, self.asd_array = self._setup_asd_from_psd(psd)
 
-        if noise_instance is None:
-            # Generate synthetic non-white Guassian noise.
-            if psd is None:
-                raise ValueError(
-                    "in order to generate synthetic background, 'psd' must be"
-                    " provided."
-                )
-            self.noise = self._generate_background_noise(noise_length)
-        else:
-            # EXPERIMENTAL OPTION TO ALLOW THE USE OF REAL OR PRE-GENERATED
-            # BACKGROUND NOISE.
-            if not isinstance(noise_instance, synthetic.NonwhiteGaussianNoise):
-                raise TypeError(
-                    "'noise_instance' must be a valid noise type"
-                    f" ({type(noise_instance)} was given)"
-                )
-            self.noise = noise_instance
+        self.whitened = self._data_in_white_space
+        self.whiten_params: dict | None = None
+        # Declare attributes populated by the helper below.
+        self._psd: Callable | None = None
+        self._asd: Callable | None = None
+        self.psd_array: np.ndarray | None = None
+        self.asd_array: np.ndarray | None = None
+        self.noise: synthetic.NonwhiteGaussianNoise | None = None
+        self.noise_std: float | None = None
+        # Helper:
+        self._configure_psd_and_noise(
+            psd=psd,
+            noise_instance=noise_instance,
+            noise_length=noise_length,
+            noise_std=noise_std,
+            random_seed=random_seed
+        )
 
         # Injection related:
         #----------------------------------------------------------------------
@@ -1640,8 +1677,6 @@ class BaseInjected(Base):
         self.snr_list = []
         self.injection_snr_scales = None
         self.injections_per_snr = 1  # Default value.
-        self.whitened = self._data_in_white_space
-        self.whiten_params = None
 
         # Train/Test subset views:
         #----------------------------------------------------------------------
@@ -1755,6 +1790,89 @@ class BaseInjected(Base):
             state['fs'] = state.pop('sample_rate')
         self.__dict__.update(state)
     
+    def _configure_psd_and_noise(self,
+                                 *,
+                                 psd: np.ndarray | Callable = None,
+                                 noise_instance: synthetic.NonwhiteGaussianNoise = None,
+                                 noise_length: int = None,
+                                 noise_std: float = 1.0,
+                                 random_seed: int = None):
+        """Configure PSD/ASD and the background-noise generator/instance.
+
+        This method creates/assigns:
+        - `self._psd`
+        - `self.psd_array`
+        - `self._asd`
+        - `self.asd_array`
+        - `self.noise`
+
+        Four handled cases depending on the working space and whether the
+        background noise is provided:
+          (1) white    + synthetic → PSD not used; generate N(0, σ², size=noise_length).
+          (2) white    + provided  → PSD not used.
+          (3) coloured + synthetic → PSD required; generate coloured N(0, σ², size=noise_length).
+          (4) coloured + provided  → PSD required; validate compatibility.
+        """
+        # Basic sanity on conflicting inputs
+        if self._data_in_white_space and psd is not None:
+            warnings.warn("Operating in white space: supplied 'psd' will be ignored.")
+        if (noise_instance is not None) and (noise_length is not None):
+            # Length is irrelevant when the caller already provides an instance
+            warnings.warn("'noise_length' is ignored because 'noise_instance' is provided.")
+
+        # ---- WHITE SPACE ----------------------------------------------------
+        if self._data_in_white_space:
+            # In white space we do not carry PSD/ASD
+            self._psd = self.psd_array = None
+            self._asd = self.asd_array = None
+
+            if noise_instance is None:
+                # Case (1)
+                self.noise = synthetic.NonwhiteGaussianNoise(
+                    psd=None,
+                    duration=noise_length/self.fs,
+                    fs=self.fs,
+                    rng=self.rng,
+                    normal_std=noise_std,  # add this kwarg in synthetic.py
+                )
+            else:
+                # Case (2)
+                self._validate_noise_white(noise_instance)
+                self.noise = noise_instance
+
+        # ---- COLOURED SPACE -------------------------------------------------
+        else:
+            if psd is None:
+                raise ValueError(
+                    "In coloured space, 'psd' must be provided (it defines the inner product/SNR), "
+                    "even if 'noise_instance' is supplied."
+                )
+            # Your existing helpers to standardise PSD/ASD representations
+            self._psd, self.psd_array = self._setup_psd(psd)
+            self._asd, self.asd_array = self._setup_asd_from_psd(psd)
+
+            if noise_instance is None:
+                # (3) coloured + synthetic
+                self.noise = synthetic.NonwhiteGaussianNoise(
+                    psd=self.psd_array,
+                    length=self._resolve_noise_duration(noise_length),
+                    rng=self.rng if hasattr(self, 'rng') else np.random.default_rng(random_seed),
+                )
+            else:
+                # (4) coloured + provided → validate PSD compatibility
+                self._validate_noise_psd_compat(noise_instance, self.psd_array)
+                self.noise = noise_instance
+    
+    def _validate_noise_white(self, noise: synthetic.NonwhiteGaussianNoise):
+        """Validate a provided white-noise instance for white-space mode."""
+
+        if noise.psd is not None:
+            warnings.warn(
+                "Provided 'noise' has a non-None PSD but the dataset is in "
+                "white space; it should be white. It will be ignored."
+            )
+
+    
     def _setup_psd(self, psd: np.ndarray | Callable) -> tuple[Callable, np.ndarray]:
         """Setup the PSD function or array depending on the input.
         
@@ -1827,16 +1945,6 @@ class BaseInjected(Base):
 
         """
         return self._asd(frequencies)
-    
-    def _generate_background_noise(self, noise_length: int) -> synthetic.NonwhiteGaussianNoise:
-        """The noise realization is generated by NonwhiteGaussianNoise."""
-        d: float = noise_length / self.fs
-        noise = synthetic.NonwhiteGaussianNoise(
-            duration=d, psd=self.psd, fs=self.fs,
-            rng=self.rng, freq_cutoff=self.freq_cutoff
-        )
-
-        return noise
     
     def _gen_empty_strains_dict(self) -> dict[dict[dict]]:
         """Initializes the nested dictionary of strains.
@@ -1931,7 +2039,7 @@ class BaseInjected(Base):
         if set(snr_list) & set(self.snr_list):
             raise ValueError("one or more SNR values are already present in the dataset")
 
-        times_old = deepcopy(self.times)
+        times_old = dictools.deepcopy(self.times)
         if randomize_noise:
             self._setup_rng(random_seed)
         if verbose:
@@ -3331,16 +3439,16 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         if clean_dataset.nonwhiten_strains is None:
             # Whitened space case (no access to strains before whitening).
             self._data_in_white_space = True
-            self.strains_clean = deepcopy(clean_dataset.strains)
+            self.strains_clean = dictools.deepcopy(clean_dataset.strains)
         else:
             # Non-whitened case (access to original strains).
             self._data_in_white_space = False
-            self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
+            self.strains_clean = dictools.deepcopy(clean_dataset.nonwhiten_strains)
         
         self.classes = clean_dataset.classes.copy()  # Dummy class.
         self.labels = self.labels = clean_dataset.labels.copy()  # Dummy labels.
         self._track_times = clean_dataset._track_times
-        self.times = deepcopy(clean_dataset.times) if self._track_times else None
+        self.times = dictools.deepcopy(clean_dataset.times) if self._track_times else None
         self.padding = clean_dataset.padding.copy()
         self.max_length = clean_dataset.max_length
 
@@ -3368,7 +3476,13 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
                     "in order to generate synthetic background, 'psd' must be"
                     " provided."
                 )
-            self.noise = self._generate_background_noise(noise_length)
+            self.noise = synthetic.NonwhiteGaussianNoise(  # TODO: White space + synthetic noise not addressed!
+                duration=noise_length/self.fs,
+                psd=self.psd,
+                fs=self.fs,
+                rng=self.rng,
+                freq_cutoff=self.freq_cutoff
+            )
         else:
             # EXPERIMENTAL OPTION TO ALLOW THE USE OF REAL OR PRE-GENERATED
             # BACKGROUND NOISE.

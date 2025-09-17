@@ -41,7 +41,7 @@ class NonwhiteGaussianNoise:
     rng: numpy.random.Generator
 
     """
-    def __init__(self, *, duration, psd, fs, rng, freq_cutoff=0):
+    def __init__(self, *, duration, psd, fs, rng, normal_std=1.0, freq_cutoff=0):
         """Initialises the noise instance.
 
         Parameters
@@ -62,6 +62,10 @@ class NonwhiteGaussianNoise:
 
         random_seed: int or 1-d array_like
             Seed for numpy.random.RandomState.
+
+        normal_std: float, default 1.0
+            Standard deviation of the Gaussian distribution to be generated
+            in frequency domain.
         
         freq_lowcut: int, optional
             Low cut-off frequency to apply when computing noise in frequency space.
@@ -74,6 +78,7 @@ class NonwhiteGaussianNoise:
         self.fs = fs
         self.freq_nyquist = fs // 2
         self.rng = rng  # Shared with the parent scope.
+        self.normal_std = normal_std
         self.psd, self._psd = self._setup_psd(psd)
         self._check_initial_parameters()
         
@@ -259,7 +264,7 @@ class NonwhiteGaussianNoise:
         psd = self.psd(f)
         psd[:i_cut] = 0  # Ensure no components are computed under the cutoff frequency.
         nf = np.sqrt(length * self.fs * psd) / 2
-        nf = nf*self.rng.normal(size=n) + 1j*nf*self.rng.normal(size=n)
+        nf = nf*self.rng.normal(scale=self.normal_std, size=n) + 1j*nf*self.rng.normal(scale=self.normal_std, size=n)
         
         # The final noise array realization
         self.noise = np.fft.irfft(nf, n=length)
