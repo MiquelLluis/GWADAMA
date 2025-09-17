@@ -505,22 +505,21 @@ class Base:
             - **ArrayLike**: Sequence with exactly 2 elements interpreted as
               [left_pad, right_pad] for all signals.
             - **dict**: Pre-formatted dictionary with signal IDs as keys and
-              [left, right] padding tuples as values. Returned directly without
+              [left, right] padding arrays as values. Returned directly without
               validation.
 
         Returns
         -------
         padding_dict : dict
-            Dictionary mapping each signal ID to its [left_pad, right_pad]
-            list.
+            Dictionary mapping each signal ID to a [left_pad, right_pad] array.
 
         """
         if isinstance(padding, int):
-            padding_dict = {id: [padding, padding] for id in self.labels}
+            padding_dict = {id: np.array([padding, padding]) for id in self.labels}
         elif isinstance(padding, tuple|list|np.ndarray):
-            padding_dict = {id: list(padding) for id in self.labels}
+            padding_dict = {id: np.asarray(padding) for id in self.labels}
         elif isinstance(padding, dict):
-            padding_dict = padding
+            padding_dict = {id: np.asarray(v) for id, v in padding.items()}
         else:
             raise TypeError("padding must be an integer, an ArrayLike or a dictionary")
         
@@ -597,8 +596,8 @@ class Base:
 
         if self.padding:
             # Add from previous padding the padded parts here.
-            for id, pad_id in padding.items():
-                self.padding[id] += pad_id
+            for id, padding_i in padding.items():
+                self.padding[id] += padding_i
         else:
             self.padding = padding
         
