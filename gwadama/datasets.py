@@ -580,29 +580,43 @@ class Base:
                 "`signal.get_window()` function."
             )
 
-        for clas, id, *keys in self.keys():
+        for clas, id_, *keys in self.keys():
             # Apply window if given
-            strain = window_func(self.get_strain(clas, id, *keys))
+            strain = window_func(self.get_strain(clas, id_, *keys))
             
             # Pad the strain
-            left_pad, right_pad = padding[id]
-            strain_padded = np.pad(strain, (left_pad, right_pad), mode='constant')
-            dictools.set_value_to_nested_dict(self.strains, [clas, id, *keys], strain_padded)
+            pad_left, pad_right = padding[id_]
+            strain_padded = np.pad(strain, (pad_left, pad_right), mode='constant')
+            dictools.set_value_to_nested_dict(self.strains, [clas, id_, *keys], strain_padded)
 
-            # Pad the corresponding time array if time tracking is enabled
             if self._track_times:
-                times = self.get_times(clas, id, *keys)
+                # Pad the corresponding time array if time tracking is enabled
+                times = self.get_times(clas, id_, *keys)
                 time_step = (times[-1] - times[0]) / (len(times) - 1)
-                left_time_points = np.arange(times[0] - left_pad * time_step, times[0], time_step)
-                right_time_points = np.arange(times[-1] + time_step, times[-1] + (right_pad + 1) * time_step, time_step)
+                left_time_points = np.arange(times[0] - pad_left * time_step, times[0], time_step)
+                right_time_points = np.arange(times[-1] + time_step, times[-1] + (pad_right + 1) * time_step, time_step)
                 times_padded = np.concatenate([left_time_points, times, right_time_points])
-                dictools.set_value_to_nested_dict(self.times, [clas, id, *keys], times_padded)
+                dictools.set_value_to_nested_dict(self.times, [clas, id_, *keys], times_padded)
+            
+            if self.strains is not self.nonwhiten_strains:
+                # We need to extend the operation to the original strains to
+                # ensure consistence with future operations.
+                # Example case: after whitening, the original strains are kept
+                # in `self.nonwhiten_strains`, but attribute `self.strains`
+                # won't point to the same object anymore. 
+                strain_nw = dictools.get_value_from_nested_dict(
+                    self.nonwhiten_strains,
+                    [clas,id_,*keys]
+                )
+                strain_nw = window_func(strain_nw)
+                strain_nw = np.pad(strain_nw, (pad_left, pad_right), mode='constant')
+                dictools.set_value_to_nested_dict(self.nonwhiten_strains, [clas,id_,*keys], strain_nw)
 
         if logpad:
             if self.padding:
                 # Add from previous padding the padded parts here.
-                for id, padding_i in padding.items():
-                    self.padding[id] += padding_i
+                for id_, padding_i in padding.items():
+                    self.padding[id_] += padding_i
             else:
                 self.padding = padding
         
