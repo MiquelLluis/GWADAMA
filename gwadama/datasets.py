@@ -335,6 +335,26 @@ class Base:
         
         self._track_times = True
 
+    def _project_keys_for_original(self, keys: list) -> list:
+        """Map a key-path from the current strains to the original strains.
+
+        Parameters
+        ----------
+        keys
+            The extra keys yielded by `self.keys()` beyond (class, id_).
+
+        Returns
+        -------
+        list
+            A key-path applicable to `self.strains_original` for the same item.
+
+        Notes
+        -----
+        Default implementation is identity; subclasses may drop internal layers
+        (e.g., SNR).
+        """
+        return keys
+
     def keys(self, max_depth: int = None) -> list:
         """Return the unrolled combinations of all strain identifiers.
 
@@ -741,12 +761,17 @@ class Base:
                 # won't point to the same object anymore. 
                 # We need to extend the operation to the original strains to
                 # ensure consistence with future operations.
+                orig_keys = self._project_keys_for_original(keys)
                 strainw = dictools.get_value_from_nested_dict(
                     self.strains_original,
-                    [clas,id_,*keys]
+                    [clas,id_,*orig_keys]
                 )
                 strainw = strainw[pad_left:-pad_right]
-                dictools.set_value_to_nested_dict(self.strains_original, [clas,id_,*keys], strainw)
+                dictools.set_value_to_nested_dict(
+                    self.strains_original,
+                    [clas,id_,*orig_keys],
+                    strainw
+                )
 
         if logpad:
             if self.padding:
@@ -1799,6 +1824,17 @@ class BaseInjected(Base):
         if 'sample_rate' in state:
             state['fs'] = state.pop('sample_rate')
         self.__dict__.update(state)
+
+    def _project_keys_for_original(self, keys: list) -> list:
+        """Drop the internal SNR layer so originals (no SNR layer) are addressed.
+
+        In injected datasets, `self.keys()` yields (clas, id_, snr, ...).
+        The originals live at (clas, id_, ...). We therefore strip the leading
+        numeric SNR key, keeping any user-defined layers that follow.
+        """
+        if keys and isinstance(keys[0], (int, np.integer, float, np.floating)):
+            return keys[1:]
+        return keys
     
     def _setup_psd(self, psd: np.ndarray | Callable) -> tuple[Callable, np.ndarray]:
         """Setup the PSD function or array depending on the input.
