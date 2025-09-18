@@ -525,7 +525,7 @@ class Base:
         
         return padding_dict
 
-    def pad_strains(self, padding: int | ArrayLike | dict, window=None) -> None:
+    def pad_strains(self, padding: int | ArrayLike | dict, window=None, logpad=True) -> None:
         """
         Pad strains with zeros on both sides.
 
@@ -553,6 +553,10 @@ class Base:
                 This parameter was added in v0.4.0 to emphasize the potential
                 need of windowing before padding strains to avoid spectral
                 leakage.
+        
+        logpad : bool, default=True
+            If False, the changes will not be reflected in the `self.padding`
+            attribute.
 
         Notes
         -----
@@ -594,18 +598,19 @@ class Base:
                 times_padded = np.concatenate([left_time_points, times, right_time_points])
                 dictools.set_value_to_nested_dict(self.times, [clas, id, *keys], times_padded)
 
-        if self.padding:
-            # Add from previous padding the padded parts here.
-            for id, padding_i in padding.items():
-                self.padding[id] += padding_i
-        else:
-            self.padding = padding
+        if logpad:
+            if self.padding:
+                # Add from previous padding the padded parts here.
+                for id, padding_i in padding.items():
+                    self.padding[id] += padding_i
+            else:
+                self.padding = padding
         
         self.max_length = self._find_max_length()
         if self.Xtrain:
             self._update_train_test_subsets()
 
-    def pad_to_length(self, length: int, *, window=None) -> None:
+    def pad_to_length(self, length: int, *, window=None, logpad=True) -> None:
         """Centre-pad all strains to a common target length.
 
         Computes, for each strain, the number of samples to pad on the left and
@@ -617,9 +622,14 @@ class Base:
         length : int
             Target total length (in samples) for all strains **after** padding.
             Must be greater than or equal to the current length of every strain.
+        
         window : str | tuple | Callable, optional
             Window to apply before padding, passed through to
             :meth:`pad_strains`. See that method for details.
+        
+        logpad : bool, default=True
+            If False, the changes will not be reflected in the `self.padding`
+            attribute.
 
         Raises
         ------
@@ -659,9 +669,9 @@ class Base:
                 f"length {length} samples: {ids}."
             )
 
-        self.pad_strains(padding_dict, window=window)
+        self.pad_strains(padding_dict, window=window, logpad=logpad)
 
-    def shrink_strains(self, padding: int | tuple | dict) -> None:
+    def shrink_strains(self, padding: int | tuple | dict, logpad=True) -> None:
         """Shrink strains by a specified padding.
 
         Shrink strains (and their associated time arrays if present) by the
@@ -687,6 +697,10 @@ class Base:
             .. note::
                 If extra layers below ID are present, they will be shrunk
                 using the same pad in cascade.
+        
+        logpad : bool, default=True
+            If False, the changes will not be reflected in the `self.padding`
+            attribute.
 
         Notes
         -----
@@ -716,16 +730,17 @@ class Base:
                 strainw = strainw[pad_left:-pad_right]
                 dictools.set_value_to_nested_dict(self.nonwhiten_strains, [clas,id,*keys], strainw)
 
-        if self.padding:
-            # Subtract from previous padding the shrunk parts here.
-            for id, pad_id in padding.items():
-                # THE SIGN IS APPLIED HERE.
-                self.padding[id][0] -= pad_id[0]
-                self.padding[id][1] -= pad_id[1]
-        else:
-            # If no previous pad wass added, store the current with negative
-            # values (since we're shrinking, not enlarging).
-            self.padding = {id: (-pad[0], -pad[1]) for id, pad in padding.items()}
+        if logpad:
+            if self.padding:
+                # Subtract from previous padding the shrunk parts here.
+                for id, pad_id in padding.items():
+                    # THE SIGN IS APPLIED HERE.
+                    self.padding[id][0] -= pad_id[0]
+                    self.padding[id][1] -= pad_id[1]
+            else:
+                # If no previous pad wass added, store the current with negative
+                # values (since we're shrinking, not enlarging).
+                self.padding = {id: (-pad[0], -pad[1]) for id, pad in padding.items()}
         
         self.max_length = self._find_max_length()
         if self.Xtrain:
