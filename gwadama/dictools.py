@@ -4,6 +4,7 @@ Collection of utility functions related to nested Python dictionaries.
 
 """
 # from copy import deepcopy  # Lazy import
+from typing import Any, Iterable
 
 import numpy as np
 
@@ -62,14 +63,14 @@ def __unroll_nested_dictionary_keys(dict_: dict,
     return unrolled_keys
 
 
-def get_value_from_nested_dict(dict_, keys: list):
+def get_value_from_nested_dict(dict_: dict, keys: Iterable[Any]) -> Any:
     """Access a value from a nested dictionary using a sequence of keys.
 
     Parameters
     ----------
     dict_ : dict
         A dictionary which may contain further nested dictionaries.
-    keys : list
+    keys : iterable
         A sequence of keys that defines the path to the target value.
 
     Returns
@@ -79,56 +80,109 @@ def get_value_from_nested_dict(dict_, keys: list):
 
     Warnings
     --------
-    The returned value is the original object stored in the dictionary, and can be
-    modified in-place. Use this behaviour with caution.
+    The returned value is the original object stored in the dictionary and can
+    be modified in-place. Use this behaviour with caution.
+
+    Notes
+    -----
+    This function *only* traverses Python `dict` objects. If a path segment
+    encounters a non-dict (e.g., a NumPy array), a `KeyError` is raised.
+    This prevents accidental array indexing when a path is malformed.
     """
     if not isinstance(dict_, dict):
         raise TypeError("'dict_' must be a dictionary")
 
-    value = dict_
-    for i, key in enumerate(keys):
-        try:
-            value = value[key]
-        except KeyError:
-            raise KeyError(f"Key '{key}' not found at depth {i} in the nested dictionary")
-        except TypeError:
-            raise ValueError(f"Expected a dictionary at depth {i}, but got {type(value).__name__}")
+    cur: Any = dict_
+    path = list(keys)
 
-    return value
+    # Empty path: return the dictionary itself (consistent with traversal)
+    if not path:
+        return cur
+
+    for i, key in enumerate(path):
+        if not isinstance(cur, dict):
+            raise KeyError(
+                f"Non-dict encountered at depth {i} while traversing {path!r}; "
+                f"current object type is {type(cur).__name__}"
+            )
+        if key not in cur:
+            avail = list(cur.keys())
+            raise KeyError(
+                f"Key {key!r} not found at depth {i}; available keys: {avail!r}"
+            )
+        cur = cur[key]
+
+    return cur
 
 
-def set_value_to_nested_dict(dict_, keys, value, add_missing_keys=False):
-        """Set a value to an arbitrarily-depth nested dictionary.
+def set_value_to_nested_dict(dict_: dict,
+                             keys: Iterable[Any],
+                             value: Any,
+                             *,
+                             add_missing_keys=False) -> None:
+    """Set a value in a nested dictionary using a sequence of keys.
 
-        Parameters
-        ----------
-        dict_: dict
-            Nested dictionary.
+    Parameters
+    ----------
+    dict_: dict
+        Target nested dictionary.
 
-        keys: iterable
-            Sequence of keys necessary to get to the element inside the nested
-            dictionary.
+    keys: iterable
+        Sequence of keys necessary to reach the element inside the nested
+        dictionary.
 
-        value: Any
+    value: Any
+        Value to set at the target location.
 
-        add_missing_keys: bool
-            If True, missing keys (layers) will be added to the nested
-            dictionary.
-            
-            CAUTION: if `add_missing_keys=True`, no KeyError will be raised.
+    add_missing_keys: bool
+        If True, missing intermediate keys are created as empty dicts.
+        If False (default), a missing key raises `KeyError`.
+    
+    Raises
+    ------
+    TypeError
+        If `dict_` is not a dictionary.
+    KeyError
+        If an intermediate key is missing (and `add_missing_keys` is False),
+        or if a non-dict object is encountered before the final key.
 
-        """
-        for key in keys[:-1]:
-            if key not in dict_:
-                if add_missing_keys:
-                    dict_[key] = {}
-                else:
-                    raise ValueError(
-                        "the nested dictionary shape does not match with the input key sequence"
-                    )
-            
-            dict_ = dict_[key]
-        dict_[keys[-1]] = value
+    Notes
+    -----
+    - This function *only* creates/traverses plain `dict` containers.
+    - It refuses to descend into non-dict objects, avoiding accidental array
+    indexing or attribute misuse mid-path.
+    """
+    if not isinstance(dict_, dict):
+        raise TypeError("'dict_' must be a dictionary")
+
+    path = list(keys)
+    if not path:
+        raise ValueError("'keys' must contain at least one element")
+    
+    cur: Any = dict_
+    for i, key in enumerate(path[:-1]):
+        if not isinstance(cur, dict):
+            raise KeyError(
+                f"Non-dict encountered at depth {i} while traversing {path!r}; "
+                f"current object type is {type(cur).__name__}"
+            )
+        if key not in cur:
+            if add_missing_keys:
+                cur[key] = {}
+            else:
+                avail = list(cur.keys())
+                raise KeyError(
+                    f"Key {key!r} not found at depth {i}; available keys: {avail!r}"
+                )
+        cur = cur[key]
+
+    # Final parent must be a dict
+    if not isinstance(cur, dict):
+        raise KeyError(
+            f"Cannot set value at final parent (type {type(cur).__name__}); "
+            f"expected a dictionary at depth {len(path)-1}"
+        )
+    cur[path[-1]] = value
 
 
 def fill(dict_: dict, value, keys=None, deepcopy=False):
