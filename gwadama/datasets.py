@@ -709,34 +709,38 @@ class Base:
         """
         padding = self._format_padding(padding)
 
-        for clas, id, *keys in self.keys():
-            strain = self.get_strain(clas, id, *keys)
+        for clas, id_, *keys in self.keys():
+            strain = self.get_strain(clas, id_, *keys)
             # Same shrinking limits for all possible strains below ID layer.
-            pad_left, pad_right = padding[id]
+            pad_left, pad_right = padding[id_]
             strain = strain[pad_left:-pad_right]
-            dictools.set_value_to_nested_dict(self.strains, [clas,id,*keys], strain)
+            dictools.set_value_to_nested_dict(self.strains, [clas,id_,*keys], strain)
 
             if self._track_times:
-                times = self.get_times(clas, id, *keys)
+                times = self.get_times(clas, id_, *keys)
                 times = times[pad_left:-pad_right]
-                dictools.set_value_to_nested_dict(self.times, [clas,id,*keys], times)
+                dictools.set_value_to_nested_dict(self.times, [clas,id_,*keys], times)
             
-            if self.whitened:
-                # Repeat top block for nonwhiten_strains.
+            if self.strains is not self.nonwhiten_strains:
+                # Example case: after whitening, the original strains are kept
+                # in `self.nonwhiten_strains`, but attribute `self.strains`
+                # won't point to the same object anymore. 
+                # We need to extend the operation to the original strains to
+                # ensure consistence with future operations.
                 strainw = dictools.get_value_from_nested_dict(
                     self.nonwhiten_strains,
-                    [clas,id,*keys]
+                    [clas,id_,*keys]
                 )
                 strainw = strainw[pad_left:-pad_right]
-                dictools.set_value_to_nested_dict(self.nonwhiten_strains, [clas,id,*keys], strainw)
+                dictools.set_value_to_nested_dict(self.nonwhiten_strains, [clas,id_,*keys], strainw)
 
         if logpad:
             if self.padding:
                 # Subtract from previous padding the shrunk parts here.
-                for id, pad_id in padding.items():
+                for id_, pad_id in padding.items():
                     # THE SIGN IS APPLIED HERE.
-                    self.padding[id][0] -= pad_id[0]
-                    self.padding[id][1] -= pad_id[1]
+                    self.padding[id_][0] -= pad_id[0]
+                    self.padding[id_][1] -= pad_id[1]
             else:
                 # If no previous pad wass added, store the current with negative
                 # values (since we're shrinking, not enlarging).
