@@ -195,7 +195,7 @@ class Base:
         # Whitening related attributes.
         self.whitened = False
         self.whiten_params = {}
-        self.nonwhiten_strains = self.strains  # Initially assumed to be the same.
+        self.strains_original = self.strains  # Initially assumed to be the same.
 
         # Time tracking related attributes.
         self.fs: int = None
@@ -598,19 +598,19 @@ class Base:
                 times_padded = np.concatenate([left_time_points, times, right_time_points])
                 dictools.set_value_to_nested_dict(self.times, [clas, id_, *keys], times_padded)
             
-            if self.strains is not self.nonwhiten_strains:
+            if self.strains is not self.strains_original:
                 # We need to extend the operation to the original strains to
                 # ensure consistence with future operations.
                 # Example case: after whitening, the original strains are kept
-                # in `self.nonwhiten_strains`, but attribute `self.strains`
+                # in `self.strains_original`, but attribute `self.strains`
                 # won't point to the same object anymore. 
                 strain_nw = dictools.get_value_from_nested_dict(
-                    self.nonwhiten_strains,
+                    self.strains_original,
                     [clas,id_,*keys]
                 )
                 strain_nw = window_func(strain_nw)
                 strain_nw = np.pad(strain_nw, (pad_left, pad_right), mode='constant')
-                dictools.set_value_to_nested_dict(self.nonwhiten_strains, [clas,id_,*keys], strain_nw)
+                dictools.set_value_to_nested_dict(self.strains_original, [clas,id_,*keys], strain_nw)
 
         if logpad:
             if self.padding:
@@ -718,7 +718,7 @@ class Base:
 
         Notes
         -----
-        This method shrinks `nonwhiten_strains` as well.
+        This method shrinks `strains_original` as well.
 
         """
         padding = self._format_padding(padding)
@@ -735,18 +735,18 @@ class Base:
                 times = times[pad_left:-pad_right]
                 dictools.set_value_to_nested_dict(self.times, [clas,id_,*keys], times)
             
-            if self.strains is not self.nonwhiten_strains:
+            if self.strains is not self.strains_original:
                 # Example case: after whitening, the original strains are kept
-                # in `self.nonwhiten_strains`, but attribute `self.strains`
+                # in `self.strains_original`, but attribute `self.strains`
                 # won't point to the same object anymore. 
                 # We need to extend the operation to the original strains to
                 # ensure consistence with future operations.
                 strainw = dictools.get_value_from_nested_dict(
-                    self.nonwhiten_strains,
+                    self.strains_original,
                     [clas,id_,*keys]
                 )
                 strainw = strainw[pad_left:-pad_right]
-                dictools.set_value_to_nested_dict(self.nonwhiten_strains, [clas,id_,*keys], strainw)
+                dictools.set_value_to_nested_dict(self.strains_original, [clas,id_,*keys], strainw)
 
         if logpad:
             if self.padding:
@@ -859,7 +859,7 @@ class Base:
         """Apply a window to all strains.
 
         Apply a window to `self.strains` recursively, and optionally to
-        `self.nonwhitened_strains` as well.
+        `self.strains_original` as well.
 
         Parameters
         ----------
@@ -867,7 +867,7 @@ class Base:
             Window to apply, formatted to be accepted by SciPy's `get_window`.
 
         all : bool, optional
-            If True, apply the window also to `self.nonwhitened_strains`.
+            If True, apply the window also to `self.strains_original`.
 
         Notes
         -----
@@ -880,15 +880,15 @@ class Base:
             strain_windowed = strain * sp.signal.get_window(window, len(strain))
             dictools.set_value_to_nested_dict(self.strains, keys, strain_windowed)
 
-        if all and (self.nonwhiten_strains is not None):
-            for keys in dictools.unroll_nested_dictionary_keys(self.nonwhiten_strains):
+        if all and (self.strains_original is not None):
+            for keys in dictools.unroll_nested_dictionary_keys(self.strains_original):
                 strain = dictools.get_value_from_nested_dict(
-                    self.nonwhiten_strains,
+                    self.strains_original,
                     keys
                 )
                 strain_windowed = strain * sp.signal.get_window(window, len(strain))
                 dictools.set_value_to_nested_dict(
-                    self.nonwhiten_strains,
+                    self.strains_original,
                     keys,
                     strain_windowed
                 )
@@ -897,7 +897,7 @@ class Base:
         """Normalise strains.
 
         Normalise strains to the indicated `mode`, and optionally to
-        `self.nonwhitened_strains` as well.
+        `self.strains_original` as well.
 
         Parameters
         ----------
@@ -905,7 +905,7 @@ class Base:
             Normalisation method. Available: amplitude, l2
 
         all_strains : bool, optional
-            If True, normalise also `self.nonwhitened_strains`.
+            If True, normalise also `self.strains_original`.
 
         Notes
         -----
@@ -922,10 +922,10 @@ class Base:
         for *_, strain in self.items():
             strain[:] *= norm_coef_function(strain)
         
-        if all_strains and (self.nonwhiten_strains is not None):
-            for keys in dictools.unroll_nested_dictionary_keys(self.nonwhiten_strains):
+        if all_strains and (self.strains_original is not None):
+            for keys in dictools.unroll_nested_dictionary_keys(self.strains_original):
                 strain = dictools.get_value_from_nested_dict(
-                    self.nonwhiten_strains,
+                    self.strains_original,
                     keys
                 )
                 strain[:] *= norm_coef_function(strain)
@@ -952,7 +952,7 @@ class Base:
         Note
         ----
         Original (non-whitened) strains will be stored in the
-        'nonwhiten_strains' attribute.
+        'strains_original' attribute.
         
         """
         if self.whitened:
@@ -961,7 +961,7 @@ class Base:
         if self.strains is None:
             raise RuntimeError("no strains have been given or generated yet")
         
-        self.nonwhiten_strains = deepcopy(self.strains)
+        self.strains_original = deepcopy(self.strains)
         
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
@@ -1392,8 +1392,8 @@ class BaseInjected(Base):
         this does not include possible variations such polarizations or
         multiple scallings of the same waveform when performing injections.
     
-    strains_clean : dict[dict]
-        Strains inherited (copied) from the `nonwhiten_strains` attribute of
+    strains_original : dict[dict]
+        Strains inherited (copied) from the `strains_original` attribute of
         the Class(Base) instance.
         This copy is kept in order to perform new injections.
         
@@ -1625,14 +1625,14 @@ class BaseInjected(Base):
         #----------------------------------------------------------------------
         self.fs = clean_dataset.fs
 
-        if clean_dataset.nonwhiten_strains is None:
+        if clean_dataset.strains_original is None:
             # Whitened space case (no access to strains before whitening).
             self._data_in_white_space = True
-            self.strains_clean = deepcopy(clean_dataset.strains)
+            self.strains_original = deepcopy(clean_dataset.strains)
         else:
             # Non-whitened case (access to original strains).
             self._data_in_white_space = False
-            self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
+            self.strains_original = deepcopy(clean_dataset.strains_original)
         
         self.classes = clean_dataset.classes.copy()
         self._check_classes_dict(self.classes)
@@ -1890,7 +1890,7 @@ class BaseInjected(Base):
         in the clean strains attribute, and adding the SNR layer.
         
         """
-        strains_dict = dictools.replicate_structure(self.strains_clean)
+        strains_dict = dictools.replicate_structure(self.strains_original)
         for indices in dictools.unroll_nested_dictionary_keys(strains_dict):
             dictools.set_value_to_nested_dict(strains_dict, indices, {})
 
@@ -1981,7 +1981,7 @@ class BaseInjected(Base):
             self._setup_rng(random_seed)
         if verbose:
             n_injections = (
-                dictools.get_number_of_elements(self.strains_clean)
+                dictools.get_number_of_elements(self.strains_original)
                 * len(snr_list)
                 * injections_per_snr
             )
@@ -2028,9 +2028,9 @@ class BaseInjected(Base):
     def _perform_injections(self, randomize_noise, injections_per_snr, verbose,
                             inject_kwargs, snr_list, times_old, pbar):
         """Main injection processing loop."""
-        for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_clean):
+        for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_original):
             # Clean signals are assumed to be already filtered if necessary.
-            strain_clean = self.strains_clean[clas][id_]
+            strain_clean = self.strains_original[clas][id_]
 
             # Strain injections
             for snr_, rep in itertools.product(snr_list, range(injections_per_snr)):
@@ -2867,7 +2867,7 @@ class SyntheticWaves(Base):
         self._gen_metadata()
         self._track_times = False
         self._gen_dataset()
-        self.nonwhiten_strains = self.strains
+        self.strains_original = self.strains
         self._gen_labels()
 
         self.Xtrain = None
@@ -3227,7 +3227,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
         # Whitening related attributes.
         self.whitened = whitened
         self.whiten_params = {}
-        self.nonwhiten_strains = None if self.whitened else self.strains 
+        self.strains_original = None if self.whitened else self.strains 
 
         # Time tracking related attributes.
         self._track_times = False  # If True, self.times must be not None.
@@ -3373,14 +3373,14 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         #----------------------------------------------------------------------
         self.fs = clean_dataset.fs
 
-        if clean_dataset.nonwhiten_strains is None:
+        if clean_dataset.strains_original is None:
             # Whitened space case (no access to strains before whitening).
             self._data_in_white_space = True
-            self.strains_clean = deepcopy(clean_dataset.strains)
+            self.strains_original = deepcopy(clean_dataset.strains)
         else:
             # Non-whitened case (access to original strains).
             self._data_in_white_space = False
-            self.strains_clean = deepcopy(clean_dataset.nonwhiten_strains)
+            self.strains_original = deepcopy(clean_dataset.strains_original)
         
         self.classes = clean_dataset.classes.copy()  # Dummy class.
         self.labels = self.labels = clean_dataset.labels.copy()  # Dummy labels.
@@ -3600,7 +3600,7 @@ class CoReWaves(Base):
 
         self.whitened = False
         self.whiten_params = {}
-        self.nonwhiten_strains = self.strains
+        self.strains_original = self.strains
 
         # Train/Test subset splits (views into the same 'self.strains').
         #   Timeseries:
@@ -4116,7 +4116,7 @@ class InjectedCoReWaves(BaseInjected):
         """
         clas = self.find_class(id)
         merger_pos = self.metadata.at[id,'merger_pos']
-        original_length = len(self.strains_clean[clas][id])
+        original_length = len(self.strains_original[clas][id])
 
         i0 = merger_pos + snr_offset
         i1 = (original_length - merger_pos) + snr_offset
