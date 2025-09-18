@@ -562,14 +562,14 @@ class Base:
         padding = self._format_padding(padding)
         
         if window is None:
-            window = lambda x: x  # identity
+            window_func = lambda x: x  # identity
             warnings.warn(
                 "No window is applied to the signal. This can cause issues "
                 "when padding the signal, as it may introduce discontinuities. "
                 "Consider using a windowing function."
             )
         elif isinstance(window, (str, tuple)):
-            window = lambda x: sp.signal.get_window(window, x)
+            window_func = lambda x: x * sp.signal.get_window(window, len(x))
         elif not callable(window):
             raise TypeError(
                 "window must be a Callable or a valid input for SciPy's "
@@ -578,7 +578,7 @@ class Base:
 
         for clas, id, *keys in self.keys():
             # Apply window if given
-            strain = window(self.get_strain(clas, id, *keys))
+            strain = window_func(self.get_strain(clas, id, *keys))
             
             # Pad the strain
             left_pad, right_pad = padding[id]
