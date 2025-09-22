@@ -3840,7 +3840,7 @@ class CoReWaves(Base):
             t_merger = self.find_merger(strain) / self.fs
             t0 = -t_merger
             t1 = duration - t_merger
-            self.times[clas][id_] = tat.gen_time_array(t0, t1, self.fs)
+            self.times[clas][id_] = tat.gen_time_array(t0, t1, fs=self.fs)
         
         # Update side-effect attributes
         self._dict_depth = dictools.get_depth(self.strains)
