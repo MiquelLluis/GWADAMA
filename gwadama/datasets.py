@@ -3694,7 +3694,13 @@ class CoReWaves(Base):
             ids = sorted(ids)  # IMPORTANT!!! Keep order to be able to trace back simulations.
             
             for id_ in ids:
-                # CoRe Rh data (in IS units):
+                # CoRe Rh data (in IS units)
+                # WARNING: Core data comes with times not centered around the
+                # merger!!! In previous experiments everything worked out
+                # because I always ended up calling the `project` method, which
+                # in turns recalculates the time arrays with their origin
+                # actually centered around the position of the merger, roughly
+                # estimated via :meth:`tat.find_merger`.
                 times_, h_plus, h_cros = coredb.gen_strain(
                     id_, self.distance, self.inclination, self.phi
                 )
@@ -3719,8 +3725,13 @@ class CoReWaves(Base):
                 times[eos][id_] = {}
                 times[eos][id_]['plus'] = times[eos][id_]['cross'] = times_[crop]
                 
-                # The time is centered at the merger.
-                i_merger = tat.find_time_origin(times_[crop])
+                # Initial rough estimate of the time of merger. It will be
+                # re-estimated more accurately after projecting the polarisations
+                # into a single strain via :meth:`CoReWaves.project`.
+                i_merger = min(
+                    tat.find_merger(strains[eos][id_]['plus']),
+                    tat.find_merger(strains[eos][id_]['cross'])
+                )
 
                 # Associated metadata:
                 md = coredb.metadata.loc[id_]
@@ -3757,9 +3768,6 @@ class CoReWaves(Base):
         Time arrays are defined with the origin at the merger. When the length
         of the strain arrays is modified, the index position of the merger
         must be updated.
-
-        NOTE: This method updates ALL the merger positions.
-        
         """
         for clas, id_ in self.keys(max_depth=2):
             times = self.times[clas][id_]
@@ -4030,7 +4038,8 @@ class InjectedCoReWaves(BaseInjected):
         of the strain arrays is modified, the index position of the merger
         must be updated.
 
-        NOTE: This method updates ALL the merger positions.
+        TODO: This method does not guarantee time arrays to be centered with
+        the merger at their origin. It should incorporate a safeguard.
         
         """
         for clas, id_ in self.keys(max_depth=2):
