@@ -3572,7 +3572,7 @@ class CoReWaves(Base):
                  *,
                  coredb: ioo.CoReManager,
                  classes: dict[str],
-                 discarded: set,
+                 discarded: dict[set|list|tuple],
                  cropped: dict,
                  # Source:
                  distance: float,
@@ -3591,8 +3591,10 @@ class CoReWaves(Base):
             Dictionary with the Equation of State (class) name as key and the
             corresponding label index as value.
         
-        discarded : set[str]
-            Set of GW IDs to discard from the dataset.
+        discarded : dict[set|list|tuple]
+            Dictionary with each key corresponding to each class, indicating
+            by ID which signals to discard. Each value can be a set, list or
+            tuple.
         
         cropped : dict[str]
             Dictionary with the class name as key and the corresponding
@@ -3614,7 +3616,7 @@ class CoReWaves(Base):
 
         self._check_classes_dict(classes)
         self.classes = classes
-        self.discarded = discarded
+        self.discarded = self._format_discarded(discarded)
         self.cropped = cropped
         # Source parameters
         self.distance = distance
@@ -3645,6 +3647,29 @@ class CoReWaves(Base):
         #   Labels:
         self.Ytrain: np.ndarray = None
         self.Ytest: np.ndarray = None
+    
+    def _format_discarded(self, discarded):
+        """Validate `discarded` and convert the dictionary values into sets."""
+
+        if not isinstance(discarded, dict):
+            raise TypeError(
+                "`discarded` must be a dict, but type "
+                f"{type(discarded).__name__} was given"
+            )
+        out = {}
+        for k, v in discarded.items():
+            if k not in self.classes:
+                raise KeyError(
+                    f"key `{k!r}` does not coincide with any known class"
+                )
+            if isinstance(v, (list, tuple, set)):
+                out[k] = set(v)
+            else:
+                raise ValueError(
+                    f"value of type `{type(v).__name__}` in key `{k!r}` not "
+                    "allowed; valid types are set, list and tuple."
+                )
+        return out
     
     def _get_strain_and_metadata(self, coredb: ioo.CoReManager) -> tuple[dict, dict, pd.DataFrame]:
         """Obtain the strain and metadata from a CoReManager instance.
