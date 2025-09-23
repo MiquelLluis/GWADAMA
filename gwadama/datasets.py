@@ -562,9 +562,9 @@ class Base:
             padding is a dictionary, it must be of the form {id: (left_pad,
             right_pad)}, where id is the identifier of each strain.
 
-        window : str | tuple | Callable, optional
+        window : str | tuple | list | Callable, optional
             Window to apply before padding the arrays.
-            If str or tuple, it will be used a `scipy.signal.get_window(window)`.
+            If str, tuple or list, it will be used a `scipy.signal.get_window(window)`.
             If Callable, it must take the strain before padding as argument,
             and return the windowed array.
             By default, no window is applied.
@@ -592,8 +592,10 @@ class Base:
                 "when padding the signal, as it may introduce discontinuities. "
                 "Consider using a windowing function."
             )
-        elif isinstance(window, (str, tuple)):
+        elif isinstance(window, str):
             window_func = lambda x: x * sp.signal.get_window(window, len(x))
+        elif isinstance(window, (tuple, list)):
+            window_func = lambda x: x * sp.signal.get_window(tuple(window), len(x))
         elif not callable(window):
             raise TypeError(
                 "window must be a Callable or a valid input for SciPy's "
