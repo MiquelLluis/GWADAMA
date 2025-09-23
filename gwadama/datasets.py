@@ -836,7 +836,9 @@ class Base:
         if not self._track_times:
             self._gen_times()
 
-        for *keys, strain in self.items():
+        # If verbose, do not show progress bar to avoid cluttering.
+        main_loop = tqdm(self.items(), total=len(self)) if not verbose else self.items()
+        for *keys, strain in main_loop:
             time = dictools.get_value_from_nested_dict(self.times, keys)
             strain_resampled, time_resampled, sr_interp, factor_up, factor_down = tat.resample(
                 strain, time, fs, full_output=True
