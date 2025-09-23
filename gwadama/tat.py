@@ -665,8 +665,8 @@ def is_arithmetic_progression(arr: np.ndarray, rtol=1e-5, atol=1e-8) -> bool:
         tolerance at their increments), False otherwise.
     
     """
-    if len(arr) <= 1:
-        return True
+    if len(arr) < 2:
+        raise ValueError
     
     step = arr[1] - arr[0]
     expected_last = arr[0] + step*(len(arr) - 1)
