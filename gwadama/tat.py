@@ -3,84 +3,184 @@
 Time analysis toolkit.
 
 """
+import warnings
+from fractions import Fraction
+
+
 import numpy as np
 from numpy.typing import ArrayLike
 import scipy as sp
-from scipy.interpolate import make_interp_spline as sp_make_interp_spline
+from scipy.interpolate import PchipInterpolator
+from scipy.signal import resample_poly
 
 
 
-def resample(strain: np.ndarray,
-             times: np.ndarray,
-             fs: int,
-             full_output=True) -> tuple[np.ndarray, np.array, int, int]:
-    """Resample a single strain in time domain.
-    
-    Resample strain's sampling frequency using an interpolation in the time domain
-    for upscalling to a constant rate, and then decimate it to the target rate.
-
-    The upscaled sampling frequency is chosen as the minimum common multiple between
-    the next integer value of the maximum sampling frequency found in the original
-    strain, and the target sampling frequency.
+def _build_uniform_grid(t0: float, t1: float, fs: float) -> np.ndarray:
+    """Closed interval grid [t0, t1] with step 1/fs."""
+    n = int(np.floor((t1 - t0) * fs)) + 1
+    return np.linspace(t0, t1, n, endpoint=True)
 
 
-    PARAMETERS
-    ----------
-    strain: 1d-array
-        Input strain signal.
-    
-    times : 1d-array
-        Original time points. Must be a NumPy array.
-    
-    fs: int
-        Target sampling frequency (Hz). Must be a possitive integer.
-    
-    full_output: bool, optional
-        If True, also returns the new time array, original sampling frequency,
-        and decimation factor.
-    
-        
-    RETURNS
-    -------
-    strain_resampled : 1d-array
-        Resampled strain.
-
-    times_resampled : 1d-array, optional
-        Time array at the new sampling frequency.
-
-    fs_in : int, optional
-        Original (inferred) sampling frequency, after interpolation if performed.
-
-    up, down : int, optional
-        Up and down factors of the resampling.
-    
+def resample(
+    strain: np.ndarray,
+    times: np.ndarray,
+    fs: int,
+    *,
+    full_output: bool = True,
+    uniform_rtol: float = 1e-6,
+    uniform_atol: float = 1e-12,
+    percentile: float = 90.0,       # robust cadence from the 90th percentile of instantaneous fs
+    f_min_factor: float = 1.25,     # ensure f_u >= f_min_factor * fs to leave FIR headroom
+    f_cap_factor: float = 8.0,      # cap f_u <= f_cap_factor * fs to avoid blow-ups
+    frac_den_limit: int = 8192      # cap denominator when reducing rational ratios
+):
     """
+    Resample (possibly irregularly-sampled) 'strain' onto a uniform grid at
+    target sampling rate 'fs' (Hz).
+
+    Logic
+    -----
+    1) Validate input.
+    2) If times ~ uniform:
+         - If fs_in == fs (within 0.5 Hz): return a copy aligned to the
+           original start.
+         - Else: resample_poly directly from fs_in -> fs (anti-aliasing
+           included).
+       Else (times irregular):
+         a) If max instantaneous rate < fs: issue a warning and directly
+            interpolate to fs via PCHIP (upsampling).
+         b) Otherwise:
+              - Pick robust f_u from the 'percentile' of instantaneous rates.
+              - Enforce fs <= f_u <= min(max_inst_rate, f_cap_factor*fs), and
+                f_u >= f_min_factor*fs.
+              - PCHIP-uniformise at f_u, then resample_poly f_u -> fs.
+
+    Returns
+    -------
+    y : 1d-array
+        Resampled strain at 'fs'.
+    t : 1d-array (if full_output)
+        Time grid at 'fs', starting at times[0].
+    fs_in : int (if full_output)
+        Estimated original sampling frequency (rounded to nearest integer). For
+        irregular inputs, this is the robust uniformisation rate if used;
+        otherwise a robust estimate from the mean spacing.
+    up, down : int, int (if full_output)
+        Up/down integers used in the final polyphase step. (0, 0) if N/A.
+    """
+    # --- Basic validations
     if not isinstance(times, np.ndarray):
         raise TypeError("'times' must be a NumPy array.")
+    if not isinstance(strain, np.ndarray):
+        raise TypeError("'strain' must be a NumPy array.")
+    if times.ndim != 1 or strain.ndim != 1 or len(times) != len(strain):
+        raise ValueError("'times' and 'strain' must be 1D arrays of equal length.")
     if fs <= 0:
-        raise ValueError("Target 'fs' must be positive.")
+        raise ValueError("Target 'fs' must be a positive integer.")
+    if len(times) < 3:
+        # Need at least 3 points to sensibly infer cadence / interpolate
+        raise ValueError("Need at least 3 samples to resample.")
 
-    if not is_arithmetic_progression(times):
-        # Interpolate to a uniform time grid at the highest reasonable rate
-        fs_interp = int(np.ceil(1 / np.min(np.diff(times))))
-        new_length = int((times[-1] - times[0]) * fs_interp) + 1
-        times_uniform = np.linspace(times[0], times[-1], new_length, endpoint=True)
-        strain = sp_make_interp_spline(times, strain, k=2)(times_uniform)
-        times = times_uniform
-    else:
-        fs_interp = int(round(1 / (times[1] - times[0])))
+    # Ensure strictly increasing times (and no duplicates)
+    if not np.all(np.diff(times) > 0):
+        raise ValueError(
+            "'times' must be strictly increasing (no duplicates, sorted "
+            "ascending)."
+        )
 
-    # Compute up/down factors
-    g = np.gcd(fs_interp, fs)
-    up = fs // g
-    down = fs_interp // g
-    
-    strain_resampled = sp.signal.resample_poly(strain, up, down)
-    
+    # --- Uniformity check
+    is_uni = is_arithmetic_progression(times, rtol=uniform_rtol, atol=uniform_atol)
+    t0, t1 = float(times[0]), float(times[-1])
+
+    # Helper: rational up/down from two (positive) rates
+    def _ratio_ud(f_out: float, f_in: float) -> tuple[int, int]:
+        r = Fraction(f_out/f_in).limit_denominator(frac_den_limit)
+        return r.numerator, r.denominator
+
+    # ---- Case A: approximately uniform input ----
+    if is_uni:
+        fs_in = 1 / np.mean(np.diff(times))
+        # Sanity check: if input rate < target, warn (we're effectively
+        # upsampling)
+        if fs_in + 0.5 < fs:
+            warnings.warn(
+                f"Input sampling rate ({fs_in:.3f} Hz) is below target ({fs} Hz). "
+                "Proceeding with upsampling; no anti-alias filtering is needed."
+            )
+        # If already at the target rate (within ~0.5 Hz), just align to exact
+        # integer fs
+        if abs(fs_in - fs) < 0.5:
+            t = _build_uniform_grid(t0, t1, fs=float(fs))
+            y = PchipInterpolator(times, strain, extrapolate=False)(t)
+            if full_output:
+                return y, t, int(round(fs_in)), 0, 0
+            return y
+
+        # Proper rate conversion with polyphase FIR
+        up, down = _ratio_ud(fs, fs_in)
+        # Align a uniform grid at the original cadence
+        t_u = _build_uniform_grid(t0, t1, fs=fs_in)
+        # Interpolate once onto that grid
+        y_u = PchipInterpolator(times, strain, extrapolate=False)(t_u)
+        y = resample_poly(y_u, up, down)
+        # Build output time grid (anchored at t0, step 1/fs)
+        t = t0 + np.arange(len(y)) / fs
+        if full_output:
+            return y, t, int(round(fs_in)), up, down
+        return y
+
+    # ---- Case B: irregular input ----
+    dt = np.diff(times)
+    fs_inst = 1.0 / dt
+    fs_inst_max = float(np.max(fs_inst))  # maximum instantaneous sampling rate
+
+    # If even the maximum instantaneous rate is below the target, we can only
+    # upsample → direct PCHIP to fs
+    if fs_inst_max < fs:
+        warnings.warn(
+            f"Maximum instantaneous sampling rate ({fs_inst_max:.3f} Hz) is "
+            f"below target ({fs} Hz). Directly interpolating to the target "
+            "grid; anti-alias filtering is unnecessary."
+        )
+        t = _build_uniform_grid(t0, t1, fs=float(fs))
+        y = PchipInterpolator(times, strain, extrapolate=False)(t)
+        if full_output:
+            # Use a robust estimate of the original cadence for reporting
+            fs_in_report = 1 / np.mean(dt)
+            return y, t, int(round(fs_in_report)), 0, 0
+        return y
+
+    # Otherwise, choose a robust uniformisation rate f_u, e.g. 90th percentile
+    # of instantaneous fs. Start from this robust value.
+    f_u = float(np.percentile(fs_inst, percentile))
+
+    # Enforce lower bound: keep some headroom for the FIR low-pass (avoid
+    # too-low uniformisation)
+    f_u = max(f_u, f_min_factor * float(fs))
+
+    # Enforce practical cap relative to the target to avoid huge temporary arrays
+    f_u = min(f_u, f_cap_factor * float(fs))
+
+    # Never exceed the actual max instantaneous rate
+    f_u = min(f_u, fs_inst_max)
+
+    # Edge case: numerical tie with fs (avoid zero-length filters/degenerate
+    # ratios). If the rounding pushed us down, bump slightly
+    if f_u < fs:
+        f_u = float(fs)
+
+    t_u = _build_uniform_grid(t0, t1, fs=f_u)
+    y_u = PchipInterpolator(times, strain, extrapolate=False)(t_u)
+
+    up, down = _ratio_ud(float(fs), f_u)
+    y = resample_poly(y_u, up, down)
+
+    # Output time grid at fs
+    t = t0 + np.arange(len(y)) / fs
+
     if full_output:
-        times_resampled = time_array_like(strain_resampled, fs=fs, t0=times[0])
-        return strain_resampled, times_resampled, fs_interp, up, down
-    return strain_resampled
+        return y, t, int(round(f_u)), up, down
+    return y
 
 
 def gen_time_array(t0, t1, *, fs, length=None):
