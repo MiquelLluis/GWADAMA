@@ -746,15 +746,25 @@ class Base:
         padding = self._format_padding(padding)
 
         for clas, id_, *keys in self.keys():
-            strain = self.get_strain(clas, id_, *keys)
             # Same shrinking limits for all possible strains below ID layer.
             pad_left, pad_right = padding[id_]
-            strain = strain[pad_left:-pad_right]
+
+            if pad_left < 0 or pad_right < 0:
+                raise ValueError(
+                    "all pads must be positive integers; got padding "
+                    f"({pad_left}, {pad_right}) for ID '{id_}'."
+                )
+
+            # Convert right pad 0 → None to avoid [:-0] becoming [:0].
+            pad_right = None if pad_right == 0 else -pad_right
+
+            strain = self.get_strain(clas, id_, *keys)
+            strain = strain[pad_left:pad_right]
             dictools.set_value_to_nested_dict(self.strains, [clas,id_,*keys], strain)
 
             if self._track_times:
                 times = self.get_times(clas, id_, *keys)
-                times = times[pad_left:-pad_right]
+                times = times[pad_left:pad_right]
                 dictools.set_value_to_nested_dict(self.times, [clas,id_,*keys], times)
             
             if self.strains is not self.strains_original:
@@ -768,7 +778,7 @@ class Base:
                     self.strains_original,
                     [clas,id_,*orig_keys]
                 )
-                strainw = strainw[pad_left:-pad_right]
+                strainw = strainw[pad_left:pad_right]
                 dictools.set_value_to_nested_dict(
                     self.strains_original,
                     [clas,id_,*orig_keys],
