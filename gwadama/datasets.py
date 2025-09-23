@@ -3883,35 +3883,133 @@ class CoReWaves(Base):
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
-    
-    def shrink_to_merger(self, offset: int = 0) -> None:
-        """Shrink strains and time arrays w.r.t. the merger.
 
-        Shrink strains (and their associated time arrays) discarding the left
-        side of the merger (inspiral), with a given offset in samples.
+    def trim_relative_to_merger(
+        self,
+        inspiral_span: int | None = None,
+        postmerger_span: int | None = None,
+    ) -> None:
+        """Trim strains/time arrays relative to the merger.
 
-        This also updates the metadata column 'merger_pos'.
+        Keeps a user-specified amount of data on each side of the merger index
+        and discards the rest. The inspiral side is defined as samples strictly
+        before the merger index; the postmerger side is defined as samples from
+        the merger index onwards. After trimming, the 'merger_pos' metadata is
+        re-evaluated to match the new arrays.
 
-        .. warning::
-            This is an irreversible action.
+        This operation is in-place and irreversible.
 
         Parameters
         ----------
-        offset : int
-            Offset in samples, relative to the merger position.
+        inspiral_span : int or None, default=None
+            Number of samples to keep on the inspiral (left) side closest to
+            the merger. If ``None``, keep the entire inspiral. If ``0``, drop
+            all inspiral.
 
+        postmerger_span : int or None, default=None
+            Number of samples to keep on the postmerger (right) side starting
+            at the merger. If ``None``, keep the entire postmerger. If ``0``,
+            drop all postmerger.
+
+        Notes
+        -----
+        - Spans larger than the available samples on a side are clipped to that
+        side's length and a warning is emitted. - If both spans are ``0``, the
+        result is an empty array (a warning is emitted). - Inspiral contains no
+        merger sample; postmerger includes the merger sample. Keeping both
+        sides includes the merger exactly once.
+
+        Warnings
+        --------
+        UserWarning
+            Emitted when a requested span exceeds the available samples on that
+            side.
+
+        Raises
+        ------
+        TypeError
+            If ``inspiral_span`` or ``postmerger_span`` is not ``None`` or
+            ``int``.
+        ValueError
+            If a provided span is negative.
+        ValueError
+            If the requested trimming would remove all samples from an array.
+        RuntimeError
+            If required metadata is missing or inconsistent.
         """
-        # Compute the equivalent shrinkage padding to apply for each signal at
-        # the ID layer.
-        padding = {}
-        for id in self.metadata.index:
-            i_merger = self.metadata.at[id, 'merger_pos']
-            # Same shrinking limits for all possible strains below ID layer.
-            padding[id] = (i_merger+offset, 0)
-        
-        self.shrink_strains(padding)
+        for name, val in (("inspiral_span", inspiral_span), ("postmerger_span", postmerger_span)):
+            if val is not None and not isinstance(val, int):
+                raise TypeError(f"{name} must be an int or None, got {type(val).__name__}")
+            if isinstance(val, int) and val < 0:
+                raise ValueError(f"{name} must be >= 0 (use None to keep the whole side)")
 
-        # Update side-effect attributes.
+        # ---- Construct the padding for each strain ----
+        padding: dict[str, tuple[int, int]] = {}
+
+        # Note: deeper layers (e.g. polarisations) are trimmed uniformly.
+        for clas, id_ in self.keys(max_depth=2):
+            i_merger = int(self.metadata.at[id_, "merger_pos"])
+
+            # Determine a representative strain length N for this ID.
+            node = self.strains[clas][id_]
+            if isinstance(node, dict):
+                arr = dictools.get_first_value(node)
+            else:
+                arr = node
+            N = len(arr)
+
+            if not (0 <= i_merger <= N):
+                raise RuntimeError(
+                    f"'merger_pos'={i_merger} is out of bounds for ID "
+                    f"{repr(id_)} with length {N}"
+                )
+
+            # Available samples on each side
+            n_inspiral = i_merger          # [0, i_merger)
+            n_post     = N - i_merger      # [i_merger, N)
+
+            # Resolve requested spans
+            if inspiral_span is None:
+                keep_inspiral = n_inspiral
+            else:
+                keep_inspiral = min(inspiral_span, n_inspiral)
+                if inspiral_span > n_inspiral:
+                    warnings.warn(
+                        f"inspiral_span={inspiral_span} exceeds available inspiral "
+                        f"({n_inspiral}) for ID {repr(id_)}; clipping to {n_inspiral}."
+                    )
+
+            if postmerger_span is None:
+                keep_post = n_post
+            else:
+                keep_post = min(postmerger_span, n_post)
+                if postmerger_span > n_post:
+                    warnings.warn(
+                        f"postmerger_span={postmerger_span} exceeds available postmerger "
+                        f"({n_post}) for ID {repr(id_)}; clipping to {n_post}."
+                    )
+
+            # Convert to left/right trims on the full array
+            left_trim  = n_inspiral - keep_inspiral   # drop from start
+            right_trim = n_post     - keep_post       # drop from end
+
+            # Raise an error if everything would be removed
+            if left_trim + right_trim >= N:
+                raise ValueError(
+                    f"Requested spans remove all samples for ID {repr(id_)} "
+                    f"(N={N}, left_trim={left_trim}, right_trim={right_trim})."
+                )
+
+            if left_trim < 0 or right_trim < 0:
+                raise RuntimeError(
+                    f"negative trim encountered for ID {repr(id_)} "
+                    f"(left_trim={left_trim}, right_trim={right_trim})"
+                )
+
+            padding[id_] = (left_trim, right_trim)
+
+        # ---- Apply trim and update side-effects ----
+        self.shrink_strains(padding)
         self._update_merger_positions()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
