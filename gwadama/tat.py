@@ -38,10 +38,10 @@ def resample(
     Resample (possibly irregularly-sampled) 'strain' onto a uniform grid at
     target sampling rate 'fs' (Hz).
 
-    Logic
-    -----
+    Logic:
+
     1) Validate input.
-    2) If times ~ uniform:
+    2) If times are approximately uniform:
          - If fs_in == fs (within 0.5 Hz): return a copy aligned to the
            original start.
          - Else: resample_poly directly from fs_in -> fs (anti-aliasing
@@ -54,17 +54,62 @@ def resample(
               - Enforce fs <= f_u <= min(max_inst_rate, f_cap_factor*fs), and
                 f_u >= f_min_factor*fs.
               - PCHIP-uniformise at f_u, then resample_poly f_u -> fs.
+    
+    Parameters
+    ----------
+    strain : numpy.ndarray
+        One-dimensional input strain samples, shape (N,).
+
+    times : numpy.ndarray
+        One-dimensional, strictly increasing time stamps (seconds), shape (N,).
+        No duplicates; must be sorted ascending.
+
+    fs : int
+        Target sampling frequency in Hz. Must be a positive integer.
+
+    full_output : bool, default=True
+        If True, also return the output time grid, an input-rate estimate,
+        and the (up, down) integers used in the final polyphase step.
+
+    uniform_rtol : float, default=1e-6
+        Relative tolerance for the uniform-spacing check.
+
+    uniform_atol : float, default=1e-12
+        Absolute tolerance for the uniform-spacing check.
+
+    percentile : float, default=90.0
+        Percentile (in [0, 100]) of instantaneous sampling rates `1/np.diff(times)`
+        used to choose the robust uniformisation rate `f_u` when input is irregular.
+
+    f_min_factor : float, default=1.25
+        Lower bound multiplier for `f_u` relative to `fs` (i.e. `f_u ≥ f_min_factor*fs`)
+        to leave margin for the FIR anti-alias filter.
+
+    f_cap_factor : float, default=8.0
+        Upper bound multiplier for `f_u` relative to `fs` (i.e. `f_u ≤ f_cap_factor*fs`)
+        to avoid excessively large intermediate grids. Must satisfy
+        `f_cap_factor ≥ f_min_factor`. `f_u` is also capped by the maximum
+        instantaneous rate.
+
+    frac_den_limit : int, default=2048
+        Maximum allowed denominator when approximating the rate ratio with
+        `fractions.Fraction(...).limit_denominator`. Larger values give a closer
+        ratio but longer polyphase FIR filters (slower); smaller values shorten
+        the filter at the cost of a tiny ratio error.
 
     Returns
     -------
     y : 1d-array
         Resampled strain at 'fs'.
+    
     t : 1d-array (if full_output)
         Time grid at 'fs', starting at times[0].
+    
     fs_in : int (if full_output)
         Estimated original sampling frequency (rounded to nearest integer). For
         irregular inputs, this is the robust uniformisation rate if used;
         otherwise a robust estimate from the mean spacing.
+    
     up, down : int, int (if full_output)
         Up/down integers used in the final polyphase step. (0, 0) if N/A.
     """
