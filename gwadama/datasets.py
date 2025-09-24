@@ -648,6 +648,10 @@ class Base:
             else:
                 self.padding = padding
         
+        self._after_pad_strains()
+
+    def _after_pad_strains(self):
+        """Hook for side-effects after `pad_strains`."""
         self.max_length = self._find_max_length()
         if self.Xtrain:
             self._update_train_test_subsets()
@@ -803,6 +807,10 @@ class Base:
                 # values (since we're shrinking, not enlarging).
                 self.padding = {id: (-pad[0], -pad[1]) for id, pad in padding.items()}
         
+        self._after_shrink_strains()
+        
+    def _after_shrink_strains(self):
+        """Hook for side-effects after `shrink_strains`."""
         self.max_length = self._find_max_length()
         if self.Xtrain:
             self._update_train_test_subsets()
@@ -856,9 +864,15 @@ class Base:
                 print(
                     f"Strain {keys[0]}::{keys[1]} resampled {sr_interp} Hz → {fs} Hz (factors up/down: {factor_up}, {factor_down})"
                 )
-
         self.fs = fs
+
+        self._after_resample()
+
+    def _after_resample(self):
+        """Hook for side-effects after `resample`."""
         self.max_length = self._find_max_length()
+        if self.Xtrain is not None:
+            self._update_train_test_subsets()
 
     def bandpass(self,
                  *,
@@ -897,6 +911,10 @@ class Base:
             # Update strains attribute.
             dictools.set_value_to_nested_dict(self.strains, keys, strain_filtered)
 
+        self._after_bandpass()
+    
+    def _after_bandpass(self):
+        """Hook for side-effects after `bandpass`."""
         if self.Xtrain is not None:
             self._update_train_test_subsets()
     
@@ -1034,7 +1052,6 @@ class Base:
         
         if shrink > 0:
             self.shrink_strains(shrink)
-            self.max_length = self._find_max_length()
 
         self.whitened = True
         self.whiten_params = {
@@ -1046,7 +1063,11 @@ class Base:
             "window": window
         }
 
-        if self.Xtrain is not None:
+        self._after_whiten(shrink)
+
+    def _after_whiten(self, shrink):
+        """Hook for side-effects after `whiten`."""
+        if self.Xtrain is not None and shrink == 0:
             self._update_train_test_subsets()
 
     def build_train_test_subsets(self, train_size: int | float):
@@ -1117,10 +1138,18 @@ class Base:
     def _update_train_test_subsets(self):
         """Builds again the Train/Test subsets from the main strains attribute.
         
-        Each time the strains are **replaced** and mutability is not guaranteed
-        to propagate changes to the train/test dictionaries, it is necessary to
-        build them again, which is the purpose of this helper function.
+        Each time the strains are **replaced**, changes are not propagated to
+        the train/test dictionaries due to mutability limitations.
+        It is necessary to build them again using this method.
+
+        .. note::
+            In-place modification of mutable objects such as arrays do
+            propagate. If not sure, running this method is cheap and secure.
         
+        .. note::
+            This method is typically called after setting new arrays via
+            :func:`dictools.set_value_to_nested_dict`.
+
         """
         id_train = list(self.Xtrain.keys())
         id_test = list(self.Xtest.keys())
@@ -2052,12 +2081,17 @@ class BaseInjected(Base):
 
         if verbose:
             pbar.close()
+        
+        self._after_gen_injections(snr_list, injections_per_snr)
+        
+    def _after_gen_injections(self, snr_list, injections_per_snr):
+        """Hook for side-effects after `gen_injections`."""
         self.snr_list += snr_list
         self.injections_per_snr = injections_per_snr
+
         if injections_per_snr > 1:
             self._dict_depth = dictools.get_depth(self.strains)
-        
-        # Side-effect attributes updated.
+
         self.max_length = self._find_max_length()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
@@ -2288,7 +2322,6 @@ class BaseInjected(Base):
         
         if shrink > 0:
             self.shrink_strains(shrink)
-            self.max_length = self._find_max_length()
 
         self.whitened = True
         self.whiten_params = {
@@ -2299,8 +2332,7 @@ class BaseInjected(Base):
             'window': window
         }
 
-        if self.Xtrain is not None:
-            self._update_train_test_subsets()
+        self._after_whiten(shrink)
 
     def get_xtrain_array(self,
                          length: int = None,
@@ -3824,29 +3856,9 @@ class CoReWaves(Base):
                 times = dictools.get_first_value(times)
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
-    def resample(self, fs, verbose=False) -> None:
-        """Resample strain and time arrays to a constant rate.
-
-        Resample CoRe strains (from NR simulations) to a constant rate.
-
-        This method updates the sampling frequency, the max_length and the
-        merger_pos inside the metadata attribute.
-
-        Parameters
-        ----------
-        fs : int
-            The new sampling frequency in Hz.
-
-        verbose : bool
-            If True, print information about the resampling.
-        
-        """
-        super().resample(fs, verbose)
-
-        # Update side-effect attributes.
+    def _after_resample(self):
+        super()._after_resample()
         self._update_merger_positions()
-        if self.Xtrain is not None:
-            self._update_train_test_subsets()
 
     def project(self, *, detector: str, ra: float, dec: float, geo_time: float, psi: float):
         """Project strains into the chosen detector at specified coordinates.
@@ -3897,7 +3909,10 @@ class CoReWaves(Base):
             t1 = duration - t_merger
             self.times[clas][id_] = tat.gen_time_array(t0, t1, fs=self.fs)
         
-        # Update side-effect attributes
+        self._after_project()
+        
+    def _after_project(self):
+        """Hook for side-effects after `project`."""
         self._dict_depth = dictools.get_depth(self.strains)
         self._update_merger_positions()
         self.max_length = self._find_max_length()
@@ -4061,10 +4076,6 @@ class CoReWaves(Base):
             times *= mass * MSUN_SEC
 
         self.units = 'IS'
-
-        # Update side-effect attributes.
-        if self.Xtrain is not None:
-            self._update_train_test_subsets()
     
     def convert_to_scaled_geometrized_units(self) -> None:
         """Convert data from IS to scaled geometrized units.
@@ -4088,21 +4099,13 @@ class CoReWaves(Base):
             times /= mass * MSUN_SEC
 
         self.units = 'geometrized'
+    
+    def _after_pad_strains(self):
+        super()._after_pad_strains()
+        self._update_merger_positions()
 
-        # Update side-effect attributes.
-        if self.Xtrain:
-            self._update_train_test_subsets()
-    
-    def pad_strains(self, padding, window=None, logpad=True):
-        super().pad_strains(padding, window, logpad)
-        self._update_merger_positions()
-    
-    def pad_to_length(self, length, *, window=None, logpad=True):
-        super().pad_to_length(length, window=window, logpad=logpad)
-        self._update_merger_positions()
-    
-    def shrink_strains(self, padding, logpad=True):
-        super().shrink_strains(padding, logpad)
+    def _after_shrink_strains(self):
+        super()._after_shrink_strains()
         self._update_merger_positions()
 
 
@@ -4274,6 +4277,8 @@ class InjectedCoReWaves(BaseInjected):
             verbose=verbose
         )
 
+    def _after_gen_injections(self, snr_list, injections_per_snr):
+        super()._after_gen_injections(snr_list, injections_per_snr)
         self._update_merger_positions()
     
     def _inject(self,
@@ -4334,35 +4339,8 @@ class InjectedCoReWaves(BaseInjected):
 
         return injected, scale
     
-    def whiten(self,
-               *,
-               flength,
-               highpass=None,
-               normed=False,
-               shrink=0,
-               window='hann',
-               verbose=False):
-        """Whiten injected strains.
-        
-        Calling this method performs the whitening of all injected strains.
-        Strains are later cut to their original size before adding the pad,
-        to remove the vigneting.
-        
-        .. warning::
-            This is an irreversible action; if the original injections need
-            to be preserved it is advised to make a copy of the instance before
-            performing the whitening.
-        
-        """
-        super().whiten(
-            flength=flength,
-            highpass=highpass,
-            normed=normed,
-            shrink=shrink,
-            window=window,
-            verbose=verbose
-        )
-
+    def _after_whiten(self, shrink):
+        super()._after_whiten(shrink)
         self._update_merger_positions()
 
 
