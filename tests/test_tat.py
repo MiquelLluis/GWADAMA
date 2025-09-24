@@ -828,12 +828,6 @@ def test_whiten_psd_flat_with_window():
 # Tests for is_arithmetic_progression()
 #------------------------------------------------------------------------------
 
-def test_arithmetic_progression_trivial():
-    """Empty or single-element arrays should always return True."""
-    assert is_arithmetic_progression(np.array([]))
-    assert is_arithmetic_progression(np.array([42.0]))
-
-
 def test_arithmetic_progression_perfect():
     """A perfect arithmetic progression should return True."""
     arr = np.array([0, 1, 2, 3, 4, 5], dtype=float)
@@ -862,3 +856,10 @@ def test_arithmetic_progression_negative_step():
     """Arithmetic progression with a negative step should return True."""
     arr = np.array([5.0, 4.0, 3.0, 2.0, 1.0])
     assert is_arithmetic_progression(arr)
+
+def test_arithmetic_progression_too_short():
+    """Empty or single-element arrays should always trhow Error."""
+    with pytest.raises(ValueError):
+        is_arithmetic_progression(np.array([]))
+    with pytest.raises(ValueError):
+        is_arithmetic_progression(np.array([42.0]))
