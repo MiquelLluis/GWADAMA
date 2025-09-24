@@ -545,6 +545,12 @@ class Base:
         
         return padding_dict
 
+    # TODO: Implement through decorators a way to run side-effects for certain
+    # methods like `pad_strains`, so that inheriting classes only need to
+    # define a single updater function and expect it to run on those methods
+    # which by the nature of their operations need it.
+    # Currently I have to update the side-effects manually on each inherited
+    # method by hand (see CoReWaves for example).
     def pad_strains(self, padding: int | ArrayLike | dict, window=None, logpad=True) -> None:
         """
         Pad strains with zeros on both sides.
@@ -4084,6 +4090,18 @@ class CoReWaves(Base):
         # Update side-effect attributes.
         if self.Xtrain:
             self._update_train_test_subsets()
+    
+    def pad_strains(self, padding, window=None, logpad=True):
+        super().pad_strains(padding, window, logpad)
+        self._update_merger_positions()
+    
+    def pad_to_length(self, length, *, window=None, logpad=True):
+        super().pad_to_length(length, window=window, logpad=logpad)
+        self._update_merger_positions()
+    
+    def shrink_strains(self, padding, logpad=True):
+        super().shrink_strains(padding, logpad)
+        self._update_merger_positions()
 
 
 class InjectedCoReWaves(BaseInjected):
