@@ -3900,6 +3900,7 @@ class CoReWaves(Base):
         self,
         inspiral_span: int | None = None,
         postmerger_span: int | None = None,
+        logpad: bool = False
     ) -> None:
         """Trim strains/time arrays relative to the merger.
 
@@ -3922,6 +3923,10 @@ class CoReWaves(Base):
             Number of samples to keep on the postmerger (right) side starting
             at the merger. If ``None``, keep the entire postmerger. If ``0``,
             drop all postmerger.
+
+        logpad : bool, default=False
+            By default the trimming won't be accounted for in the `self.padding`
+            register. Set to True if it must.
 
         Notes
         -----
@@ -4021,7 +4026,7 @@ class CoReWaves(Base):
             padding[id_] = (left_trim, right_trim)
 
         # ---- Apply trim and update side-effects ----
-        self.shrink_strains(padding)
+        self.shrink_strains(padding, logpad=logpad)
         self._update_merger_positions()
         if self.Xtrain is not None:
             self._update_train_test_subsets()
