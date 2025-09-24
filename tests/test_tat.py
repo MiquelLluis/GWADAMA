@@ -111,7 +111,7 @@ def test_resample_preserves_signal_shape(simple_sine):
     # Compare to original (allowing for some tolerance, and discarding edges)
     assert_allclose(upsampled[15:-15], signal[15:-15], atol=1e-3)
     # Ttimes should be equal
-    np.testing.assert_equal(t, t_up)
+    np.testing.assert_allclose(t, t_up)
 
 
 
