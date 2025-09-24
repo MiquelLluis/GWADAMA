@@ -2035,6 +2035,8 @@ class BaseInjected(Base):
         times_old = deepcopy(self.times)
         if randomize_noise:
             self._setup_rng(random_seed)
+        
+        pbar = None  # Always passed to `_perform_injections`.
         if verbose:
             n_injections = (
                 dictools.get_number_of_elements(self.strains_original)
