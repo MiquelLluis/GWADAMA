@@ -342,7 +342,7 @@ class CoReManager:
         # Convert data types of the selected columns:
         for field in self.fields_float:
             mask = (md[field] == 'NAN') | (md[field] == '')
-            md[field].loc[mask] = np.nan
+            md.loc[mask,field] = np.nan
             md[field] = md[field].astype(float)
 
         return md
