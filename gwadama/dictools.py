@@ -9,7 +9,7 @@ from typing import Any, Iterable
 import numpy as np
 
 
-def unroll_nested_dictionary_keys(dict_: dict, max_depth: int = None) -> list:
+def unroll_nested_dictionary_keys(dict_: dict, max_depth: int|None = None) -> list:
     """Returns a list of all combinations of keys inside a nested dictionary.
     
     Useful to iterate over all keys of a nested dictionary without having to
@@ -36,8 +36,8 @@ def unroll_nested_dictionary_keys(dict_: dict, max_depth: int = None) -> list:
 
 def __unroll_nested_dictionary_keys(dict_: dict,
                                     *,
-                                    max_depth: int,
-                                    current_keys: list = None,
+                                    max_depth: int|None = None,
+                                    current_keys: list|None = None,
                                     current_depth: int = 1) -> list:
     """Returns a list of all combinations of keys inside a nested dictionary.
     
@@ -217,7 +217,7 @@ def fill(dict_: dict, value, keys=None, deepcopy=False):
     __fill(dict_, value, deepcopy=deepcopy)
 
 
-def __fill(dict_: dict, value, deepcopy=False):
+def __fill(dict_: dict, value, deepcopy: bool = False):
     """Fill an arbitrarily-depth nested dictionary with a value.
 
     This is the recursive function. Use the main function.
@@ -231,8 +231,8 @@ def __fill(dict_: dict, value, deepcopy=False):
                 try:
                     dict_[key] = value.copy()
                 except AttributeError:
-                    from copy import deepcopy
-                    dict_[key] = deepcopy(value)
+                    from copy import deepcopy as dc
+                    dict_[key] = dc(value)
             else:
                 dict_[key] = value
 
@@ -274,7 +274,7 @@ def get_depth(dict_: dict) -> int:
     return depth
 
 
-def dict_to_stacked_array(dict_: dict, target_length: int = None) -> tuple[np.ndarray, list]:
+def dict_to_stacked_array(dict_: dict, target_length: int|None = None) -> tuple[np.ndarray, list]:
     """Stack the arrays inside a dict() to a 2d-array.
     
     Given a NON-nested dict whose values are flat numpy arrays, with potentially different

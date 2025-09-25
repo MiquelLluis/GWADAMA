@@ -3,12 +3,12 @@
 Time analysis toolkit.
 
 """
-import warnings
+from collections.abc import Sequence
 from fractions import Fraction
-
+import warnings
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray
 import scipy as sp
 from scipy.interpolate import PchipInterpolator
 from scipy.signal import resample_poly
@@ -22,8 +22,8 @@ def _build_uniform_grid(t0: float, t1: float, fs: float) -> np.ndarray:
 
 
 def resample(
-    strain: np.ndarray,
-    times: np.ndarray,
+    strain: NDArray,
+    times: NDArray,
     fs: int,
     *,
     full_output: bool = True,
@@ -144,7 +144,7 @@ def resample(
 
     # ---- Case A: approximately uniform input ----
     if is_uni:
-        fs_in = 1 / np.mean(np.diff(times))
+        fs_in = float(1 / np.mean(np.diff(times)))  # cast from np.floating to float
         # Sanity check: if input rate < target, warn (we're effectively
         # upsampling)
         if fs_in + 0.5 < fs:
@@ -228,7 +228,13 @@ def resample(
     return y
 
 
-def gen_time_array(t0, t1, *, fs, length=None):
+def gen_time_array(
+    t0: float,
+    t1: float,
+    *,
+    fs: int,
+    length: int|None = None
+) -> NDArray[np.floating]:
     """Generate a time array for a given time range and sampling frequency.
 
     Generate a time array for a given time range and sampling frequency with an
@@ -251,7 +257,7 @@ def gen_time_array(t0, t1, *, fs, length=None):
     t1 : float
         Final time (exclusive).
     
-    fs : float
+    fs : int
         sampling frequency.
     
     length : int, optional
@@ -310,7 +316,7 @@ def time_array_like(array, fs=4096, t0=0.0):
 
 
 
-def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
+def pad_time_array(times: NDArray, pad: int|Sequence[int]) -> np.ndarray:
     """Extend a uniformly sampled time array by 'pad' number of samples.
 
     Parameters
@@ -318,10 +324,10 @@ def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
     times: numpy.ndarray
         1D array of time samples. Must be uniformly sampled.
     
-    pad: int or array_like of two ints
+    pad: int or Sequence of two ints
         Number of samples to add.
         * If int, the same number of samples is added on both sides.
-        * If array_like of length 2, interpreted as (pad_before, pad_after).
+        * If Sequence of length 2, interpreted as (pad_before, pad_after).
     
     numpy.ndarray
         New time array with the specified padding, using the same time step
@@ -362,14 +368,14 @@ def pad_time_array(times: np.ndarray, pad: int | ArrayLike) -> np.ndarray:
     return np.linspace(t0, t1, length)
 
 
-def find_time_origin(times: np.ndarray) -> int:
+def find_time_origin(times: NDArray) -> int:
     """Return the index of the element closest to zero.
 
     Finds the position in the time array whose value is nearest to 0.
     
     Parameters
     ----------
-    times : np.ndarray
+    times : NDArray
         Time array.
     
     Returns
@@ -378,10 +384,10 @@ def find_time_origin(times: np.ndarray) -> int:
         Index position of the time origin (0).
     
     """
-    return np.argmin(np.abs(times))
+    return int(np.argmin(np.abs(times)))
 
 
-def find_merger(h: np.ndarray) -> int:
+def find_merger(h: NDArray) -> int:
     """Estimate the index of the merger in a gravitational-wave strain.
 
     This function provides a rough estimate of the merger time index by finding
@@ -420,7 +426,7 @@ def find_merger(h: np.ndarray) -> int:
     >>> find_merger(h)
     3
     """
-    return np.argmax(np.abs(h))
+    return int(np.argmax(np.abs(h)))
 
 
 def planck(N, nleft=0, nright=0):
@@ -499,7 +505,7 @@ def truncate_transfer(transfer, ncorner=None):
     return out
 
 
-def truncate_impulse(impulse, ntaps, window='hann'):
+def truncate_impulse(impulse, ntaps, window: str|tuple = 'hann'):
     """Smoothly truncate a time domain impulse response
 
     Parameters
@@ -543,7 +549,7 @@ def truncate_impulse(impulse, ntaps, window='hann'):
     return out
 
 
-def fir_from_transfer(transfer, ntaps, window='hann', ncorner=None):
+def fir_from_transfer(transfer, ntaps, window: str|tuple = 'hann', ncorner=None):
     """Design a Type II FIR filter given an arbitrary transfer function
 
     Parameters
@@ -582,7 +588,7 @@ def fir_from_transfer(transfer, ntaps, window='hann', ncorner=None):
     return out
 
 
-def convolve(strain, fir, window='hann'):
+def convolve(strain, fir, window: str|tuple = 'hann'):
     """Convolve a time series.
 
     Convolve a time series with a FIR filter using the overlap-save method.
@@ -664,13 +670,13 @@ def convolve(strain, fir, window='hann'):
     return conv
 
 
-def whiten(strain: np.ndarray,
+def whiten(strain: NDArray,
            *,
-           asd: np.ndarray,
+           asd: NDArray,
            fs: int,
            flength: int,
-           window='hann',
-           highpass: float = None,
+           window: str|tuple = 'hann',
+           highpass: float|None = None,
            normed: bool = True) -> np.ndarray:
     """Whiten a single strain signal using a FIR filter.
 
@@ -784,7 +790,7 @@ def whiten(strain: np.ndarray,
     return strain_whitened
 
 
-def is_arithmetic_progression(arr: np.ndarray, rtol=1e-5, atol=1e-8) -> bool:
+def is_arithmetic_progression(arr: NDArray, rtol=1e-5, atol=1e-8) -> bool:
     """Check if the array is an arithmetic progression.
     
     Check if the array is a progression with a constant increment, allowing for
@@ -792,7 +798,7 @@ def is_arithmetic_progression(arr: np.ndarray, rtol=1e-5, atol=1e-8) -> bool:
 
     Parameters
     ----------
-    arr : np.ndarray
+    arr : NDArray
         Input array to check.
     
     rtol : float, optional

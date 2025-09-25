@@ -1,6 +1,7 @@
 from typing import Callable
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
 
 from . import fat
@@ -41,7 +42,12 @@ class NonwhiteGaussianNoise:
     rng: numpy.random.Generator
 
     """
-    def __init__(self, *, duration, psd, fs, rng, freq_cutoff=0):
+    def __init__(self, *,
+                 duration: float,
+                 psd: Callable|NDArray,
+                 fs: int,
+                 rng: np.random.Generator,
+                 freq_cutoff: int = 0):
         """Initialises the noise instance.
 
         Parameters
@@ -59,9 +65,6 @@ class NonwhiteGaussianNoise:
 
         fs: int
             Sampling frequency of the signal.
-
-        random_seed: int or 1-d array_like
-            Seed for numpy.random.RandomState.
         
         freq_lowcut: int, optional
             Low cut-off frequency to apply when computing noise in frequency space.
@@ -111,7 +114,7 @@ class NonwhiteGaussianNoise:
 
         return "{}(t={}, fs={}, random_state={})".format(*args)
 
-    def _setup_psd(self, psd: np.ndarray | Callable) -> Callable:
+    def _setup_psd(self, psd: NDArray|Callable) -> tuple[Callable, NDArray]:
         """Return the PSD array AND an interpolating function."""
         if callable(psd):
             psd_fun = psd
@@ -267,7 +270,7 @@ class NonwhiteGaussianNoise:
 
 
 
-def sine_gaussian_waveform(times: np.ndarray,
+def sine_gaussian_waveform(times: NDArray,
                            *,
                            t0: float,
                            f0: float,
@@ -302,7 +305,7 @@ def sine_gaussian_waveform(times: np.ndarray,
     return env * np.sin(arg)
 
 
-def gaussian_waveform(times: np.ndarray,
+def gaussian_waveform(times: NDArray,
                       *,
                       t0: float,
                       hrss: float,
@@ -338,7 +341,7 @@ def gaussian_waveform(times: np.ndarray,
     return env
 
 
-def ring_down_waveform(times: np.ndarray,
+def ring_down_waveform(times: NDArray,
                        *,
                        t0: float,
                        f0: float,

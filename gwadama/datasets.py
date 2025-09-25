@@ -18,7 +18,7 @@ Notes
 """
 from copy import deepcopy
 import itertools
-from typing import Callable
+from typing import Callable, Any, overload
 import warnings
 
 # from gwpy.timeseries import TimeSeries  # Lazy import
@@ -223,7 +223,7 @@ class Base:
         max_length = self.max_length if hasattr(self, 'max_length') else 0
         fs = self.fs if hasattr(self, 'fs') else None
         whitened = self.whitened if hasattr(self, 'whitened') else False
-        train_test_split = (self.Xtrain is not None and self.Xtest is not None)
+        train_test_split = (self.Xtrain and self.Xtest)
         
         # Metadata information
         metadata_shape = self.metadata.shape if hasattr(self, 'metadata') and self.metadata is not None else (0, 0)
@@ -264,7 +264,7 @@ class Base:
             state['fs'] = state.pop('sample_rate')
         self.__dict__.update(state)
 
-    def _check_classes_dict(self, classes: dict[str]):
+    def _check_classes_dict(self, classes: dict[str, Any]):
         if not isinstance(classes, dict):
             raise TypeError("'classes' must be a dictionary")
         
@@ -353,7 +353,7 @@ class Base:
         """
         return keys
 
-    def keys(self, max_depth: int = None) -> list:
+    def keys(self, max_depth: int|None = None) -> list:
         """Return the unrolled combinations of all strain identifiers.
 
         Return the unrolled combinations of all keys  of the nested dictionary
@@ -422,7 +422,7 @@ class Base:
         """
         return dictools.find_parent_key_of_nested_key(self.strains, id)
 
-    def get_strain(self, *indices, normalize=False) -> np.ndarray:
+    def get_strain(self, *indices, normalize=False) -> NDArray:
         """Get a single strain from the complete index coordinates.
         
         This is just a shortcut to avoid having to write several squared
@@ -442,7 +442,7 @@ class Base:
         
         Returns
         -------
-        strain : np.ndarray
+        strain : NDArray
             The requested strain.
         
         """
@@ -455,7 +455,7 @@ class Base:
 
         return strain
 
-    def get_strains_array(self, length: int = None) -> np.ndarray:
+    def get_strains_array(self, length: int|None = None) -> tuple[NDArray, list]:
         """Get all strains stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals into an homogeneous numpy array whose length
@@ -471,7 +471,7 @@ class Base:
 
         Returns
         -------
-        strains_array : np.ndarray
+        strains_array : NDArray
             train subset.
         
         lengths : list
@@ -484,7 +484,7 @@ class Base:
 
         return strains_array, lengths
 
-    def get_times(self, *indices) -> np.ndarray:
+    def get_times(self, *indices) -> NDArray[np.float_]:
         """Get a single time array from the complete index coordinates.
         
         If there is no time tracking (thus no stored times), a new time array
@@ -500,7 +500,7 @@ class Base:
             raise ValueError("indices do not match the layout of 'self.strains'")
         
         if self._track_times:
-            times = dictools.get_value_from_nested_dict(self.times, indices)
+            times = dictools.get_value_from_nested_dict(self.times, indices) # pyright: ignore[reportArgumentType]
         else:
             length = len(self.get_strain(*indices))
             duration = length / self.fs
@@ -622,7 +622,7 @@ class Base:
                 left_time_points = np.arange(times[0] - pad_left * time_step, times[0], time_step)
                 right_time_points = np.arange(times[-1] + time_step, times[-1] + (pad_right + 1) * time_step, time_step)
                 times_padded = np.concatenate([left_time_points, times, right_time_points])
-                dictools.set_value_to_nested_dict(self.times, [clas, id_, *keys], times_padded)
+                dictools.set_value_to_nested_dict(self.times, [clas, id_, *keys], times_padded) # pyright: ignore[reportArgumentType]
             
             if self.strains is not self.strains_original:
                 # We need to extend the operation to the original strains to
@@ -773,7 +773,7 @@ class Base:
             if self._track_times:
                 times = self.get_times(clas, id_, *keys)
                 times = times[pad_left:pad_right]
-                dictools.set_value_to_nested_dict(self.times, [clas,id_,*keys], times)
+                dictools.set_value_to_nested_dict(self.times, [clas,id_,*keys], times) # pyright: ignore[reportArgumentType]
             
             if self.strains is not self.strains_original:
                 # Example case: after whitening, the original strains are kept
@@ -803,7 +803,7 @@ class Base:
             else:
                 # If no previous pad wass added, store the current with negative
                 # values (since we're shrinking, not enlarging).
-                self.padding = {id: (-pad[0], -pad[1]) for id, pad in padding.items()}
+                self.padding = {id: np.array([-pad[0], -pad[1]]) for id, pad in padding.items()}
         
         self._after_shrink_strains()
         
@@ -851,12 +851,12 @@ class Base:
         # If verbose, do not show progress bar to avoid cluttering.
         main_loop = tqdm(self.items(), total=len(self)) if not verbose else self.items()
         for *keys, strain in main_loop:
-            time = dictools.get_value_from_nested_dict(self.times, keys)
+            time = dictools.get_value_from_nested_dict(self.times, keys) # pyright: ignore[reportArgumentType]
             strain_resampled, time_resampled, sr_interp, factor_up, factor_down = tat.resample(
                 strain, time, fs, full_output=True
             )
             dictools.set_value_to_nested_dict(self.strains, keys, strain_resampled)
-            dictools.set_value_to_nested_dict(self.times, keys, time_resampled)
+            dictools.set_value_to_nested_dict(self.times, keys, time_resampled) # pyright: ignore[reportArgumentType]
             
             if verbose:
                 print(
@@ -869,7 +869,7 @@ class Base:
     def _after_resample(self):
         """Hook for side-effects after `resample`."""
         self.max_length = self._find_max_length()
-        if self.Xtrain is not None:
+        if self.Xtrain:
             self._update_train_test_subsets()
 
     def bandpass(self,
@@ -913,7 +913,7 @@ class Base:
     
     def _after_bandpass(self):
         """Hook for side-effects after `bandpass`."""
-        if self.Xtrain is not None:
+        if self.Xtrain:
             self._update_train_test_subsets()
     
     def apply_window(self, window, all=False):
@@ -994,8 +994,8 @@ class Base:
     def whiten(self,
                *,
                flength: int,
-               asd_array: np.ndarray = None,
-               highpass: int = None,
+               asd_array: NDArray|None = None,
+               highpass: int|None = None,
                normed=False,
                shrink: int = 0,
                window: str | tuple = 'hann',
@@ -1065,7 +1065,7 @@ class Base:
 
     def _after_whiten(self, shrink):
         """Hook for side-effects after `whiten`."""
-        if self.Xtrain is not None and shrink == 0:
+        if self.Xtrain and shrink == 0:
             self._update_train_test_subsets()
 
     def build_train_test_subsets(self, train_size: int | float):
@@ -1175,7 +1175,7 @@ class Base:
 
         Returns
         -------
-        train_array : np.ndarray
+        train_array : NDArray
             train subset.
         
         lengths : list
@@ -1212,7 +1212,7 @@ class Base:
 
         Returns
         -------
-        test_array : np.ndarray
+        test_array : NDArray
             test subset.
         
         lengths : list
@@ -1249,13 +1249,13 @@ class Base:
 
         Returns
         -------
-        np.ndarray
+        NDArray
             Filtered train labels.
 
-        np.ndarray, optional
+        NDArray, optional
             IDs associated to the filtered train labels.
         
-        np.ndarray, optional
+        NDArray, optional
             Indices associated to the filtered train labels.
 
         """
@@ -1282,13 +1282,13 @@ class Base:
 
         Returns
         -------
-        np.ndarray
+        NDArray
             Filtered test labels.
 
-        np.ndarray, optional
+        NDArray, optional
             IDs associated to the filtered test labels.
         
-        np.ndarray, optional
+        NDArray, optional
             Indices associated to the filtered test labels.
 
         """
@@ -1297,6 +1297,36 @@ class Base:
             with_id=with_id, with_index=with_index
         )
     
+    @overload
+    def _filter_labels(
+        self,
+        labels,
+        labels_id,
+        classes,
+        *,
+        with_id: bool,
+        with_index: bool,
+    ) -> tuple[NDArray, NDArray, NDArray]: ...
+    @overload
+    def _filter_labels(
+        self,
+        labels,
+        labels_id,
+        classes,
+        *,
+        with_id: bool,
+        with_index: bool = ...,
+    ) -> tuple[NDArray, NDArray]: ...
+    @overload
+    def _filter_labels(
+        self,
+        labels,
+        labels_id,
+        classes,
+        *,
+        with_id: bool = ...,
+        with_index: bool = ...,
+    ) -> NDArray: ...
     def _filter_labels(self, labels, labels_id, classes, with_id=False, with_index=False):
         """Filter labels based on 'classes'.
 
@@ -1304,7 +1334,7 @@ class Base:
         
         Parameters
         ----------
-        labels : np.ndarray
+        labels : NDArray
             The array containing the labels.
         
         labels_id : list
@@ -1326,13 +1356,13 @@ class Base:
 
         Returns
         -------
-        filtered_labels : np.ndarray
+        filtered_labels : NDArray
             Filtered labels.
 
-        filtered_ids : np.ndarray, optional
+        filtered_ids : NDArray, optional
             IDs associated to the filtered labels.
 
-        filtered_indices : np.ndarray, optional
+        filtered_indices : NDArray, optional
             Indices associated to the filtered labels.
 
         """
@@ -1371,7 +1401,7 @@ class Base:
             return filtered_labels, filtered_indices
         return filtered_labels
         
-    def stack_by_id(self, id_list: list, length: int = None):
+    def stack_by_id(self, id_list: list, length: int|None = None):
         """Stack an subset of strains by their ID into a Numpy array.
 
         Stack an arbitrary selection of strains by their original ID into a
@@ -1389,7 +1419,7 @@ class Base:
 
         Returns
         -------
-        stacked_signals : np.ndarray
+        stacked_signals : NDArray
             The array containing the stacked strains.
 
         lengths : list
@@ -1570,15 +1600,10 @@ class BaseInjected(Base):
     whiten_params : dict
         TODO
 
-        freq_cutoff : int | float
+        freq_cutoff : int
             Frequency cutoff below which no noise bins will be generated in the
             frequency space, and also used for the high-pass filter applied to
             clean signals before injection.
-
-        freq_butter_order : int
-            Butterworth filter order.
-            See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
-            for more information.
 
     Xtrain, Xtest : dict, optional
         Train and test subsets randomly split using SKLearn train_test_split
@@ -1608,13 +1633,12 @@ class BaseInjected(Base):
     def __init__(self,
                  clean_dataset: Base,
                  *,
-                 psd: np.ndarray | Callable,
-                 noise_length: int,
-                 freq_cutoff: int | float,
-                 freq_butter_order: int | float,
-                 noise_instance=None,
+                 psd: NDArray | Callable,
+                 noise_length: int = 0,
+                 freq_cutoff: int = 0,
+                 noise_instance: synthetic.NonwhiteGaussianNoise|None = None,
                  detector: str = '',
-                 random_seed: int = None):
+                 random_seed: int|None = None):
         """Base constructor for injected datasets.
 
         TODO: Update docstring.
@@ -1640,7 +1664,7 @@ class BaseInjected(Base):
         clean_dataset : Base
             Instance of a Class(Base) with noiseless signals.
 
-        psd : np.ndarray | Callable
+        psd : NDArray | Callable
             Power Spectral Density of the detector's sensitivity in the range
             of frequencies of interest. Can be given as a callable function
             whose argument is expected to be an array of frequencies, or as a
@@ -1659,18 +1683,12 @@ class BaseInjected(Base):
             It should be at least longer than the longest signal expected to be
             injected.
 
-        freq_cutoff : int | float
+        freq_cutoff : int
             Frequency cutoff below which no noise bins will be generated in the
             frequency space, and also used for the high-pass filter applied to
             clean signals before injection.
             TODO: Properly separate this parameter from the whitening frequency
             cutoff, which can be set to a different value.
-
-        freq_butter_order : int | float
-            Butterworth filter order. For signals above 100 Hz it's usually
-            enough with order 4 to 6.
-            See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
-            for more information.
 
         noise_instance : NonwhiteGaussianNoise-like, optional
             [Experimental] Instead of generating random Gaussian noise, an
@@ -1711,7 +1729,7 @@ class BaseInjected(Base):
         self.labels = clean_dataset.labels.copy()
         self.metadata = deepcopy(clean_dataset.metadata)
         self._track_times = clean_dataset._track_times
-        self.times = deepcopy(clean_dataset.times) if self._track_times else None
+        self.times = deepcopy(clean_dataset.times) if self._track_times else {}
         self.padding = clean_dataset.padding.copy()
         self.max_length = clean_dataset.max_length
 
@@ -1723,7 +1741,6 @@ class BaseInjected(Base):
 
         # Highpass parameters applied when generating the noise array.
         self.freq_cutoff = freq_cutoff
-        self.freq_butter_order = freq_butter_order
     
         if self._data_in_white_space:
             self._psd, self.psd_array = None, None
@@ -1752,19 +1769,19 @@ class BaseInjected(Base):
 
         # Injection related:
         #----------------------------------------------------------------------
-        self.strains = None
+        self.strains: dict = {}
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
-        self.injection_snr_scales = None
+        self.injection_snr_scales: dict = {}
         self.injections_per_snr = 1  # Default value.
         self.whitened = self._data_in_white_space
-        self.whiten_params = None
+        self.whiten_params = {}
 
         # Train/Test subset views:
         #----------------------------------------------------------------------
         if clean_dataset.Xtrain is not None:
-            self.Xtrain = {k: None for k in clean_dataset.Xtrain.keys()}
-            self.Xtest = {k: None for k in clean_dataset.Xtest.keys()}
+            self.Xtrain = {k: np.array([]) for k in clean_dataset.Xtrain.keys()}
+            self.Xtest = {k: np.array([]) for k in clean_dataset.Xtest.keys()}
             self.Ytrain = clean_dataset.Ytrain
             self.Ytest = clean_dataset.Ytest
             self.id_train = clean_dataset.id_train
@@ -1883,7 +1900,7 @@ class BaseInjected(Base):
             return keys[1:]
         return keys
     
-    def _setup_psd(self, psd: np.ndarray | Callable) -> tuple[Callable, np.ndarray]:
+    def _setup_psd(self, psd: NDArray|Callable) -> tuple[Callable, NDArray]:
         """Setup the PSD function or array depending on the input.
         
         Setup the power spectral density function and array from any of those.
@@ -1908,7 +1925,7 @@ class BaseInjected(Base):
             
         return psd_fun, psd_array
 
-    def _setup_asd_from_psd(self, psd) -> tuple[Callable, np.ndarray]:
+    def _setup_asd_from_psd(self, psd: NDArray|Callable) -> tuple[Callable, NDArray]:
         """Setup the ASD function or array depending on the input.
         
         Setup the amplitude spectral density function and array from any of
@@ -1934,18 +1951,27 @@ class BaseInjected(Base):
             
         return asd_fun, asd_array
 
-    def psd(self, frequencies: float | np.ndarray[float]) -> np.ndarray[float]:
+    def psd(self, frequencies: float | NDArray[np.float_]) -> NDArray[np.float_]:
         """Power spectral density (PSD) of the detector at given frequencies.
 
         Interpolates the PSD at the given frequencies from their array
         representation. If during initialization the PSD was given as its
         array representation, the interpolant is computed using SciPy's
         quadratic spline interpolant function.
-
         """
+        if self._data_in_white_space:
+            raise RuntimeError(
+                "PSD unavailable: the instance is in 'white space' and "
+                "no PSD is stored."
+            )
+        elif self._psd is None:
+            raise RuntimeError(
+                "PSD unavailable, but data not in white space. "
+                "This is probably a bug."
+            )
         return self._psd(frequencies)
 
-    def asd(self, frequencies: float | np.ndarray[float]) -> np.ndarray[float]:
+    def asd(self, frequencies: float | NDArray[np.float_]) -> NDArray[np.float_]:
         """Amplitude spectral density (ASD) of the detector at given frequencies.
 
         Interpolates the ASD at the given frequencies from their array
@@ -1954,6 +1980,16 @@ class BaseInjected(Base):
         quadratic spline interpolant function.
 
         """
+        if self._data_in_white_space:
+            raise RuntimeError(
+                "ASD unavailable: the instance is in 'white space' and "
+                "no ASD is stored."
+            )
+        elif self._asd is None:
+            raise RuntimeError(
+                "ASD unavailable, but data not in white space. "
+                "This is probably a bug."
+            )
         return self._asd(frequencies)
     
     def _generate_background_noise(self, noise_length: int) -> synthetic.NonwhiteGaussianNoise:
@@ -1966,7 +2002,7 @@ class BaseInjected(Base):
 
         return noise
     
-    def _gen_empty_strains_dict(self) -> dict[dict[dict]]:
+    def _gen_empty_strains_dict(self) -> dict[int|str, dict[int|str, dict]]:
         """Initializes the nested dictionary of strains.
         
         Initializes the nested dictionary of strains following the hierarchy
@@ -1982,7 +2018,7 @@ class BaseInjected(Base):
     def gen_injections(self,
                        snr: int|float|list|tuple,
                        randomize_noise: bool = False,
-                       random_seed: int = None,
+                       random_seed: int|None = None,
                        injections_per_snr: int = 1,
                        verbose=False,
                        **inject_kwargs):
@@ -2078,7 +2114,7 @@ class BaseInjected(Base):
                                  inject_kwargs, snr_list, times_old, pbar)
 
         if verbose:
-            pbar.close()
+            pbar.close() # pyright: ignore[reportOptionalMemberAccess]
         
         self._after_gen_injections(snr_list, injections_per_snr)
         
@@ -2091,7 +2127,7 @@ class BaseInjected(Base):
             self._dict_depth = dictools.get_depth(self.strains)
 
         self.max_length = self._find_max_length()
-        if self.Xtrain is not None:
+        if self.Xtrain:
             self._update_train_test_subsets()
 
     def _setup_rng(self, random_seed):
@@ -2107,7 +2143,7 @@ class BaseInjected(Base):
 
     def _initialize_injection_structures(self):
         """Initialize injection-related attributes."""
-        if self.strains is None:
+        if not self.strains:
             # 1st time making injections.
             self.strains = self._gen_empty_strains_dict()
             if self._track_times:
@@ -2173,6 +2209,11 @@ class BaseInjected(Base):
             **inject_kwargs
         )
         if self.whitened and not self._data_in_white_space:
+            if self.asd_array is None:
+                raise RuntimeError(
+                "ASD unavailable, but data not in white space. "
+                "This is probably a bug."
+            )
             injected = tat.whiten(
                 injected,
                 asd=self.asd_array,
@@ -2180,7 +2221,6 @@ class BaseInjected(Base):
                 flength=self.whiten_params['flength'],
                 window=self.whiten_params['window'],
                 highpass=self.whiten_params['highpass'],
-                shrink=self.whiten_params['shrink'],
                 normed=self.whiten_params['normed']
             )
             
@@ -2190,16 +2230,17 @@ class BaseInjected(Base):
         if isinstance(snr, (int, float)):
             snr_list = [snr]
         elif isinstance(snr, (list,tuple)):
-            snr_list = snr
+            snr_list = list(snr)
         else:
             raise TypeError(f"'{type(snr)}' is not a valid 'snr' type")
+        
         return snr_list
     
     def _inject(self,
-                strain: np.ndarray,
+                strain: NDArray,
                 snr: int | float,
                 pos: int = 0,
-                **_) -> np.ndarray:
+                **_) -> tuple[NDArray, float]:
         """Inject 'strain' at 'snr' into noise using the 'self.noise' instance.
 
         NOTE: This is writen as an independent method to allow for other
@@ -2264,7 +2305,7 @@ class BaseInjected(Base):
     def whiten(self,
                *,
                flength: int,
-               highpass: int = None,
+               highpass: int|None = None,
                normed=False,
                shrink: int = 0,
                window: str | tuple = 'hann',
@@ -2306,8 +2347,14 @@ class BaseInjected(Base):
         if self.whitened:
             raise RuntimeError("dataset already whitened")
 
-        if self.strains is None:
+        if not self.strains:
             raise RuntimeError("no injections have been performed yet")
+
+        if self.asd_array is None:
+            raise RuntimeError(
+                "ASD unavailable, but data not in white space. "
+                "This is probably a bug."
+            )
         
         loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
         for *keys, strain in loop_aux:
@@ -2333,7 +2380,7 @@ class BaseInjected(Base):
         self._after_whiten(shrink)
 
     def get_xtrain_array(self,
-                         length: int = None,
+                         length: int|None = None,
                          classes: str | list = 'all',
                          snr: int | list | str = 'all',
                          with_metadata: bool = False):
@@ -2379,7 +2426,7 @@ class BaseInjected(Base):
 
         Returns
         -------
-        train_array : np.ndarray
+        train_array : NDArray
             Train subset.
         
         lengths : list
@@ -2394,9 +2441,9 @@ class BaseInjected(Base):
         return self._stack_subset(self.Xtrain, length, classes, snr, with_metadata)
     
     def get_xtest_array(self,
-                        length: int = None,
-                        classes: str | list = 'all',
-                        snr: int | list | str = 'all',
+                        length: int|None = None,
+                        classes: str|list = 'all',
+                        snr: int|list|str = 'all',
                         with_metadata: bool = False):
         """Get the test subset stacked in a zero-padded Numpy 2d-array.
 
@@ -2440,7 +2487,7 @@ class BaseInjected(Base):
 
         Returns
         -------
-        test_array : np.ndarray
+        test_array : NDArray
             Test subset.
 
         lengths : list
@@ -2457,9 +2504,9 @@ class BaseInjected(Base):
 
     def _stack_subset(self,
                       strains: dict,
-                      length:  int = None,
-                      classes: str | list = 'all',
-                      snr: int | list | str = 'all',
+                      length:  int|None = None,
+                      classes: str|list = 'all',
+                      snr: int|list|str = 'all',
                       with_metadata: bool = False):
         """Stack 'strains' into a zero-padded 2d-array.
 
@@ -2501,7 +2548,7 @@ class BaseInjected(Base):
 
         Returns
         -------
-        stacked_signals : np.ndarray
+        stacked_signals : NDArray
             The array containing the stacked strains.
 
         lengths : list
@@ -2595,13 +2642,13 @@ class BaseInjected(Base):
 
         Returns
         -------
-        np.ndarray
+        NDArray
             Filtered train labels.
 
-        np.ndarray, optional
+        NDArray, optional
             IDs associated to the filtered train labels.
         
-        np.ndarray, optional
+        NDArray, optional
             Indices associated to the filtered train labels.
 
         """
@@ -2633,13 +2680,13 @@ class BaseInjected(Base):
 
         Returns
         -------
-        np.ndarray
+        NDArray
             Filtered test labels.
 
-        np.ndarray, optional
+        NDArray, optional
             IDs associated to the filtered test labels.
         
-        np.ndarray, optional
+        NDArray, optional
             Indices associated to the filtered test labels.
 
         """
@@ -2655,7 +2702,7 @@ class BaseInjected(Base):
         
         Parameters
         ----------
-        labels : np.ndarray
+        labels : NDArray
             The array containing the labels.
 
         labels_id : list
@@ -2681,13 +2728,13 @@ class BaseInjected(Base):
 
         Returns
         -------
-        filtered_labels : np.ndarray
+        filtered_labels : NDArray
             Filtered labels.
 
-        filtered_ids : np.ndarray, optional
+        filtered_ids : NDArray, optional
             IDs associated to the filtered labels.
 
-        filtered_indices : np.ndarray, optional
+        filtered_indices : NDArray, optional
             Indices associated to the filtered labels.
 
         """
@@ -2753,7 +2800,7 @@ class BaseInjected(Base):
 
     def stack_by_id(self,
                     id_list: list,
-                    length: int = None,
+                    length: int|None = None,
                     snr_included: int | list[int] | str = 'all'):
         """Stack a subset of strains by ID into a zero-padded 2d-array.
 
@@ -2784,7 +2831,7 @@ class BaseInjected(Base):
 
         Returns
         -------
-        stacked_signals : np.ndarray
+        stacked_signals : NDArray
             The array containing the stacked strains.
 
         lengths : list
@@ -2898,7 +2945,7 @@ class SyntheticWaves(Base):
                  amp_threshold: float,
                  tukey_alpha: float,
                  fs: int,
-                 random_seed: int = None):
+                 random_seed: int|None = None):
         """
         Parameters
         ----------
@@ -2958,10 +3005,10 @@ class SyntheticWaves(Base):
         self.strains_original = self.strains
         self._gen_labels()
 
-        self.Xtrain = None
-        self.Xtest = None
-        self.Ytrain = None
-        self.Ytest = None
+        self.Xtrain = {}
+        self.Xtest = {}
+        self.Ytrain = np.array([])
+        self.Ytest = np.array([])
 
     def _gen_metadata(self):
         """Generate random metadata associated with each waveform."""
@@ -3031,25 +3078,25 @@ class SyntheticWaves(Base):
                     self.strains[clas][id] = synthetic.sine_gaussian_waveform(
                         times,
                         t0=self.peak_time_max_length,
-                        f0=self.metadata.at[id,'f0'],
-                        Q=self.metadata.at[id,'Q'],
-                        hrss=self.metadata.at[id,'hrss']
+                        f0=float(self.metadata.at[id,'f0']), # type: ignore
+                        Q=float(self.metadata.at[id,'Q']), # type: ignore
+                        hrss=float(self.metadata.at[id,'hrss']) # type: ignore
                     )
                 case 'G':
                     self.strains[clas][id] = synthetic.gaussian_waveform(
                         times,
                         t0=self.peak_time_max_length,
-                        hrss=self.metadata.at[id,'hrss'],
-                        duration=self.metadata.at[id,'duration'],
+                        hrss=float(self.metadata.at[id,'hrss']), # type: ignore
+                        duration=float(self.metadata.at[id,'duration']), # type: ignore
                         amp_threshold=self.amp_threshold
                     )
                 case 'RD':
                     self.strains[clas][id] = synthetic.ring_down_waveform(
                         times,
                         t0=self.peak_time_max_length,
-                        f0=self.metadata.at[id,'f0'],
-                        Q=self.metadata.at[id,'Q'],
-                        hrss=self.metadata.at[id,'hrss']
+                        f0=self.metadata.at[id,'f0'], # type: ignore
+                        Q=self.metadata.at[id,'Q'], # type: ignore
+                        hrss=self.metadata.at[id,'hrss'] # type: ignore
                     )
         
         self._dict_depth = dictools.get_depth(self.strains)
@@ -3116,7 +3163,7 @@ class SyntheticWaves(Base):
         """
         for i in range(len(self)):
             clas = self.metadata.at[i,'Class']
-            duration = self.metadata.at[i,'duration']
+            duration = float(self.metadata.at[i,'duration']) # type: ignore
             ref_length = int(duration * self.fs)
             
             if clas == 'RD':
@@ -3152,29 +3199,28 @@ class InjectedSyntheticWaves(BaseInjected):
     def __init__(self,
                  clean_dataset: SyntheticWaves,
                  *,
-                 psd: np.ndarray | Callable,
+                 psd: NDArray | Callable,
                  detector: str,
                  noise_length: int,
-                 freq_cutoff: int | float,
-                 freq_butter_order: int | float,
+                 freq_cutoff: int,
                  random_seed: int):
         super().__init__(
             clean_dataset, psd=psd, detector=detector, noise_length=noise_length,
-            freq_cutoff=freq_cutoff, freq_butter_order=freq_butter_order, random_seed=random_seed
+            freq_cutoff=freq_cutoff, random_seed=random_seed
         )
 
         # Initialize the Train/Test subsets inheriting the indices of the input
         # clean dataset instance.
-        if clean_dataset.Xtrain is not None:
+        if clean_dataset.Xtrain:
             self.Xtrain = dictools.replicate_structure(clean_dataset.Xtrain)
             self.Xtest = dictools.replicate_structure(clean_dataset.Xtest)
-            self.Ytrain = dictools.replicate_structure(clean_dataset.Ytrain)
-            self.Ytest = dictools.replicate_structure(clean_dataset.Ytest)
+            self.Ytrain = clean_dataset.Ytrain
+            self.Ytest = clean_dataset.Ytest
         else:
-            self.Xtrain = None
-            self.Xtest = None
-            self.Ytrain = None
-            self.Ytest = None
+            self.Xtrain = {}
+            self.Xtest = {}
+            self.Ytrain = np.array([])
+            self.Ytest = np.array([])
 
 
 class UnlabeledBaseMixin:
@@ -3194,6 +3240,9 @@ class UnlabeledBaseMixin:
       to handle correctly the references.
     
     """
+    # Attributes expected to exist:
+    classes: dict[str, Any]
+
     def get_strain(self, *indices, normalize=False):
         # Add the dummy class name (if ommited) as the first index, so that the
         # user does not need to write it explicitly:
@@ -3201,17 +3250,17 @@ class UnlabeledBaseMixin:
         if indices[0] != class_label:
             indices = (next(iter(self.classes.keys())), *indices)
 
-        return super().get_strain(*indices, normalize=normalize)
+        return super().get_strain(*indices, normalize=normalize) # pyright: ignore[reportAttributeAccessIssue]
     get_strain.__doc__ = Base.get_strain.__doc__
 
-    def get_times(self, *indices) -> np.ndarray:
+    def get_times(self, *indices) -> NDArray:
         # Add the dummy class name (if ommited) as the first index, so that the
         # user does not need to write it explicitly:
         class_label = next(iter(self.classes.keys()))
         if indices[0] != class_label:
             indices = (next(iter(self.classes.keys())), *indices)
         
-        return super().get_times(*indices)
+        return super().get_times(*indices) # pyright: ignore[reportAttributeAccessIssue]
     get_times.__doc__ = Base.get_times.__doc__
 
 
@@ -3248,10 +3297,10 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
     
     """
     def __init__(self,
-                 strains_array: np.ndarray,
+                 strains_array: NDArray,
                  *,
                  fs: int,
-                 strain_limits=None,
+                 strain_limits: NDArray|None = None,
                  whitened=False,
                  random_seed=None):
         """Initialize an UnlabeledWaves dataset.
@@ -3264,7 +3313,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
 
         Parameters
         ----------
-        strains_array : np.ndarray
+        strains_array : NDArray
             A 2D array containing gravitational wave signals, where each row 
             represents a separate waveform, possibly zero-padded.
 
@@ -3319,20 +3368,20 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
 
         # Time tracking related attributes.
         self._track_times = False  # If True, self.times must be not None.
-        self.times: dict = None
+        self.times: dict = {}
         
         # Train/Test subset splits (views into the same 'self.strains').
         #   Timeseries:
-        self.Xtrain: np.ndarray = None
-        self.Xtest: np.ndarray = None
+        self.Xtrain: dict[int|str, NDArray] = {}
+        self.Xtest: dict[int|str, NDArray] = {}
         #   Labels:
-        self.Ytrain: np.ndarray = None
-        self.Ytest: np.ndarray = None
+        self.Ytrain: NDArray[np.integer] = np.array([], dtype=int)
+        self.Ytest: NDArray[np.integer]= np.array([], dtype=int)
         #   Indices (sorted as in train and test splits respectively):
-        self.id_train: np.ndarray = None
-        self.id_test: np.ndarray = None
+        self.id_train: NDArray[np.integer] = np.array([], dtype=int)
+        self.id_test: NDArray[np.integer] = np.array([], dtype=int)
 
-    def _unpack_strains(self, strain_array: np.ndarray, strain_limits: np.ndarray = None) -> dict:
+    def _unpack_strains(self, strain_array: NDArray, strain_limits: NDArray|None = None) -> dict:
         num_signals = strain_array.shape[0]
 
         if strain_limits is None:
@@ -3370,13 +3419,12 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
     """
     def __init__(self,
                  clean_dataset: UnlabeledWaves,
-                 psd: np.ndarray | Callable = None,
-                 noise_length: int = None,
-                 freq_cutoff: int | float = None,
-                 freq_butter_order: int | float = None,
-                 noise_instance: synthetic.NonwhiteGaussianNoise = None,
+                 psd: NDArray|Callable|None = None,
+                 noise_length: int = 0,
+                 freq_cutoff: int|float|None = None,
+                 noise_instance: synthetic.NonwhiteGaussianNoise|None = None,
                  detector: str = '',
-                 random_seed: int = None):
+                 random_seed: int|None = None):
         """Initialize an InjectedUnlabeledWaves dataset.
 
         This constructor is built from a previous UnlabeledWaves instance.
@@ -3394,7 +3442,7 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         ----------
         clean_dataset : UnlabeledWaves
 
-        psd : np.ndarray | Callable, optional
+        psd : NDArray | Callable, optional
             Power Spectral Density of the detector's sensitivity in the range
             of frequencies of interest. Can be given as a callable function
             whose argument is expected to be an array of frequencies, or as a
@@ -3420,12 +3468,6 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
             Frequency cutoff below which no noise bins will be generated in the
             frequency space, and also used for the high-pass filter applied to
             clean signals before injection.
-
-        freq_butter_order : int | float, optional
-            Butterworth filter order. For signals above 100 Hz it's usually
-            enough with order 4 to 6.
-            See (https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html)
-            for more information.
 
         noise_instance : NonwhiteGaussianNoise-like, optional
             [Experimental] Instead of generating random Gaussian noise, an
@@ -3473,7 +3515,7 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
         self.classes = clean_dataset.classes.copy()  # Dummy class.
         self.labels = self.labels = clean_dataset.labels.copy()  # Dummy labels.
         self._track_times = clean_dataset._track_times
-        self.times = deepcopy(clean_dataset.times) if self._track_times else None
+        self.times = deepcopy(clean_dataset.times) if self._track_times else {}
         self.padding = clean_dataset.padding.copy()
         self.max_length = clean_dataset.max_length
 
@@ -3485,22 +3527,31 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
 
         # Highpass parameters applied when generating the noise array.
         self.freq_cutoff = freq_cutoff
-        self.freq_butter_order = freq_butter_order
 
         if self._data_in_white_space:
             self._psd, self.psd_array = None, None
             self._asd, self.asd_array = None, None
-        else:
+        elif psd is not None:
             self._psd, self.psd_array = self._setup_psd(psd)
             self._asd, self.asd_array = self._setup_asd_from_psd(psd)
+        else:
+            raise ValueError(
+                "Either provide a noise instance, or a PSD curve to generate "
+                "coloured non-white Gaussian noise."
+            )
 
         if noise_instance is None:
             # Generate synthetic non-white Guassian noise.
             if psd is None:
-                raise ValueError(
-                    "in order to generate synthetic background, 'psd' must be"
-                    " provided."
-                )
+                if self._data_in_white_space:
+                    raise NotImplementedError(
+                        "White noise generation is not yet implemented."
+                    )
+                else:
+                    raise ValueError(
+                        "In order to generate coloured synthetic background "
+                        " noise 'psd' must be provided."
+                    )
             self.noise = self._generate_background_noise(noise_length)
         else:
             # EXPERIMENTAL OPTION TO ALLOW THE USE OF REAL OR PRE-GENERATED
@@ -3514,30 +3565,30 @@ class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
 
         # Injection related:
         #----------------------------------------------------------------------
-        self.strains = None
+        self.strains: dict = {}
         self._dict_depth = clean_dataset._dict_depth + 1  # Depth of the strains dict.
         self.snr_list = []
-        self.injection_snr_scales = None
+        self.injection_snr_scales: dict = {}
         self.injections_per_snr = 1  # Default value.
         self.whitened = self._data_in_white_space
-        self.whiten_params = None
+        self.whiten_params = {}
         
         # Train/Test subset views:
         #----------------------------------------------------------------------
-        if clean_dataset.Xtrain is not None:
-            self.Xtrain = {k: None for k in clean_dataset.Xtrain.keys()}
-            self.Xtest = {k: None for k in clean_dataset.Xtest.keys()}
+        if clean_dataset.Xtrain:
+            self.Xtrain = {k: np.array([]) for k in clean_dataset.Xtrain.keys()}
+            self.Xtest = {k: np.array([]) for k in clean_dataset.Xtest.keys()}
             self.Ytrain = clean_dataset.Ytrain
             self.Ytest = clean_dataset.Ytest
             self.id_train = clean_dataset.id_train
             self.id_test = clean_dataset.id_test
         else:
-            self.Xtrain = None
-            self.Xtest = None
-            self.Ytrain = None
-            self.Ytest = None
-            self.id_train = None
-            self.id_test = None
+            self.Xtrain = {}
+            self.Xtest = {}
+            self.Ytrain = np.array([], dtype=int)
+            self.Ytest = np.array([], dtype=int)
+            self.id_train = np.array([], dtype=int)
+            self.id_test = np.array([], dtype=int)
 
 
 class CoReWaves(Base):
@@ -3581,9 +3632,10 @@ class CoReWaves(Base):
         the 'classes' list.
         The 'id' is an unique identifier for each strain, and must exist in the
         `self.metadata.index` column of the metadata DataFrame.
-        Initially, an extra depth layer is defined to store the polarizations
-        of the CoRe GW simulated data. After the projection this layer will be
-        collapsed to a single strain.
+        .. note::
+            Initially, an extra depth layer is defined to store the polarizations
+            of the CoRe GW simulated data. After the projection this layer will be
+            collapsed to a single strain.
     
     times : dict {class: {id: gw_time_points} }
         Time samples associated with the strains, following the same structure.
@@ -3623,8 +3675,8 @@ class CoReWaves(Base):
     def __init__(self,
                  *,
                  coredb: ioo.CoReManager,
-                 classes: dict[str],
-                 discarded: dict[set|list|tuple],
+                 classes: dict[str, Any],
+                 discarded: dict[int|str, set[set|list|tuple]],
                  cropped: dict,
                  # Source:
                  distance: float,
@@ -3682,7 +3734,7 @@ class CoReWaves(Base):
         self._gen_labels()
         self.max_length = self._find_max_length()
 
-        self.fs = None  # Set up after resampling
+        self.fs = 0  # Set up after resampling
         self.random_seed = None  # Set if calling the 'build_train_test_subsets' method.
         self.rng = np.random.default_rng(self.random_seed)
 
@@ -3694,13 +3746,13 @@ class CoReWaves(Base):
 
         # Train/Test subset splits (views into the same 'self.strains').
         #   Timeseries:
-        self.Xtrain: np.ndarray = None
-        self.Xtest: np.ndarray = None
+        self.Xtrain: dict[int|str, NDArray] = {}
+        self.Xtest: dict[int|str, NDArray] = {}
         #   Labels:
-        self.Ytrain: np.ndarray = None
-        self.Ytest: np.ndarray = None
+        self.Ytrain: NDArray[np.integer] = np.array([], dtype=int)
+        self.Ytest: NDArray[np.integer]= np.array([], dtype=int)
     
-    def _format_discarded(self, discarded):
+    def _format_discarded(self, discarded: dict[int|str, set[set|list|tuple]]):
         """Validate `discarded` and convert the dictionary values into sets."""
 
         if not isinstance(discarded, dict):
@@ -3723,7 +3775,11 @@ class CoReWaves(Base):
                 )
         return out
     
-    def _get_strain_and_metadata(self, coredb: ioo.CoReManager) -> tuple[dict, dict, pd.DataFrame]:
+    def _get_strain_and_metadata(self, coredb: ioo.CoReManager) -> tuple[
+        dict[int|str, dict[int|str, dict[str, NDArray[np.floating]]]],
+        dict[int|str, dict[int|str, dict[str, NDArray[np.floating]]]],
+        pd.DataFrame
+    ]:
         """Obtain the strain and metadata from a CoReManager instance.
 
         The strains are the Pluss and Cross polarizations obtained from the
@@ -3836,7 +3892,7 @@ class CoReWaves(Base):
         
         return strains, times, metadata
     
-    def find_merger(self, strain: np.ndarray) -> int:
+    def find_merger(self, strain: NDArray) -> int:
         return tat.find_merger(strain)
 
     def _update_merger_positions(self):
@@ -3851,7 +3907,7 @@ class CoReWaves(Base):
             # If more layers are present, only get the first instance of times
             # since all will be the same.
             if isinstance(times, dict):
-                times = dictools.get_first_value(times)
+                times = np.asarray(dictools.get_first_value(times))
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
     def _after_resample(self):
@@ -3914,7 +3970,7 @@ class CoReWaves(Base):
         self._dict_depth = dictools.get_depth(self.strains)
         self._update_merger_positions()
         self.max_length = self._find_max_length()
-        if self.Xtrain is not None:
+        if self.Xtrain:
             self._update_train_test_subsets()
 
     def trim_relative_to_merger(
@@ -3986,7 +4042,7 @@ class CoReWaves(Base):
 
         # Note: deeper layers (e.g. polarisations) are trimmed uniformly.
         for clas, id_ in self.keys(max_depth=2):
-            i_merger = int(self.metadata.at[id_, "merger_pos"])
+            i_merger = int(self.metadata.at[id_, "merger_pos"]) # type: ignore
 
             # Determine a representative strain length N for this ID.
             node = self.strains[clas][id_]
@@ -4049,7 +4105,7 @@ class CoReWaves(Base):
         # ---- Apply trim and update side-effects ----
         self.shrink_strains(padding, logpad=logpad)
         self._update_merger_positions()
-        if self.Xtrain is not None:
+        if self.Xtrain:
             self._update_train_test_subsets()
 
     def convert_to_IS_units(self) -> None:
@@ -4066,7 +4122,7 @@ class CoReWaves(Base):
 
         for keys in self.keys():
             id_ = keys[1]
-            mass = self.metadata.at[id_,'mass']
+            mass = float(self.metadata.at[id_,'mass']) # type: ignore
             strain = self.get_strain(*keys)
             times = self.get_times(*keys)
 
@@ -4089,7 +4145,7 @@ class CoReWaves(Base):
         
         for keys in self.keys():
             id_ = keys[1]
-            mass = self.metadata.at[id_,'mass']
+            mass = float(self.metadata.at[id_,'mass']) # type: ignore
             strain = self.get_strain(*keys)
             times = self.get_times(*keys)
             
@@ -4135,11 +4191,10 @@ class InjectedCoReWaves(BaseInjected):
     def __init__(self,
                  clean_dataset: Base,
                  *,
-                 psd: np.ndarray | Callable,
+                 psd: NDArray | Callable,
                  detector: str,
                  noise_length: int,
-                 freq_cutoff: int | float,
-                 freq_butter_order: int | float,
+                 freq_cutoff: int,
                  random_seed: int):
         """
         Initializes an instance of the InjectedCoReWaves class.
@@ -4149,7 +4204,7 @@ class InjectedCoReWaves(BaseInjected):
         clean_dataset : Base
             An instance of a BaseDataset class with noiseless signals.
         
-        psd : np.ndarray | Callable
+        psd : NDArray | Callable
             Power Spectral Density of the detector's sensitivity in the
             range of frequencies of interest.
             Can be given as a callable function whose argument is
@@ -4175,9 +4230,6 @@ class InjectedCoReWaves(BaseInjected):
         freq_cutoff : int | float
             Frequency cutoff for the filter applied to the signal.
         
-        freq_butter_order : int | float
-            Order of the Butterworth filter applied to the signal.
-        
         random_seed : int
             Random seed for generating random numbers.
         
@@ -4188,7 +4240,6 @@ class InjectedCoReWaves(BaseInjected):
             detector=detector,
             noise_length=noise_length,
             freq_cutoff=freq_cutoff,
-            freq_butter_order=freq_butter_order,
             random_seed=random_seed
         )
 
@@ -4207,14 +4258,14 @@ class InjectedCoReWaves(BaseInjected):
         """
         for clas, id_ in self.keys(max_depth=2):
             # Same time array for all SNR variations.
-            times = dictools.get_first_value(self.times[clas][id_])
+            times = np.asarray(dictools.get_first_value(self.times[clas][id_]))
             self.metadata.at[id_,'merger_pos'] = tat.find_time_origin(times)
     
     def gen_injections(self,
                        snr: int|float|list,
                        snr_offset: int = 0,
                        randomize_noise: bool = False,
-                       random_seed: int = None,
+                       random_seed: int|None = None,
                        injections_per_snr: int = 1,
                        verbose=False):
         """Inject all strains in simulated noise with the given SNR values.
@@ -4280,12 +4331,12 @@ class InjectedCoReWaves(BaseInjected):
         self._update_merger_positions()
     
     def _inject(self,
-                strain: np.ndarray,
+                strain: NDArray,
                 snr: int | float,
                 *,
                 id: str,
-                snr_offset: int | list,
-                pos: int = 0) -> np.ndarray:
+                snr_offset: int,
+                pos: int = 0) -> tuple[NDArray, float]:
         """Inject a strain at 'snr' into noise using 'self.noise' instance.
 
         Parameters
@@ -4325,7 +4376,7 @@ class InjectedCoReWaves(BaseInjected):
         
         """
         clas = self.find_class(id)
-        merger_pos = self.metadata.at[id,'merger_pos']
+        merger_pos = int(self.metadata.at[id,'merger_pos']) # type: ignore
         original_length = len(self.strains_original[clas][id])
 
         i0 = merger_pos + snr_offset

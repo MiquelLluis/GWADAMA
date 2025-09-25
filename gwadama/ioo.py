@@ -342,7 +342,7 @@ class CoReManager:
         # Convert data types of the selected columns:
         for field in self.fields_float:
             mask = (md[field] == 'NAN') | (md[field] == '')
-            md[field].values[mask] = np.nan
+            md[field].loc[mask] = np.nan
             md[field] = md[field].astype(float)
 
         return md
@@ -428,7 +428,7 @@ class CoReManager:
         return ecc
 
 
-def save_to_hdf5(file: str, *, data: dict, metadata: dict) -> None:
+def write_nested_dict_to_hdf5(file: str, *, data: dict, metadata: dict) -> None:
     """Save nested dictionary of NumPy arrays to HDF5 file with metadata.
 
     PARAMETERS

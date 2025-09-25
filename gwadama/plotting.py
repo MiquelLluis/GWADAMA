@@ -6,6 +6,7 @@ Custom plotting functions
 import warnings
 
 import matplotlib as  mpl
+from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
@@ -132,7 +133,7 @@ def plot_spectrogram_with_instantaneous_features(
     fig = plt.figure(figsize=(10, 6))
 
     # Define a grid with 5 rows: top waveform (1), gap (1), spectrogram (3)
-    gs = mpl.gridspec.GridSpec(
+    gs = GridSpec(
         nrows=4, ncols=2,
         width_ratios=[60, 1],  # Main plot vs narrow colorbar
         height_ratios=[1, 0.05, 6, 0.05],  # Top waveform, small gap, spectrogram
