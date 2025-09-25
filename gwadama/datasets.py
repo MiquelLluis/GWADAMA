@@ -23,7 +23,7 @@ import warnings
 
 # from gwpy.timeseries import TimeSeries  # Lazy import
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray, ArrayLike
 import pandas as pd
 import scipy as sp
 from scipy.interpolate import make_interp_spline as sp_make_interp_spline
@@ -165,32 +165,30 @@ class Base:
     """
     def __init__(self):
         """Overwrite when inheriting!"""
-        raise NotImplementedError("Base class should not be called directly.")
-
         #----------------------------------------------------------------------
         # Attributes whose values must be set up during initialization.
         #----------------------------------------------------------------------
     
-        self.strains: dict = None
-        self.classes: dict[str] = None
+        self.strains: dict
+        self.classes: dict[str, Any]
         self._check_classes_dict(self.classes)
-        self.metadata: pd.DataFrame = None
+        self.metadata: pd.DataFrame
         self._gen_labels()  # sets `self.labels`
         
         # Number of nested layers in strains' dictionary. Keep updated always:
         self._dict_depth: int = dictools.get_depth(self.strains)
 
         self.max_length = self._find_max_length()
-        self.random_seed: int = None  # SKlearn train_test_split doesn't accept a Generator yet.
+        self.random_seed: int|None  # SKlearn train_test_split doesn't accept a Generator yet.
         self.rng = np.random.default_rng(self.random_seed)
-        self._track_times = False  # If True, self.times must be not None.
+        self._track_times = False  # If True, self.times must not be empty.
 
         #----------------------------------------------------------------------
         # Attributes whose values can be set up or otherwise left as follows.
         #----------------------------------------------------------------------
 
         # Optional padding record.
-        self.padding = {}
+        self.padding: dict[str|int, NDArray] = {}
 
         # Whitening related attributes.
         self.whitened = False
@@ -198,19 +196,19 @@ class Base:
         self.strains_original = self.strains  # Initially assumed to be the same.
 
         # Time tracking related attributes.
-        self.fs: int = None
-        self.times: dict = None
+        self.fs: int
+        self.times: dict = {}
         
         # Train/Test subset splits (views into the same 'self.strains').
         #   Timeseries:
-        self.Xtrain: np.ndarray = None
-        self.Xtest: np.ndarray = None
+        self.Xtrain: dict[int|str, NDArray]
+        self.Xtest: dict[int|str, NDArray]
         #   Labels:
-        self.Ytrain: np.ndarray = None
-        self.Ytest: np.ndarray = None
+        self.Ytrain: NDArray[np.integer]
+        self.Ytest: NDArray[np.integer]
         #   Indices (sorted as in train and test splits respectively):
-        self.id_train: np.ndarray = None
-        self.id_test: np.ndarray = None
+        self.id_train: NDArray
+        self.id_test: NDArray
     
     def __str__(self):
         """Return a summary of the dataset."""
