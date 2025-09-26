@@ -3296,8 +3296,10 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
     - Train/Test split is still supported but is not stratified.
     
     """
+    CLASS_NAME = 'unique'  # Dummy class.
+
     def __init__(self,
-                 strains_array: NDArray,
+                 strains: NDArray|dict[int|str,NDArray],
                  *,
                  fs: int,
                  strain_limits: NDArray|None = None,
@@ -3313,20 +3315,21 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
 
         Parameters
         ----------
-        strains_array : NDArray
-            A 2D array containing gravitational wave signals, where each row 
-            represents a separate waveform, possibly zero-padded.
+        strains : NDArray | dict[int|str, NDArray]
+            Gravitational wave strains. If a 2d-array is given, each row must
+            contain a single waveform, possibly zero-padded. If a dict is given
+            it should be formatted as `{id: strain_array}`.
 
         fs : int
             The assumed constant sampling frequency for the waveforms.
 
         strain_limits : list[tuple[int, int]] | None, optional
             A list of (start, end) indices defining the valid range for each 
-            waveform in `strains_array`. If None, waveforms are assumed to 
+            waveform in `strains`. If None, waveforms are assumed to 
             contain no unnecessary padding.
         
         whitened : bool, optional
-            If True, it is assumed that signals in `strains_array` have already
+            If True, it is assumed that signals in `strains` have already
             been whitened. This effectively changes some of the behaviour of
             the class when treating data internally.
 
@@ -3346,8 +3349,18 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
           varying sampling (and all corresponding checks).
         
         """
-        self.classes = {'unique': 1}  # Dummy class.
-        self.strains = self._unpack_strains(strains_array, strain_limits)
+        self.classes = {self.CLASS_NAME: 1}  # Dummy class.
+
+        if isinstance(strains, np.ndarray):
+            self.strains = self._unpack_strains(strains, strain_limits)
+        elif isinstance(strains, dict):
+            self.strains = {self.CLASS_NAME: strains}
+        else:
+            raise TypeError(
+                "dict or NDArray expected for 'strains', "
+                f"got '{type(strains).__name__}'."
+            )
+        
         self._gen_labels()  # Dummy labels.
         self.fs = fs
         # self.metadata: pd.DataFrame = None  # OMMITED IN THIS CLASS
@@ -3395,9 +3408,7 @@ class UnlabeledWaves(UnlabeledBaseMixin, Base):
             raise ValueError("Invalid shape for strain_limits. Must be None, (2,), or (N,2).")
 
         # Add the outer (class) layer:
-        class_name = next(iter(self.classes))  # Get the first class name
-
-        return {class_name: extracted_signals}
+        return {self.CLASS_NAME: extracted_signals}
     
 
 class InjectedUnlabeledWaves(UnlabeledBaseMixin, BaseInjected):
