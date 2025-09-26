@@ -400,6 +400,8 @@ def find_merger(h: NDArray) -> int:
     ----------
     h : numpy.ndarray
         1D array containing the gravitational-wave strain.
+        If the strain is split into polarisations, combine them in a complex
+        array such as: ``h = s_plus - 1j * s_cross``
 
     Returns
     -------
