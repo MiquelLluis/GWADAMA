@@ -1,16 +1,20 @@
 import bilby
 import numpy as np
+from numpy.typing import NDArray
 import scipy as sp
 
 from . import tat
 
 
-def project(h_plus: np.ndarray, h_cros: np.ndarray,
-            *,
-            parameters: dict,
-            fs: int,
-            nfft: int,
-            detector: str) -> np.ndarray:
+def project(
+    h_plus: NDArray, h_cros: NDArray,
+    *,
+    parameters: dict,
+    fs: int,
+    nfft: int,
+    detector: str,
+    window: str|tuple = ('tukey', 0.04)
+) -> NDArray:
     """Project strain modes in a GW detector.
     
     Project the input GW modes in the sky as detected by the specified
@@ -41,6 +45,9 @@ def project(h_plus: np.ndarray, h_cros: np.ndarray,
     nfft : int
         Length of the FFT window.
     
+    window : str | tuple
+        Passed to :func:`sp.signal.get_window`.
+    
     detector : str
         GW detector into which the modes will be projected.
         Must exist in Bilby's InterferometerList().
@@ -65,12 +72,12 @@ def project(h_plus: np.ndarray, h_cros: np.ndarray,
     l_input = len(h_plus)
     assert l_input <= nfft
 
-    # Pad signal and apply window (first)
+    # Apply window and pad signal
     pad_l = (nfft - l_input)//2
     pad_r = pad_l + (nfft - l_input)%2
-    window = sp.signal.windows.tukey(l_input, 0.04)
-    h_plus_padded = np.pad(h_plus*window, (pad_l,pad_r))
-    h_cros_padded = np.pad(h_cros*window, (pad_l,pad_r))
+    w = sp.signal.get_window(window, l_input)
+    h_plus_padded = np.pad(h_plus*w, (pad_l,pad_r))
+    h_cros_padded = np.pad(h_cros*w, (pad_l,pad_r))
 
     i_merger_pad = tat.find_merger(h_plus_padded - 1j*h_cros_padded)
 
