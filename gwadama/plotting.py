@@ -5,17 +5,32 @@ Custom plotting functions
 """
 import warnings
 
-import matplotlib as  mpl
+import matplotlib as mpl
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 import scipy as sp
 
 
 def plot_spectrogram_with_instantaneous_features(
-        strain_array, time_array, fs=2**14, outseg=None, outfreq=None,
-        window=sp.signal.windows.tukey(128,0.5), hop=32, mfft=None, vmin=-22,
-        spec_interpol='lanczos', if_line_width=2):
+    strain_array,
+    time_array,
+    fs=2**14,
+    outseg=None,
+    outfreq=None,
+    window=sp.signal.windows.tukey(128,0.5),
+    hop=32,
+    mfft=None,
+    vmin=None,
+    vmax=None,
+    spec_log=True,
+    spec_norm=True,
+    spec_interpol='lanczos',
+    if_line_width=2
+) -> tuple[Figure, tuple[Axes,Axes,Axes], NDArray]:
     """Plot the spectrogram, instantaneous frequency, and strain's waveform.
 
     This function generates a multi-panel plot consisting of:
@@ -32,13 +47,13 @@ def plot_spectrogram_with_instantaneous_features(
 
     - **Spectrogram**: The frequency content of the gravitational wave signal
       is displayed over time using a color map (`inferno`), with the x-axis
-      representing time (in milliseconds) and the y-axis representing
-      frequency (in Hz).
+      representing time (in milliseconds) and the y-axis representing frequency
+      (in Hz).
     - **Instantaneous Frequency**: Plots the instantaneous frequency of the
       strain over time, highlighting the frequency variations.
     - **Energy Normalization**: The spectrogram uses a logarithmic scale for
-      the energy (power spectral density, PSD), normalized by the maximum
-      energy value in the signal.
+      the energy (power spectral density, PSD), optionally normalized by the
+      maximum energy value in the signal.
     - **Dynamic Range Control**: The color scale of the spectrogram can be
       adjusted via the `vmin` parameter to emphasize specific energy levels.
     - **Time-Domain Waveform**: A plot of the original strain data in the time
@@ -46,8 +61,8 @@ def plot_spectrogram_with_instantaneous_features(
       evolution.
     - **Segmentation**: The user can specify the time (`outseg`) and frequency
       (`outfreq`) ranges to focus on specific parts of the data.
-    - **Customization**: The plot has a black background, white grid lines,
-      and labeled colorbars for clarity.
+    - **Customization**: The plot has a black background, white grid lines, and
+      labeled colorbars for clarity.
 
     Parameters
     ----------
@@ -58,7 +73,8 @@ def plot_spectrogram_with_instantaneous_features(
         Array of time stamps corresponding to the strain data.
     
     fs : int, optional
-        The sampling frequency of the data in Hz (default is 2^14, or 16384 Hz).
+        The sampling frequency of the data in Hz (default is 2^14, or 16384
+        Hz).
     
     outseg : tuple, optional
         A tuple specifying the time range (start, end) in seconds for the
@@ -70,23 +86,29 @@ def plot_spectrogram_with_instantaneous_features(
         is used.
     
     window : numpy.ndarray, optional
-        The window function applied during STFT computation (default is a
-        Tukey window).
+        The window function applied during STFT computation (default is a Tukey
+        window).
     
     hop : int, optional
         The hop size between successive STFT windows (default is 32).
     
     mfft : int, optional
-        The number of points in the FFT used for STFT computation (default
-        is None).
+        The number of points in the FFT used for STFT computation (default is
+        None).
     
-    vmin : float, optional
-        The minimum value for the color scale in the spectrogram (default
-        is -22). This controls the dynamic range of the color map.
+    vmin, vmax : float, optional
+        The minimum/maximum value for the color scale in the spectrogram. This
+        controls the dynamic range of the color map.
+    
+    spec_log : bool, optional
+        If true, represent `np.log10(Sxx)`.
+
+    spec_norm : bool, optional
+        If true, normalize the spectrogram to the maximum energy value.
 
     spec_interpol : str, optional
-        Interpolation used for visual representation (default 'Lanczos').
-        See `matplotlib.pyplot.imshow` for other options.
+        Interpolation used for visual representation (default 'Lanczos'). See
+        `matplotlib.pyplot.imshow` for other options.
 
     if_line_width : int | float, optional
         The line width of the instantaneous frequency plot (default is 2).
@@ -105,11 +127,9 @@ def plot_spectrogram_with_instantaneous_features(
 
     Notes
     -----
-    - The spectrogram normalization is performed on the square root of the 
-      Power Spectral Density (PSD), converted to a logarithmic scale.
     - The y-axis of the spectrogram uses a kilohertz scale for readability.
     - The time-domain waveform is plotted without axes labels for simplicity.
-    - Instantaneous frequency values below zero are masked to avoid displaying 
+    - Instantaneous frequency values below zero are masked to avoid displaying
       non-physical results.
     
     """
@@ -121,9 +141,18 @@ def plot_spectrogram_with_instantaneous_features(
         fft_mode='onesided', scale_to='psd'
     )
     Sxx = stfft_model.spectrogram(strain_array)
-    with np.errstate(divide='ignore'):
-        normalized_Sxx = np.log10(np.sqrt(Sxx))
-    normalized_Sxx -= np.max(normalized_Sxx)
+
+    # Optional scaling and normalisation.
+    if spec_log:
+        with np.errstate(divide='ignore'):
+            _Sxx = np.log10(np.sqrt(Sxx))
+        if spec_norm:
+            _Sxx -= np.max(_Sxx)
+    else:
+        if spec_norm:
+            _Sxx = Sxx / np.max(Sxx)
+        _Sxx = Sxx
+
     t0, t1, f0, f1 = stfft_model.extent(len(strain_array))
     t_origin = time_array[0]
     t0 += t_origin
@@ -146,8 +175,11 @@ def plot_spectrogram_with_instantaneous_features(
     ax2 = fig.add_subplot(gs[2, 1])  # Colorbar
 
     # SPECTROGRAM (ax1)
-    im = ax.imshow(normalized_Sxx, cmap='inferno', origin='lower', aspect='auto',
-              extent=(t0,t1,f0,f1), interpolation=spec_interpol, vmin=vmin)
+    im = ax.imshow(
+        _Sxx, extent=(t0,t1,f0,f1),
+        origin='lower', aspect='auto', cmap='inferno',
+        interpolation=spec_interpol, vmin=vmin, vmax=vmax
+    )
     # ...and Instant Frequency
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
@@ -177,7 +209,15 @@ def plot_spectrogram_with_instantaneous_features(
     # ...labels.
     ax.set_xlabel('Time [ms]')
     ax.set_ylabel('Frequency [Hz]')
-    cbar.set_label('Normalized energy')
+    match (spec_log, spec_norm):
+        case True, True:
+            cbar.set_label(r"Norm. $\log_{10}\, \mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
+        case True, False:
+            cbar.set_label(r"$\log_{10}\, \mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
+        case False, True:
+            cbar.set_label(r"Norm. $\mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
+        case False, False:
+            cbar.set_label(r"$\mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
     # # ...Y ticks to kHz
     # ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: f'{x / 1000:.0f}'))
     # ...X ticks to milliseconds and avoid roundoff errors.
@@ -197,4 +237,4 @@ def plot_spectrogram_with_instantaneous_features(
 
     fig.subplots_adjust(left=0.08, right=0.91, top=0.96, bottom=0.08)
     
-    return fig, [ax, ax2, ax3], Sxx
+    return fig, (ax, ax2, ax3), Sxx
