@@ -1,3 +1,5 @@
+from typing import Callable
+
 import bilby
 import numpy as np
 from numpy.typing import NDArray
@@ -13,7 +15,7 @@ def project(
     fs: int,
     nfft: int,
     detector: str,
-    window: str|tuple = ('tukey', 0.04)
+    window: str|tuple|Callable = ('tukey', 0.04)
 ) -> NDArray:
     """Project strain modes in a GW detector.
     
@@ -45,8 +47,10 @@ def project(
     nfft : int
         Length of the FFT window.
     
-    window : str | tuple
-        Passed to :func:`sp.signal.get_window`.
+    window : str | tuple | Callable
+        Passed to :func:`sp.signal.get_window`, unless Callable is given.
+        In this case, a function `window(length)` is expected to return a
+        NDArray.
     
     detector : str
         GW detector into which the modes will be projected.
@@ -75,7 +79,10 @@ def project(
     # Apply window and pad signal
     pad_l = (nfft - l_input)//2
     pad_r = pad_l + (nfft - l_input)%2
-    w = sp.signal.get_window(window, l_input)
+    if isinstance(window, (str, tuple)):
+        w = sp.signal.get_window(window, l_input)
+    elif isinstance(window, Callable):
+        w = window(l_input)
     h_plus_padded = np.pad(h_plus*w, (pad_l,pad_r))
     h_cros_padded = np.pad(h_cros*w, (pad_l,pad_r))
 
