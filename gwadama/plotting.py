@@ -9,6 +9,7 @@ import matplotlib as mpl
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
@@ -144,23 +145,38 @@ def plot_spectrogram_with_instantaneous_features(
 
     # Optional scaling and normalisation.
     if spec_log:
-        with np.errstate(divide='ignore'):
-            _Sxx = np.log10(np.sqrt(Sxx))
+        with np.errstate(divide='ignore', invalid='ignore'):
+            _Sxx = np.log10(Sxx)
+        finite_mask = np.isfinite(_Sxx)
+        if not finite_mask.any():
+            raise ValueError("Spectrogram contains no finite values after log10.")
         if spec_norm:
-            _Sxx -= np.max(_Sxx)
+            _Sxx -= np.nanmax(_Sxx)
     else:
+        _Sxx = Sxx.astype(float)
         if spec_norm:
-            _Sxx = Sxx / np.max(Sxx)
-        _Sxx = Sxx
+            _Sxx = _Sxx / np.nanmax(_Sxx)
+    _Sxx = np.ma.masked_invalid(_Sxx)
+    
+    # If the user didn’t provide limits, derive safe defaults from finite data
+    if vmin is None:
+        vmin = float(np.nanmin(_Sxx))
+    if vmax is None:
+        vmax = float(np.nanmax(_Sxx))
+    if not (np.isfinite(vmin) and np.isfinite(vmax)) or vmin >= vmax:
+        raise ValueError("Invalid colour limits: ensure finite vmin < vmax.")
+    
+    # Make the mapping explicit and clipped
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax, clip=True) # type: ignore
 
+    # Time-frequency grid
     t0, t1, f0, f1 = stfft_model.extent(len(strain_array))
     t_origin = time_array[0]
     t0 += t_origin
     t1 += t_origin
 
-    # Create a figure with adequate height
-    fig = plt.figure(figsize=(10, 6))
 
+    fig = plt.figure(figsize=(10, 6))
     # Define a grid with 5 rows: top waveform (1), gap (1), spectrogram (3)
     gs = GridSpec(
         nrows=4, ncols=2,
@@ -168,7 +184,6 @@ def plot_spectrogram_with_instantaneous_features(
         height_ratios=[1, 0.05, 6, 0.05],  # Top waveform, small gap, spectrogram
         hspace=0.05, wspace=0.02
     )
-
     # Axes
     ax3 = fig.add_subplot(gs[0, 0])  # Top waveform
     ax = fig.add_subplot(gs[2, 0], sharex=ax3)  # Spectrogram
@@ -178,8 +193,10 @@ def plot_spectrogram_with_instantaneous_features(
     im = ax.imshow(
         _Sxx, extent=(t0,t1,f0,f1),
         origin='lower', aspect='auto', cmap='inferno',
-        interpolation=spec_interpol, vmin=vmin, vmax=vmax
+        interpolation=spec_interpol, norm=norm
     )
+    # Background in black to match the colormap.
+    ax.set_facecolor('black')
     # ...and Instant Frequency
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
@@ -192,8 +209,13 @@ def plot_spectrogram_with_instantaneous_features(
     instant_time = instant_time[mask]
     ax.plot(instant_time, instant_freq, 'purple', lw=if_line_width)
     
-    # COLORBAR (ax2)
-    cbar = fig.colorbar(im, cax=ax2)
+    # COLOURBAR (ax2)
+    cbar = fig.colorbar(
+        im, cax=ax2,
+        boundaries=np.linspace(vmin, vmax, 256),
+        ticks=np.linspace(vmin, vmax, 6),
+        extend='both'
+    )
     
     # LABELS, LIMITS, ETC
     ax.grid(True, ls='--', alpha=.4)
@@ -206,9 +228,14 @@ def plot_spectrogram_with_instantaneous_features(
         ax.set_ylim(0, fs/2)
     else:
         ax.set_ylim(*outfreq)
+    # ...X ticks to milliseconds
+    ax.xaxis.set_major_formatter(
+        FuncFormatter(lambda x, _: f"{x*1e3:.1f}")  # seconds → milliseconds
+    )
     # ...labels.
     ax.set_xlabel('Time [ms]')
     ax.set_ylabel('Frequency [Hz]')
+
     match (spec_log, spec_norm):
         case True, True:
             cbar.set_label(r"Norm. $\log_{10}\, \mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
@@ -218,16 +245,6 @@ def plot_spectrogram_with_instantaneous_features(
             cbar.set_label(r"Norm. $\mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
         case False, False:
             cbar.set_label(r"$\mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
-    # # ...Y ticks to kHz
-    # ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: f'{x / 1000:.0f}'))
-    # ...X ticks to milliseconds and avoid roundoff errors.
-    # ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))  # Set style first, for new ticklabels.
-    xticks = ax.get_xticks()
-    ax.set_xticks(xticks)
-    # ax.set_xticklabels(np.round(xticks * 1000).astype(int))
-    ax.set_xticklabels(np.round(xticks*1000, decimals=1))
-    # ...background in black to match the colormap.
-    ax.set_facecolor('black')
 
     # GW IN TIME-DOMAIN ON TOP OF THE SPECTROGRAM (ax3)
     ax3.plot(time_array, strain_array, c='black', lw=1, alpha=1)
