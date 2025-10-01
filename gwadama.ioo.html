@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.ioo &#8212; GWADAMA 0.3.0 documentation</title>
+    <title>gwadama.ioo &#8212; GWADAMA 0.4.0 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6e061ff1" />
   
   <!-- So that users can add custom icons -->
@@ -39,17 +39,17 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=e259d695"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/documentation_options.js?v=6c02275b"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.ioo';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="gwadama.synthetic" href="gwadama.synthetic.html" />
+    <link rel="next" title="gwadama.plotting" href="gwadama.plotting.html" />
     <link rel="prev" title="gwadama.fat" href="gwadama.fat.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.3.0" />
+  <meta name="docsearch:version" content="0.4.0" />
   </head>
   
   
@@ -102,7 +102,7 @@
     <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
         <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
         <span class="navbar-project-name">GWADAMA</span>
-        <span class="navbar-project-version">v0.3.0</span>
+        <span class="navbar-project-version">v0.4.0</span>
     </a>
 </div></div>
     
@@ -266,6 +266,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">gwadama.ioo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.plotting.html">gwadama.plotting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
@@ -335,7 +336,7 @@
 <p>Everything related to input data retrieval and output files.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="gwadama.ioo.CoReManager">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gwadama.ioo.</span></span><span class="sig-name descname"><span class="pre">CoReManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gwadama.ioo.</span></span><span class="sig-name descname"><span class="pre">CoReManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Manage easily usual tasks of Watpy’s CoRe_db instances.</p>
 <p>Ad-hoc manager to automate and make easier usual tasks in Watpy, including
@@ -370,7 +371,7 @@ Tree-format:</p>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#gwadama.ioo.CoReManager.cast_to_float" title="gwadama.ioo.CoReManager.cast_to_float"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cast_to_float</span></code></a>(string)</p></td>
 <td><p>Cast a string to float, considering '' also a NaN.</p></td>
@@ -427,7 +428,7 @@ Refer to ‘watpy.coredb.coredb.CoRe_db’ for more details.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gwadama.ioo.CoReManager.cast_to_float">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cast_to_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.cast_to_float"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.cast_to_float" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cast_to_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.cast_to_float"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.cast_to_float" title="Link to this definition">#</a></dt>
 <dd><p>Cast a string to float, considering ‘’ also a NaN.</p>
 </dd></dl>
 
@@ -542,7 +543,7 @@ will be returned.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gwadama.ioo.CoReManager.sw_Y22">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sw_Y22</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.sw_Y22"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.sw_Y22" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sw_Y22</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#CoReManager.sw_Y22"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.CoReManager.sw_Y22" title="Link to this definition">#</a></dt>
 <dd><p>Spin-weighted spherical harmonic mode lm = 22.</p>
 <p>Ref: Ajith et al., 2011</p>
 </dd></dl>
@@ -550,65 +551,8 @@ will be returned.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="gwadama.ioo.save_experiment_results">
-<span class="sig-prename descclassname"><span class="pre">gwadama.ioo.</span></span><span class="sig-name descname"><span class="pre">save_experiment_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">';'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dataframe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/ioo.html#save_experiment_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.save_experiment_results" title="Link to this definition">#</a></dt>
-<dd><p>Save (update) experiment results to a CSV using pandas.DataFrame.</p>
-<p>Parameters and results are saved as columns in a Pandas DataFrame, in a
-new row of an existing CSV file, or as the first row if the file does not
-exists. Each row represents an experiment.
-Parameters’ keys may change depending on the experiment; when adding a new
-key or omitting one, the corresponding place in the CSV file will be filled
-with NaN.</p>
-<p>Results are inserted at the beginning of the DataFrame’s columns, and their
-keys must not change between experiments.</p>
-<p>If there is a complex parameter structure, it is recommended to provide
-a flattened version with new and simpler keys.</p>
-<dl class="field-list">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
-<dt><strong>file</strong><span class="classifier">str</span></dt><dd><p>Path to the CSV file.
-If the file already exists, loads it and appends the experiment data
-to the end of the DataFrame, and updates the file.
-If the file does not exist, creates it.</p>
-</dd>
-<dt><strong>parameters</strong><span class="classifier">dict</span></dt><dd><p>Experiment settings and hyper-parameters.
-They must be registered in a flat dictionary.</p>
-</dd>
-<dt><strong>results</strong><span class="classifier">dict</span></dt><dd><p>Experiment results, tipically the LOSS overall statistics.
-For example:
-<a href="#id1"><span class="problematic" id="id2">``</span></a>`
-results = {</p>
-<blockquote>
-<div><p>‘loss max’: 0.3,
-‘loss_mean’: 0.1,
-‘loss_median’: 0.08,
-‘loss_min’: 0.001</p>
-</div></blockquote>
-<p>They will be inserted at the beginning of the DataFrame’s columns.</p>
-</dd>
-<dt><strong>sep</strong><span class="classifier">str</span></dt><dd><p>Column separator in the CSV file. ‘;’ by default.</p>
-</dd>
-<dt><strong>start_index</strong><span class="classifier">int</span></dt><dd><p>Index of the first row in the experiment (and the CSV file) when
-creating a new file. If the file already exists, this is ignored.
-0 by default.</p>
-</dd>
-<dt><strong>return_dataframe</strong><span class="classifier">bool</span></dt><dd><p>If True, return the DataFrame instance. False by default.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>df</strong><span class="classifier">pandas.DataFrame, optional</span></dt><dd><p>The pandas DataFrame instance, only returned if ‘return_dataframe’
-is True.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="gwadama.ioo.save_to_hdf5">
-<span class="sig-prename descclassname"><span class="pre">gwadama.ioo.</span></span><span class="sig-name descname"><span class="pre">save_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/gwadama/ioo.html#save_to_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.save_to_hdf5" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="gwadama.ioo.write_nested_dict_to_hdf5">
+<span class="sig-prename descclassname"><span class="pre">gwadama.ioo.</span></span><span class="sig-name descname"><span class="pre">write_nested_dict_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/gwadama/ioo.html#write_nested_dict_to_hdf5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.ioo.write_nested_dict_to_hdf5" title="Link to this definition">#</a></dt>
 <dd><p>Save nested dictionary of NumPy arrays to HDF5 file with metadata.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -646,11 +590,11 @@ is True.</p>
       </div>
     </a>
     <a class="right-next"
-       href="gwadama.synthetic.html"
+       href="gwadama.plotting.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">gwadama.synthetic</p>
+        <p class="prev-next-title">gwadama.plotting</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -689,8 +633,7 @@ is True.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.CoReManager.sw_Y22"><code class="docutils literal notranslate"><span class="pre">CoReManager.sw_Y22()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.save_experiment_results"><code class="docutils literal notranslate"><span class="pre">save_experiment_results()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.save_to_hdf5"><code class="docutils literal notranslate"><span class="pre">save_to_hdf5()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.ioo.write_nested_dict_to_hdf5"><code class="docutils literal notranslate"><span class="pre">write_nested_dict_to_hdf5()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -728,7 +671,7 @@ is True.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

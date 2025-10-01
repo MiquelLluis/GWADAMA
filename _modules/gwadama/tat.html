@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gwadama.tat &#8212; GWADAMA 0.2.1 documentation</title>
+    <title>gwadama.tat &#8212; GWADAMA 0.4.0 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=6e061ff1" />
   
   <!-- So that users can add custom icons -->
@@ -38,15 +38,15 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=37f418d5"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/documentation_options.js?v=6c02275b"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/gwadama/tat';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.1" />
+  <meta name="docsearch:version" content="0.4.0" />
   </head>
   
   
@@ -99,7 +99,7 @@
     <a href="../../index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
         <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
         <span class="navbar-project-name">GWADAMA</span>
-        <span class="navbar-project-version">v0.2.1</span>
+        <span class="navbar-project-version">v0.4.0</span>
     </a>
 </div></div>
     
@@ -311,166 +311,376 @@
 <span class="sd">Time analysis toolkit.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fractions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fraction</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.interpolate</span><span class="w"> </span><span class="kn">import</span> <span class="n">PchipInterpolator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">resample_poly</span>
 
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">import</span> <span class="nn">scipy.signal</span>
-<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">make_interp_spline</span> <span class="k">as</span> <span class="n">sp_make_interp_spline</span>
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_uniform_grid</span><span class="p">(</span><span class="n">t0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">t1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">fs</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Closed interval grid [t0, t1] with step 1/fs.&quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="n">fs</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="resample">
 <a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.resample">[docs]</a>
-<span class="k">def</span> <span class="nf">resample</span><span class="p">(</span><span class="n">strain</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-             <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
-             <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-             <span class="n">full_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resample a single strain in time domain.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">resample</span><span class="p">(</span>
+    <span class="n">strain</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="n">times</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+    <span class="n">fs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">full_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">uniform_rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+    <span class="n">uniform_atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span>
+    <span class="n">percentile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">90.0</span><span class="p">,</span>       <span class="c1"># robust cadence from the 90th percentile of instantaneous fs</span>
+    <span class="n">f_min_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.25</span><span class="p">,</span>     <span class="c1"># ensure f_u &gt;= f_min_factor * fs to leave FIR headroom</span>
+    <span class="n">f_cap_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">8.0</span><span class="p">,</span>      <span class="c1"># cap f_u &lt;= f_cap_factor * fs to avoid blow-ups</span>
+    <span class="n">frac_den_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8192</span>      <span class="c1"># cap denominator when reducing rational ratios</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resample (possibly irregularly-sampled) &#39;strain&#39; onto a uniform grid at</span>
+<span class="sd">    target sampling rate &#39;fs&#39; (Hz).</span>
+
+<span class="sd">    Logic:</span>
+
+<span class="sd">    1) Validate input.</span>
+<span class="sd">    2) If times are approximately uniform:</span>
+<span class="sd">         - If fs_in == fs (within 0.5 Hz): return a copy aligned to the</span>
+<span class="sd">           original start.</span>
+<span class="sd">         - Else: resample_poly directly from fs_in -&gt; fs (anti-aliasing</span>
+<span class="sd">           included).</span>
+<span class="sd">       Else (times irregular):</span>
+<span class="sd">         a) If max instantaneous rate &lt; fs: issue a warning and directly</span>
+<span class="sd">            interpolate to fs via PCHIP (upsampling).</span>
+<span class="sd">         b) Otherwise:</span>
+<span class="sd">              - Pick robust f_u from the &#39;percentile&#39; of instantaneous rates.</span>
+<span class="sd">              - Enforce fs &lt;= f_u &lt;= min(max_inst_rate, f_cap_factor*fs), and</span>
+<span class="sd">                f_u &gt;= f_min_factor*fs.</span>
+<span class="sd">              - PCHIP-uniformise at f_u, then resample_poly f_u -&gt; fs.</span>
 <span class="sd">    </span>
-<span class="sd">    Resample strain&#39;s sampling rate using an interpolation in the time domain</span>
-<span class="sd">    for upscalling to a constant rate, and then decimate it to the target rate.</span>
-
-<span class="sd">    The upscaled sample rate is chosen as the minimum common multiple between</span>
-<span class="sd">    the next integer value of the maximum sampling rate found in the original</span>
-<span class="sd">    strain, and the target sample rate.</span>
-
-
-<span class="sd">    PARAMETERS</span>
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    strain: 1d-array</span>
-<span class="sd">        Only one strain.</span>
-<span class="sd">    </span>
-<span class="sd">    time: 1d-array | int | float</span>
-<span class="sd">        Time points. If an Int or Float is given, it is interpreted as the</span>
-<span class="sd">        former sampling rate, and assumed to be constant.</span>
-<span class="sd">    </span>
-<span class="sd">    sample_rate: int</span>
-<span class="sd">        Target sample rate.</span>
-<span class="sd">        NOTE: It cannot be fractional.</span>
-<span class="sd">    </span>
-<span class="sd">    full_output: bool, optional</span>
-<span class="sd">        If True, also returns the new time points, the upscaled sampling rate,</span>
-<span class="sd">        and the factor down.</span>
-<span class="sd">    </span>
-<span class="sd">        </span>
-<span class="sd">    RETURNS</span>
+<span class="sd">    strain : numpy.ndarray</span>
+<span class="sd">        One-dimensional input strain samples, shape (N,).</span>
+
+<span class="sd">    times : numpy.ndarray</span>
+<span class="sd">        One-dimensional, strictly increasing time stamps (seconds), shape (N,).</span>
+<span class="sd">        No duplicates; must be sorted ascending.</span>
+
+<span class="sd">    fs : int</span>
+<span class="sd">        Target sampling frequency in Hz. Must be a positive integer.</span>
+
+<span class="sd">    full_output : bool, default=True</span>
+<span class="sd">        If True, also return the output time grid, an input-rate estimate,</span>
+<span class="sd">        and the (up, down) integers used in the final polyphase step.</span>
+
+<span class="sd">    uniform_rtol : float, default=1e-6</span>
+<span class="sd">        Relative tolerance for the uniform-spacing check.</span>
+
+<span class="sd">    uniform_atol : float, default=1e-12</span>
+<span class="sd">        Absolute tolerance for the uniform-spacing check.</span>
+
+<span class="sd">    percentile : float, default=90.0</span>
+<span class="sd">        Percentile (in [0, 100]) of instantaneous sampling rates `1/np.diff(times)`</span>
+<span class="sd">        used to choose the robust uniformisation rate `f_u` when input is irregular.</span>
+
+<span class="sd">    f_min_factor : float, default=1.25</span>
+<span class="sd">        Lower bound multiplier for `f_u` relative to `fs` (i.e. `f_u ≥ f_min_factor*fs`)</span>
+<span class="sd">        to leave margin for the FIR anti-alias filter.</span>
+
+<span class="sd">    f_cap_factor : float, default=8.0</span>
+<span class="sd">        Upper bound multiplier for `f_u` relative to `fs` (i.e. `f_u ≤ f_cap_factor*fs`)</span>
+<span class="sd">        to avoid excessively large intermediate grids. Must satisfy</span>
+<span class="sd">        `f_cap_factor ≥ f_min_factor`. `f_u` is also capped by the maximum</span>
+<span class="sd">        instantaneous rate.</span>
+
+<span class="sd">    frac_den_limit : int, default=2048</span>
+<span class="sd">        Maximum allowed denominator when approximating the rate ratio with</span>
+<span class="sd">        `fractions.Fraction(...).limit_denominator`. Larger values give a closer</span>
+<span class="sd">        ratio but longer polyphase FIR filters (slower); smaller values shorten</span>
+<span class="sd">        the filter at the cost of a tiny ratio error.</span>
+
+<span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    strain: 1d-array</span>
-<span class="sd">        Strain at the new sampling rate.</span>
+<span class="sd">    y : 1d-array</span>
+<span class="sd">        Resampled strain at &#39;fs&#39;.</span>
 <span class="sd">    </span>
-<span class="sd">    time: 1d-array, optional</span>
-<span class="sd">        New time points.</span>
+<span class="sd">    t : 1d-array (if full_output)</span>
+<span class="sd">        Time grid at &#39;fs&#39;, starting at times[0].</span>
 <span class="sd">    </span>
-<span class="sd">    sr_up: int, optional</span>
-<span class="sd">        Upscaled sample rate.</span>
+<span class="sd">    fs_in : int (if full_output)</span>
+<span class="sd">        Estimated original sampling frequency (rounded to nearest integer). For</span>
+<span class="sd">        irregular inputs, this is the robust uniformisation rate if used;</span>
+<span class="sd">        otherwise a robust estimate from the mean spacing.</span>
 <span class="sd">    </span>
-<span class="sd">    factor_down: int, optional</span>
-<span class="sd">        Factor at which the signal is decimated after the upscalling.</span>
-<span class="sd">    </span>
+<span class="sd">    up, down : int, int (if full_output)</span>
+<span class="sd">        Up/down integers used in the final polyphase step. (0, 0) if N/A.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-        <span class="n">sr_max</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="n">sr_max</span> <span class="o">=</span> <span class="n">time</span>
-        <span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">strain</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">sr_max</span>
-        <span class="n">time</span> <span class="o">=</span> <span class="n">gen_time_array</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">sr_max</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;time&#39; type not recognized&quot;</span><span class="p">)</span>
+    <span class="c1"># --- Basic validations</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;times&#39; must be a NumPy array.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strain</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;strain&#39; must be a NumPy array.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">times</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">strain</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">strain</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;times&#39; and &#39;strain&#39; must be 1D arrays of equal length.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fs</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Target &#39;fs&#39; must be a positive integer.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># Need at least 3 points to sensibly infer cadence / interpolate</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Need at least 3 samples to resample.&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Upsample:</span>
-    <span class="c1">#</span>
-    <span class="n">sr_up</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">sr_max</span> <span class="o">//</span> <span class="n">sample_rate</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">sample_rate</span><span class="p">)</span>
-    <span class="c1"># Intentionally skipping last time point to avoid extrapolation by round-off errors.</span>
-    <span class="n">time_up</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">time</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="o">/</span><span class="n">sr_up</span><span class="p">)</span>
-    <span class="n">strain</span> <span class="o">=</span> <span class="n">sp_make_interp_spline</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">strain</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)(</span><span class="n">time_up</span><span class="p">)</span>  <span class="c1"># len(strain) = len(strain) - 1</span>
-    <span class="n">time</span> <span class="o">=</span> <span class="n">time_up</span>
+    <span class="c1"># Ensure strictly increasing times (and no duplicates)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;times&#39; must be strictly increasing (no duplicates, sorted &quot;</span>
+            <span class="s2">&quot;ascending).&quot;</span>
+        <span class="p">)</span>
 
-    <span class="c1"># Downsample (if needed):</span>
-    <span class="c1">#</span>
-    <span class="n">factor_down</span> <span class="o">=</span> <span class="n">sr_up</span> <span class="o">//</span> <span class="n">sample_rate</span>
-    <span class="k">if</span> <span class="n">factor_down</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="p">[::</span><span class="n">factor_down</span><span class="p">]</span>
-        <span class="n">strain</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">decimate</span><span class="p">(</span><span class="n">strain</span><span class="p">,</span> <span class="n">factor_down</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;fir&#39;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">factor_down</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;factor_down = </span><span class="si">{</span><span class="n">factor_down</span><span class="si">}</span><span class="s2"> &lt; 1&quot;</span><span class="p">)</span>
-    
-    <span class="k">return</span> <span class="n">strain</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">sr_up</span><span class="p">,</span> <span class="n">factor_down</span> <span class="k">if</span> <span class="n">full_output</span> <span class="k">else</span> <span class="n">strain</span></div>
+    <span class="c1"># --- Uniformity check</span>
+    <span class="n">is_uni</span> <span class="o">=</span> <span class="n">is_arithmetic_progression</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">uniform_rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">uniform_atol</span><span class="p">)</span>
+    <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Helper: rational up/down from two (positive) rates</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ratio_ud</span><span class="p">(</span><span class="n">f_out</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">f_in</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">Fraction</span><span class="p">(</span><span class="n">f_out</span><span class="o">/</span><span class="n">f_in</span><span class="p">)</span><span class="o">.</span><span class="n">limit_denominator</span><span class="p">(</span><span class="n">frac_den_limit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">numerator</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">denominator</span>
+
+    <span class="c1"># ---- Case A: approximately uniform input ----</span>
+    <span class="k">if</span> <span class="n">is_uni</span><span class="p">:</span>
+        <span class="n">fs_in</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">times</span><span class="p">)))</span>  <span class="c1"># cast from np.floating to float</span>
+        <span class="c1"># Sanity check: if input rate &lt; target, warn (we&#39;re effectively</span>
+        <span class="c1"># upsampling)</span>
+        <span class="k">if</span> <span class="n">fs_in</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">&lt;</span> <span class="n">fs</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Input sampling rate (</span><span class="si">{</span><span class="n">fs_in</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> Hz) is below target (</span><span class="si">{</span><span class="n">fs</span><span class="si">}</span><span class="s2"> Hz). &quot;</span>
+                <span class="s2">&quot;Proceeding with upsampling; no anti-alias filtering is needed.&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># If already at the target rate (within ~0.5 Hz), just align to exact</span>
+        <span class="c1"># integer fs</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">fs_in</span> <span class="o">-</span> <span class="n">fs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">_build_uniform_grid</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">fs</span><span class="p">))</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">PchipInterpolator</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">strain</span><span class="p">,</span> <span class="n">extrapolate</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span><span class="n">t</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">full_output</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">fs_in</span><span class="p">)),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="n">y</span>
+
+        <span class="c1"># Proper rate conversion with polyphase FIR</span>
+        <span class="n">up</span><span class="p">,</span> <span class="n">down</span> <span class="o">=</span> <span class="n">_ratio_ud</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">fs_in</span><span class="p">)</span>
+        <span class="c1"># Align a uniform grid at the original cadence</span>
+        <span class="n">t_u</span> <span class="o">=</span> <span class="n">_build_uniform_grid</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs_in</span><span class="p">)</span>
+        <span class="c1"># Interpolate once onto that grid</span>
+        <span class="n">y_u</span> <span class="o">=</span> <span class="n">PchipInterpolator</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">strain</span><span class="p">,</span> <span class="n">extrapolate</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span><span class="n">t_u</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">resample_poly</span><span class="p">(</span><span class="n">y_u</span><span class="p">,</span> <span class="n">up</span><span class="p">,</span> <span class="n">down</span><span class="p">)</span>
+        <span class="c1"># Build output time grid (anchored at t0, step 1/fs)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="n">fs</span>
+        <span class="k">if</span> <span class="n">full_output</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">fs_in</span><span class="p">)),</span> <span class="n">up</span><span class="p">,</span> <span class="n">down</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="c1"># ---- Case B: irregular input ----</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+    <span class="n">fs_inst</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">dt</span>
+    <span class="n">fs_inst_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">fs_inst</span><span class="p">))</span>  <span class="c1"># maximum instantaneous sampling rate</span>
+
+    <span class="c1"># If even the maximum instantaneous rate is below the target, we can only</span>
+    <span class="c1"># upsample → direct PCHIP to fs</span>
+    <span class="k">if</span> <span class="n">fs_inst_max</span> <span class="o">&lt;</span> <span class="n">fs</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Maximum instantaneous sampling rate (</span><span class="si">{</span><span class="n">fs_inst_max</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> Hz) is &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;below target (</span><span class="si">{</span><span class="n">fs</span><span class="si">}</span><span class="s2"> Hz). Directly interpolating to the target &quot;</span>
+            <span class="s2">&quot;grid; anti-alias filtering is unnecessary.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_build_uniform_grid</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">fs</span><span class="p">))</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">PchipInterpolator</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">strain</span><span class="p">,</span> <span class="n">extrapolate</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">full_output</span><span class="p">:</span>
+            <span class="c1"># Use a robust estimate of the original cadence for reporting</span>
+            <span class="n">fs_in_report</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">fs_in_report</span><span class="p">)),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="c1"># Otherwise, choose a robust uniformisation rate f_u, e.g. 90th percentile</span>
+    <span class="c1"># of instantaneous fs. Start from this robust value.</span>
+    <span class="n">f_u</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">fs_inst</span><span class="p">,</span> <span class="n">percentile</span><span class="p">))</span>
+
+    <span class="c1"># Enforce lower bound: keep some headroom for the FIR low-pass (avoid</span>
+    <span class="c1"># too-low uniformisation)</span>
+    <span class="n">f_u</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">f_u</span><span class="p">,</span> <span class="n">f_min_factor</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">fs</span><span class="p">))</span>
+
+    <span class="c1"># Enforce practical cap relative to the target to avoid huge temporary arrays</span>
+    <span class="n">f_u</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">f_u</span><span class="p">,</span> <span class="n">f_cap_factor</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">fs</span><span class="p">))</span>
+
+    <span class="c1"># Never exceed the actual max instantaneous rate</span>
+    <span class="n">f_u</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">f_u</span><span class="p">,</span> <span class="n">fs_inst_max</span><span class="p">)</span>
+
+    <span class="c1"># Edge case: numerical tie with fs (avoid zero-length filters/degenerate</span>
+    <span class="c1"># ratios). If the rounding pushed us down, bump slightly</span>
+    <span class="k">if</span> <span class="n">f_u</span> <span class="o">&lt;</span> <span class="n">fs</span><span class="p">:</span>
+        <span class="n">f_u</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
+
+    <span class="n">t_u</span> <span class="o">=</span> <span class="n">_build_uniform_grid</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">f_u</span><span class="p">)</span>
+    <span class="n">y_u</span> <span class="o">=</span> <span class="n">PchipInterpolator</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">strain</span><span class="p">,</span> <span class="n">extrapolate</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span><span class="n">t_u</span><span class="p">)</span>
+
+    <span class="n">up</span><span class="p">,</span> <span class="n">down</span> <span class="o">=</span> <span class="n">_ratio_ud</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">fs</span><span class="p">),</span> <span class="n">f_u</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">resample_poly</span><span class="p">(</span><span class="n">y_u</span><span class="p">,</span> <span class="n">up</span><span class="p">,</span> <span class="n">down</span><span class="p">)</span>
+
+    <span class="c1"># Output time grid at fs</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">/</span> <span class="n">fs</span>
+
+    <span class="k">if</span> <span class="n">full_output</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">f_u</span><span class="p">)),</span> <span class="n">up</span><span class="p">,</span> <span class="n">down</span>
+    <span class="k">return</span> <span class="n">y</span></div>
 
 
 
 <div class="viewcode-block" id="gen_time_array">
 <a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.gen_time_array">[docs]</a>
-<span class="k">def</span> <span class="nf">gen_time_array</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">sr</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a time array with constant sampling rate.</span>
-<span class="sd">    </span>
-<span class="sd">    Extension of numpy.arange which takes care of the case when an extra sample</span>
-<span class="sd">    is produced due to round-off errors. When this happens, the extra sample is</span>
-<span class="sd">    cut off.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gen_time_array</span><span class="p">(</span>
+    <span class="n">t0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">t1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">fs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a time array for a given time range and sampling frequency.</span>
+
+<span class="sd">    Generate a time array for a given time range and sampling frequency with an</span>
+<span class="sd">    optional consistency check.</span>
+
+<span class="sd">    Floating-point precision can cause `(t1 - t0) * fs` to yield an unexpected </span>
+<span class="sd">    number of samples, leading to off-by-one errors in :func:`numpy.linspace`.</span>
+<span class="sd">    If `length` is provided, the function verifies that it matches the expected</span>
+<span class="sd">    length using `t1` as reference. A mismatch raises will raise `ValueError`,</span>
+<span class="sd">    ensuring consistency between the expected and actual number of samples.</span>
+
+<span class="sd">    If `length` is not provided, the function simply calls</span>
+<span class="sd">    :func:`numpy.linspace` without performing the safety check.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    t0, t1: float</span>
-<span class="sd">        Initial and final times of the array: [t0, t1).</span>
+<span class="sd">    t0 : float</span>
+<span class="sd">        Start time (inclusive).</span>
 <span class="sd">    </span>
-<span class="sd">    sr: int</span>
-<span class="sd">        Sample rate.</span>
+<span class="sd">    t1 : float</span>
+<span class="sd">        Final time (exclusive).</span>
 <span class="sd">    </span>
-<span class="sd">    length: int</span>
-<span class="sd">        Length of the final time array in samples.</span>
-<span class="sd">        If due to round-off errors the length of the array is longer, it will</span>
-<span class="sd">        be adjusted.</span>
+<span class="sd">    fs : int</span>
+<span class="sd">        sampling frequency.</span>
 <span class="sd">    </span>
+<span class="sd">    length : int, optional</span>
+<span class="sd">        If provided, must match `int((t1 - t0) * fs)` exactly.</span>
+<span class="sd">        Acts as a safeguard against miscalculations due to floating-point</span>
+<span class="sd">        precision.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    times: NDArray</span>
-<span class="sd">        Time array.</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        A 1D array of evenly spaced time values from `t0` (inclusive) to `t1`</span>
+<span class="sd">        (exclusive).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `length` is provided and does not match the expected number of</span>
+<span class="sd">        samples.</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">sr</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">t1</span><span class="p">:</span>
-        <span class="n">times</span> <span class="o">=</span> <span class="n">times</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">expected_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="n">fs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">length</span> <span class="o">!=</span> <span class="n">expected_length</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Inconsistent input: Expected </span><span class="si">{</span><span class="n">expected_length</span><span class="si">}</span><span class="s2"> samples, got </span><span class="si">{</span><span class="n">length</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
     
-    <span class="k">return</span> <span class="n">times</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">expected_length</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="time_array_like">
+<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.time_array_like">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">time_array_like</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a time array matching the length of the input array.</span>
+
+<span class="sd">    Computes a time array starting from `t0` with evenly spaced values based </span>
+<span class="sd">    on the sampling frequency `fs`, matching the length of the input 1D array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array : array_like</span>
+<span class="sd">        Input 1D array whose length determines the number of time samples.</span>
+<span class="sd">    </span>
+<span class="sd">    fs : float, optional</span>
+<span class="sd">        sampling frequency in Hz. Default is 4096.</span>
+<span class="sd">    </span>
+<span class="sd">    t0 : float, optional</span>
+<span class="sd">        Start time in seconds. Default is 0.0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        A 1D array of evenly spaced time values starting at `t0` with spacing</span>
+<span class="sd">        `1/fs` and the same length as the input array.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t0</span><span class="o">+</span><span class="n">n</span><span class="o">/</span><span class="n">fs</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
 
 
 
 <div class="viewcode-block" id="pad_time_array">
 <a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.pad_time_array">[docs]</a>
-<span class="k">def</span> <span class="nf">pad_time_array</span><span class="p">(</span><span class="n">times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pad</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extend a time array by &#39;pad&#39; number of samples.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pad_time_array</span><span class="p">(</span><span class="n">times</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">pad</span><span class="p">:</span> <span class="nb">int</span><span class="o">|</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extend a uniformly sampled time array by &#39;pad&#39; number of samples.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    times: NDArray</span>
-<span class="sd">        Time array.</span>
+<span class="sd">    times: numpy.ndarray</span>
+<span class="sd">        1D array of time samples. Must be uniformly sampled.</span>
 <span class="sd">    </span>
-<span class="sd">    pad: int | tuple</span>
-<span class="sd">        If int, number of samples to add on both sides.</span>
-<span class="sd">        If tuple, number of samples to add on each side.</span>
+<span class="sd">    pad: int or Sequence of two ints</span>
+<span class="sd">        Number of samples to add.</span>
+<span class="sd">        * If int, the same number of samples is added on both sides.</span>
+<span class="sd">        * If Sequence of length 2, interpreted as (pad_before, pad_after).</span>
 <span class="sd">    </span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    NDArray</span>
-<span class="sd">        Padded time array.</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        New time array with the specified padding, using the same time step</span>
+<span class="sd">        as the input.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `times` is not uniformly sampled.</span>
 <span class="sd">    </span>
-<span class="sd">    NOTES</span>
+<span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    - Computes again the entire time array.</span>
-<span class="sd">    - Due to round-off errors some intermediate time values might be slightly</span>
-<span class="sd">      different.</span>
+<span class="sd">    - The function recomputes the entire time array using</span>
+<span class="sd">      :func:`numpy.linspace`.</span>
+<span class="sd">    - Due to floating-point round-off, intermediate values may differ</span>
+<span class="sd">      slightly from the input.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; t = np.array([0.0, 0.1, 0.2])</span>
+<span class="sd">    &gt;&gt;&gt; pad_time_array(t, 1)</span>
+<span class="sd">    array([-0.1, 0.0, 0.1, 0.2, 0.3])</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_arithmetic_progression</span><span class="p">(</span><span class="n">times</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input time array must be uniformly sampled.&quot;</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">pad0</span><span class="p">,</span> <span class="n">pad1</span> <span class="o">=</span> <span class="n">pad</span><span class="p">,</span> <span class="n">pad</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-        <span class="n">pad0</span><span class="p">,</span> <span class="n">pad1</span> <span class="o">=</span> <span class="n">pad</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;pad&#39; type not recognized&quot;</span><span class="p">)</span>
+        <span class="n">pad0</span><span class="p">,</span> <span class="n">pad1</span> <span class="o">=</span> <span class="n">pad</span>
 
     <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">+</span> <span class="n">pad0</span> <span class="o">+</span> <span class="n">pad1</span>
     <span class="n">dt</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
     <span class="n">t0</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">pad0</span><span class="o">*</span><span class="n">dt</span>
     <span class="n">t1</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="p">(</span><span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">dt</span>
 
@@ -478,33 +688,12 @@
 
 
 
-<div class="viewcode-block" id="shrink_time_array">
-<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.shrink_time_array">[docs]</a>
-<span class="k">def</span> <span class="nf">shrink_time_array</span><span class="p">(</span><span class="n">times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">unpad</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shrink a time array on both sides by &#39;unpad&#39; number of samples.</span>
-<span class="sd">    </span>
-<span class="sd">    NOTES</span>
-<span class="sd">    -----</span>
-<span class="sd">    - Computes again the entire time array.</span>
-<span class="sd">    - Due to round-off errors some intermediate time values might be slightly</span>
-<span class="sd">      different.</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">unpad</span>
-    <span class="n">dt</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">t0</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">unpad</span><span class="o">*</span><span class="n">dt</span>
-    <span class="n">t1</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="p">(</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">dt</span>
-
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span></div>
-
-
-
 <div class="viewcode-block" id="find_time_origin">
 <a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.find_time_origin">[docs]</a>
-<span class="k">def</span> <span class="nf">find_time_origin</span><span class="p">(</span><span class="n">times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the index position of the origin of a time array.</span>
-<span class="sd">    </span>
-<span class="sd">    It is just a shortcut for `np.argmin(np.abs(times))`.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_time_origin</span><span class="p">(</span><span class="n">times</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the index of the element closest to zero.</span>
+
+<span class="sd">    Finds the position in the time array whose value is nearest to 0.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -513,47 +702,477 @@
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    _ : int</span>
+<span class="sd">    int</span>
 <span class="sd">        Index position of the time origin (0).</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">times</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">times</span><span class="p">)))</span></div>
 
 
 
 <div class="viewcode-block" id="find_merger">
 <a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.find_merger">[docs]</a>
-<span class="k">def</span> <span class="nf">find_merger</span><span class="p">(</span><span class="n">h</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Estimate the index position of the merger in the given strain.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_merger</span><span class="p">(</span><span class="n">h</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Estimate the index of the merger in a gravitational-wave strain.</span>
 
-<span class="sd">    This function provides a rough estimate of the merger index position by</span>
-<span class="sd">    locating the maximum of the absolute amplitude of the gravitational wave</span>
-<span class="sd">    signal in the time domain. It assumes that the merger roughly corresponds</span>
-<span class="sd">    to this peak, which holds for certain clean or high-SNR simulated CBC</span>
-<span class="sd">    gravitational waves.</span>
-
-<span class="sd">    :warning:</span>
-<span class="sd">    This function may be replaced in the near future by a more formal estimator</span>
-<span class="sd">    with a better model, such as a Gaussian fit for binary mergers.</span>
-<span class="sd">    </span>
-<span class="sd">    :caution:</span>
-<span class="sd">    This is a very ad-hoc method and may not be accurate for all datasets,</span>
-<span class="sd">    especially depending on the sensitivity of the detector. This method</span>
-<span class="sd">    assumes that the peak amplitude in the time domain corresponds closely to</span>
-<span class="sd">    the merger, which may not hold for lower-SNR signals or noisy data.</span>
+<span class="sd">    This function provides a rough estimate of the merger time index by finding</span>
+<span class="sd">    the position of the maximum absolute amplitude in the time-domain strain</span>
+<span class="sd">    data. It assumes that the merger approximately coincides with this peak,</span>
+<span class="sd">    which is often valid for certain clean or high‑SNR simulated CBC</span>
+<span class="sd">    (compact binary coalescence) signals.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    h : np.ndarray</span>
-<span class="sd">        The gravitational wave strain data.</span>
+<span class="sd">    h : numpy.ndarray</span>
+<span class="sd">        1D array containing the gravitational-wave strain.</span>
+<span class="sd">        If the strain is split into polarisations, combine them in a complex</span>
+<span class="sd">        array such as: ``h = s_plus - 1j * s_cross``</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    int</span>
-<span class="sd">        The index of the estimated merger position in the strain data.</span>
+<span class="sd">        Index of the estimated merger position in `h`.</span>
+
+<span class="sd">    Warnings</span>
+<span class="sd">    --------</span>
+<span class="sd">    This method is **ad hoc** and may give misleading results on some data,</span>
+<span class="sd">    particularly low-SNR or real detector data where noise fluctuations</span>
+<span class="sd">    dominate the peak amplitude.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    * Assumes that the peak amplitude in the time domain corresponds to</span>
+<span class="sd">      the merger, which is a simplification.</span>
+<span class="sd">    * This function is a **temporary placeholder** and will be replaced in</span>
+<span class="sd">      future versions by a more formal estimator (for example, a Gaussian</span>
+<span class="sd">      fit around the expected merger region).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; h = np.array([0.0, 0.2, -0.1, 0.5, 0.3])</span>
+<span class="sd">    &gt;&gt;&gt; find_merger(h)</span>
+<span class="sd">    3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">h</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="planck">
+<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.planck">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">planck</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">nleft</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">nright</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a Planck taper window.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    N : `int`</span>
+<span class="sd">        Number of samples in the output window</span>
+
+<span class="sd">    nleft : `int`, optional</span>
+<span class="sd">        Number of samples to taper on the left, should be less than `N/2`</span>
+
+<span class="sd">    nright : `int`, optional</span>
+<span class="sd">        Number of samples to taper on the right, should be less than `N/2`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    w : `ndarray`</span>
+<span class="sd">        The window, with the maximum value normalized to 1 and at least one</span>
+<span class="sd">        end tapered smoothly to 0.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Based on :func:`gwpy.signal.window.planck`.</span>
+
+<span class="sd">    .. [1] McKechan, D.J.A., Robinson, C., and Sathyaprakash, B.S. (April</span>
+<span class="sd">           2010). &quot;A tapering window for time-domain templates and simulated</span>
+<span class="sd">           signals in the detection of gravitational waves from coalescing</span>
+<span class="sd">           compact binaries&quot;. Classical and Quantum Gravity 27 (8).</span>
+<span class="sd">           :doi:`10.1088/0264-9381/27/8/084020`</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">h</span><span class="p">))</span></div>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nleft</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nleft</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">nleft</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="n">nleft</span><span class="p">))</span>
+        <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">nleft</span><span class="p">]</span> <span class="o">*=</span> <span class="n">sp</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">expit</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>  <span class="c1"># sigmoid</span>
+        <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">nright</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nright</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="n">nright</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="n">nright</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">w</span><span class="p">[</span><span class="o">-</span><span class="n">nright</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="n">sp</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">expit</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">w</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">return</span> <span class="n">w</span></div>
+
+
+
+<div class="viewcode-block" id="truncate_transfer">
+<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.truncate_transfer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">truncate_transfer</span><span class="p">(</span><span class="n">transfer</span><span class="p">,</span> <span class="n">ncorner</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Smoothly zero the edges of a frequency domain transfer function</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    transfer : `numpy.ndarray`</span>
+<span class="sd">        transfer function to start from, must have at least ten samples</span>
+
+<span class="sd">    ncorner : `int`, optional</span>
+<span class="sd">        number of extra samples to zero off at low frequency, default: `None`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : `numpy.ndarray`</span>
+<span class="sd">        the smoothly truncated transfer function</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Based on :func:`gwpy.signal.filter_design.truncate_transfer`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nsamp</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">ncorner</span> <span class="o">=</span> <span class="n">ncorner</span> <span class="ow">or</span> <span class="mi">0</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">out</span><span class="p">[:</span><span class="n">ncorner</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">ncorner</span><span class="p">:]</span> <span class="o">*=</span> <span class="n">planck</span><span class="p">(</span><span class="n">nsamp</span><span class="o">-</span><span class="n">ncorner</span><span class="p">,</span> <span class="n">nleft</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nright</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="truncate_impulse">
+<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.truncate_impulse">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">truncate_impulse</span><span class="p">(</span><span class="n">impulse</span><span class="p">,</span> <span class="n">ntaps</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="nb">tuple</span> <span class="o">=</span> <span class="s1">&#39;hann&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Smoothly truncate a time domain impulse response</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    impulse : `numpy.ndarray`</span>
+<span class="sd">        the impulse response to start from</span>
+
+<span class="sd">    ntaps : `int`</span>
+<span class="sd">        number of taps in the final filter</span>
+
+<span class="sd">    window : `str`, `numpy.ndarray`, optional</span>
+<span class="sd">        window function to truncate with, default: ``&#39;hann&#39;``</span>
+<span class="sd">        see :func:`scipy.signal.get_window` for details on acceptable formats</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : `numpy.ndarray`</span>
+<span class="sd">        the smoothly truncated impulse response</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Based on :func:`gwpy.signal.filter_design.truncate_impulse`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Set up window:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">window</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`window` must be a 1‑D array&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">window</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">ntaps</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`window` length must equal `ntaps`&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">get_window</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">ntaps</span><span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">impulse</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">trunc_start</span> <span class="o">=</span> <span class="n">ntaps</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">trunc_stop</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">trunc_start</span>
+    <span class="n">out</span><span class="p">[:</span><span class="n">trunc_start</span><span class="p">]</span> <span class="o">*=</span> <span class="n">window</span><span class="p">[</span><span class="n">trunc_start</span><span class="p">:]</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">trunc_stop</span><span class="p">:]</span> <span class="o">*=</span> <span class="n">window</span><span class="p">[:</span><span class="n">trunc_start</span><span class="p">]</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">trunc_start</span><span class="p">:</span><span class="n">trunc_stop</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="fir_from_transfer">
+<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.fir_from_transfer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fir_from_transfer</span><span class="p">(</span><span class="n">transfer</span><span class="p">,</span> <span class="n">ntaps</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="nb">tuple</span> <span class="o">=</span> <span class="s1">&#39;hann&#39;</span><span class="p">,</span> <span class="n">ncorner</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Design a Type II FIR filter given an arbitrary transfer function</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    transfer : `numpy.ndarray`</span>
+<span class="sd">        transfer function to start from, must have at least ten samples</span>
+
+<span class="sd">    ntaps : `int`</span>
+<span class="sd">        number of taps in the final filter, must be an even number</span>
+
+<span class="sd">    window : `str`, `numpy.ndarray`, optional</span>
+<span class="sd">        window function to truncate with, default: ``&#39;hann&#39;``</span>
+<span class="sd">        see :func:`scipy.signal.get_window` for details on acceptable formats</span>
+
+<span class="sd">    ncorner : `int`, optional</span>
+<span class="sd">        number of extra samples to zero off at low frequency, default: `None`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : `numpy.ndarray`</span>
+<span class="sd">        A time domain FIR filter of length `ntaps`</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Based on :func:`gwpy.signal.filter_design.fir_from_transfer`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># truncate and highpass the transfer function</span>
+    <span class="n">transfer</span> <span class="o">=</span> <span class="n">truncate_transfer</span><span class="p">(</span><span class="n">transfer</span><span class="p">,</span> <span class="n">ncorner</span><span class="o">=</span><span class="n">ncorner</span><span class="p">)</span>
+    <span class="c1"># compute and truncate the impulse response</span>
+    <span class="n">impulse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">irfft</span><span class="p">(</span><span class="n">transfer</span><span class="p">)</span>
+    <span class="n">impulse</span> <span class="o">=</span> <span class="n">truncate_impulse</span><span class="p">(</span><span class="n">impulse</span><span class="p">,</span> <span class="n">ntaps</span><span class="o">=</span><span class="n">ntaps</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
+    <span class="c1"># wrap around and normalise to construct the filter</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">impulse</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">ntaps</span><span class="o">//</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">)[:</span><span class="n">ntaps</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="convolve">
+<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.convolve">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convolve</span><span class="p">(</span><span class="n">strain</span><span class="p">,</span> <span class="n">fir</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="nb">tuple</span> <span class="o">=</span> <span class="s1">&#39;hann&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convolve a time series.</span>
+
+<span class="sd">    Convolve a time series with a FIR filter using the overlap-save method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    strain : numpy.ndarray</span>
+<span class="sd">        The input time series strain.</span>
+<span class="sd">    </span>
+<span class="sd">    fir : numpy.ndarray</span>
+<span class="sd">        The FIR filter coefficients.</span>
+<span class="sd">    </span>
+<span class="sd">    window : str | tuple, optional</span>
+<span class="sd">        The window function to apply to the boundaries (default: &#39;hann&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        The convolved time series, same length as input data.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function, based on the implementation of GWpy[1]_, differs in its</span>
+<span class="sd">    implementation from the `oaconvolve` implementation of SciPy[2]_, which</span>
+<span class="sd">    uses the overlap-add method:</span>
+
+<span class="sd">    - **Algorithm**: Overlap-save discards edge artifacts after convolution,</span>
+<span class="sd">      whereas overlap-add sums overlapping output segments.</span>
+<span class="sd">    - **Boundary Windowing**: Explicitly applies a window (e.g., Hann) to the</span>
+<span class="sd">      first/last ``N/2`` samples (where ``N`` is the filter length) to suppress</span>
+<span class="sd">      spectral leakage at boundaries. SciPy implementations do not modify input</span>
+<span class="sd">      boundaries.</span>
+<span class="sd">    - **Edge Corruption**: Intentionally tolerates edge corruption in a segment</span>
+<span class="sd">      of length ``N/2`` at both ends, while SciPy&#39;s output validity depends on</span>
+<span class="sd">      the selected mode (`full`/`valid`/`same`).</span>
+<span class="sd">    - **Use Case Focus**: Optimized for 1D time-series processing with</span>
+<span class="sd">      boundary-aware windowing. SciPy&#39;s `oaconvolve` is more general-purpose,</span>
+<span class="sd">      focused in computational efficiency for large N-dimensional arrays</span>
+<span class="sd">      and arbitrary convolution modes.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Based on :meth:`gwpy.timeseries.TimeSeries.convolve`.</span>
+<span class="sd">    .. [2] SciPy&#39;s more general implementation :func:`scipy.signal.oaconvolve`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fir</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">nfft</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">fir</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">strain</span><span class="p">))</span>
+    
+    <span class="c1"># Apply window to the boundaries of the input data</span>
+    <span class="n">window_arr</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">get_window</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">fir</span><span class="p">))</span>
+    <span class="n">padded_data</span> <span class="o">=</span> <span class="n">strain</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">padded_data</span><span class="p">[:</span><span class="n">pad</span><span class="p">]</span> <span class="o">*=</span> <span class="n">window_arr</span><span class="p">[:</span><span class="n">pad</span><span class="p">]</span>
+    <span class="n">padded_data</span><span class="p">[</span><span class="o">-</span><span class="n">pad</span><span class="p">:]</span> <span class="o">*=</span> <span class="n">window_arr</span><span class="p">[</span><span class="o">-</span><span class="n">pad</span><span class="p">:]</span>
+    
+    <span class="k">if</span> <span class="n">nfft</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">strain</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># Perform a single convolution if FFT length is sufficiently large</span>
+        <span class="n">conv</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="n">padded_data</span><span class="p">,</span> <span class="n">fir</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nstep</span> <span class="o">=</span> <span class="n">nfft</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pad</span>
+        <span class="n">conv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">strain</span><span class="p">)</span>
+        
+        <span class="c1"># Process the first chunk</span>
+        <span class="n">first_chunk</span> <span class="o">=</span> <span class="n">padded_data</span><span class="p">[:</span><span class="n">nfft</span><span class="p">]</span>
+        <span class="n">conv</span><span class="p">[:</span><span class="n">nfft</span><span class="o">-</span><span class="n">pad</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="n">first_chunk</span><span class="p">,</span> <span class="n">fir</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)[:</span><span class="n">nfft</span><span class="o">-</span><span class="n">pad</span><span class="p">]</span>
+        
+        <span class="c1"># Process middle chunks</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nfft</span><span class="o">-</span><span class="n">pad</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">strain</span><span class="p">)</span><span class="o">-</span><span class="n">nfft</span><span class="o">+</span><span class="n">pad</span><span class="p">,</span> <span class="n">nstep</span><span class="p">):</span>
+            <span class="n">yk</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="n">padded_data</span><span class="p">[</span><span class="n">k</span><span class="o">-</span><span class="n">pad</span><span class="p">:</span><span class="n">k</span><span class="o">+</span><span class="n">nstep</span><span class="o">+</span><span class="n">pad</span><span class="p">],</span> <span class="n">fir</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+            <span class="n">conv</span><span class="p">[</span><span class="n">k</span><span class="p">:</span><span class="n">k</span><span class="o">+</span><span class="n">yk</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">pad</span><span class="p">]</span> <span class="o">=</span> <span class="n">yk</span><span class="p">[</span><span class="n">pad</span><span class="p">:</span><span class="o">-</span><span class="n">pad</span><span class="p">]</span>
+        
+        <span class="c1"># Process the last chunk</span>
+        <span class="n">conv</span><span class="p">[</span><span class="o">-</span><span class="n">nfft</span><span class="o">+</span><span class="n">pad</span><span class="p">:]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span>
+            <span class="n">padded_data</span><span class="p">[</span><span class="o">-</span><span class="n">nfft</span><span class="p">:],</span>
+            <span class="n">fir</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span>
+        <span class="p">)[</span><span class="o">-</span><span class="n">nfft</span><span class="o">+</span><span class="n">pad</span><span class="p">:]</span>
+    
+    <span class="k">return</span> <span class="n">conv</span></div>
+
+
+
+<div class="viewcode-block" id="whiten">
+<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.whiten">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">whiten</span><span class="p">(</span><span class="n">strain</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+           <span class="o">*</span><span class="p">,</span>
+           <span class="n">asd</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+           <span class="n">fs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+           <span class="n">flength</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+           <span class="n">window</span><span class="p">:</span> <span class="nb">str</span><span class="o">|</span><span class="nb">tuple</span> <span class="o">=</span> <span class="s1">&#39;hann&#39;</span><span class="p">,</span>
+           <span class="n">highpass</span><span class="p">:</span> <span class="nb">float</span><span class="o">|</span><span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+           <span class="n">normed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whiten a single strain signal using a FIR filter.</span>
+
+<span class="sd">    Whiten a strain using the input amplitude spectral density &#39;asd&#39; to</span>
+<span class="sd">    design the FIR filter.</span>
+
+<span class="sd">    This is a standalone implementation of GWpy&#39;s whiten method.[1]_</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    strain : NDArray</span>
+<span class="sd">        Strain data points in time domain.</span>
+
+<span class="sd">    asd : 2d-array</span>
+<span class="sd">        Amplitude spectral density assumed for the &#39;set_strain&#39;.</span>
+<span class="sd">        Its components are:</span>
+<span class="sd">        - asd[0] = frequency points</span>
+<span class="sd">        - asd[1] = ASD points</span>
+<span class="sd">        NOTE: It must have a linear and constant sampling frequency!</span>
+
+<span class="sd">    fs : int</span>
+<span class="sd">        The sampling frequency of the strain data.</span>
+
+<span class="sd">    flength : int</span>
+<span class="sd">        Length (in samples) of the time-domain FIR whitening filter.</span>
+<span class="sd">    </span>
+<span class="sd">    window : str, np.ndarray, optional</span>
+<span class="sd">        window function to apply to timeseries prior to FFT,</span>
+<span class="sd">        default: &#39;hann&#39;</span>
+<span class="sd">        see :func:`scipy.signal.get_window` for details on acceptable</span>
+<span class="sd">        formats.</span>
+
+<span class="sd">    highpass : float, optional</span>
+<span class="sd">        Highpass corner frequency (in Hz) of the FIR whitening filter.</span>
+
+<span class="sd">    normed : bool</span>
+<span class="sd">        If True, normalizes the strains to their maximum absolute amplitude.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    strain_w : NDArray</span>
+<span class="sd">        Whitened strain (in time domain).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Due to filter settle-in, a segment of length `0.5*fduration` will be</span>
+<span class="sd">    corrupted at the beginning and end of the output.</span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Based on :meth:`gwpy.timeseries.TimeSeries.whiten`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">asd</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">asd</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;asd&#39; must have 2 dimensions&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_arithmetic_progression</span><span class="p">(</span><span class="n">asd</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;frequency points in &#39;asd[0]&#39; must be ascending with constant increment&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flength</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;flength&#39; must be an integer&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Constant detrending</span>
+    <span class="n">strain_detrended</span> <span class="o">=</span> <span class="n">strain</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">strain</span><span class="p">)</span>
+
+    <span class="n">asd_freq</span><span class="p">,</span> <span class="n">asd_vals</span> <span class="o">=</span> <span class="n">asd</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">fs</span>
+
+    <span class="n">freq_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfftfreq</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">strain</span><span class="p">),</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="c1"># Assumes ASD is defined or extrapolated over full frequency range.</span>
+    <span class="c1"># No check needed if extrapolated with zeros and signal is bandpass-filtered.</span>
+    <span class="c1">#--------------------------------------------------------------------------</span>
+    <span class="c1"># if asd_freq[-1] &lt; freq_target[-1]:</span>
+    <span class="c1">#     raise ValueError(&quot;ASD frequency range is insufficient for the strain data.&quot;)</span>
+    <span class="c1">#--------------------------------------------------------------------------</span>
+
+
+    <span class="c1"># Linear interpolation of ASD if needed, assuming ASD_freq is already</span>
+    <span class="c1"># covering the strain frequency range.</span>
+    <span class="n">asd_interp_function</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">interpolate</span><span class="o">.</span><span class="n">interp1d</span><span class="p">(</span>
+        <span class="n">asd_freq</span><span class="p">,</span> <span class="n">asd_vals</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+        <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span>
+    <span class="p">)</span>
+    <span class="n">asd_interpolated</span> <span class="o">=</span> <span class="n">asd_interp_function</span><span class="p">(</span><span class="n">freq_target</span><span class="p">)</span>
+
+    <span class="c1"># Compute transfer function</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+        <span class="n">transfer_function</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">asd_interpolated</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">asd_interpolated</span><span class="o">!=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">transfer_function</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">transfer_function</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Handle division by zero</span>
+
+    <span class="c1"># Handle highpass</span>
+    <span class="n">duration</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">strain</span><span class="p">)</span> <span class="o">/</span> <span class="n">fs</span>
+    <span class="n">delta_f</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">duration</span>
+    <span class="k">if</span> <span class="n">highpass</span><span class="p">:</span>
+        <span class="n">ncorner</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">highpass</span> <span class="o">/</span> <span class="n">delta_f</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ncorner</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Create the causal FIR filter</span>
+    <span class="n">fir_filter</span> <span class="o">=</span> <span class="n">fir_from_transfer</span><span class="p">(</span><span class="n">transfer_function</span><span class="p">,</span> <span class="n">ntaps</span><span class="o">=</span><span class="n">flength</span><span class="p">,</span> <span class="n">ncorner</span><span class="o">=</span><span class="n">ncorner</span><span class="p">)</span>
+
+    <span class="c1"># Convolve with filter</span>
+    <span class="n">strain_whitened</span> <span class="o">=</span> <span class="n">convolve</span><span class="p">(</span><span class="n">strain_detrended</span><span class="p">,</span> <span class="n">fir_filter</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
+    <span class="n">strain_whitened</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>  <span class="c1"># scaling factor</span>
+
+    <span class="c1"># Normalize if needed</span>
+    <span class="k">if</span> <span class="n">normed</span><span class="p">:</span>
+        <span class="n">max_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">strain_whitened</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">max_abs</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">strain_whitened</span> <span class="o">/=</span> <span class="n">max_abs</span>
+
+    <span class="k">return</span> <span class="n">strain_whitened</span></div>
+
+
+
+<div class="viewcode-block" id="is_arithmetic_progression">
+<a class="viewcode-back" href="../../gwadama.tat.html#gwadama.tat.is_arithmetic_progression">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_arithmetic_progression</span><span class="p">(</span><span class="n">arr</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the array is an arithmetic progression.</span>
+<span class="sd">    </span>
+<span class="sd">    Check if the array is a progression with a constant increment, allowing for</span>
+<span class="sd">    numerical tolerances.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr : NDArray</span>
+<span class="sd">        Input array to check.</span>
+<span class="sd">    </span>
+<span class="sd">    rtol : float, optional</span>
+<span class="sd">        Relative tolerance for comparing floating-point values.</span>
+<span class="sd">        Default is 1e-5.</span>
+<span class="sd">    </span>
+<span class="sd">    atol : float, optional</span>
+<span class="sd">        Absolute tolerance for comparing floating-point values.</span>
+<span class="sd">        Default is 1e-8.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the array is an arithmetic progression (within a specified</span>
+<span class="sd">        tolerance at their increments), False otherwise.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+    
+    <span class="n">step</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">expected_last</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">step</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">expected_last</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="n">step</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">)</span></div>
 
 </pre></div>
 
@@ -605,7 +1224,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

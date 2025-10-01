@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.detectors &#8212; GWADAMA 0.4.0 documentation</title>
+    <title>gwadama.plotting &#8212; GWADAMA 0.4.0 documentation</title>
   
   
   
@@ -42,11 +42,11 @@
     <script src="_static/documentation_options.js?v=6c02275b"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.detectors';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.plotting';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="gwadama.dictools" href="gwadama.dictools.html" />
-    <link rel="prev" title="gwadama.datasets" href="gwadama.datasets.html" />
+    <link rel="next" title="gwadama.synthetic" href="gwadama.synthetic.html" />
+    <link rel="prev" title="gwadama.ioo" href="gwadama.ioo.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.4.0" />
@@ -262,11 +262,11 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="gwadama.datasets.html">gwadama.datasets</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">gwadama.detectors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.detectors.html">gwadama.detectors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gwadama.plotting.html">gwadama.plotting</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">gwadama.plotting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
@@ -313,7 +313,7 @@
     
     <li class="breadcrumb-item"><a href="modules.html" class="nav-link">API Documentation</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama.detectors</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">gwadama.plotting</span></li>
   </ul>
 </nav>
 </div>
@@ -330,58 +330,102 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-gwadama.detectors">
-<span id="gwadama-detectors"></span><h1>gwadama.detectors<a class="headerlink" href="#module-gwadama.detectors" title="Link to this heading">#</a></h1>
+  <section id="gwadama-plotting">
+<h1>gwadama.plotting<a class="headerlink" href="#gwadama-plotting" title="Link to this heading">#</a></h1>
+<p id="module-gwadama.plotting">plotting.py</p>
+<p>Custom plotting functions</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="gwadama.detectors.project">
-<span class="sig-prename descclassname"><span class="pre">gwadama.detectors.</span></span><span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_plus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_cros</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nfft</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('tukey',</span> <span class="pre">0.04)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/detectors.html#project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.detectors.project" title="Link to this definition">#</a></dt>
-<dd><p>Project strain modes in a GW detector.</p>
-<p>Project the input GW modes in the sky as detected by the specified
-detector using Bilby.</p>
-<dl class="field-list">
+<dt class="sig sig-object py" id="gwadama.plotting.plot_spectrogram_with_instantaneous_features">
+<span class="sig-prename descclassname"><span class="pre">gwadama.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_spectrogram_with_instantaneous_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16384</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outseg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfreq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mfft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_interpol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lanczos'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">if_line_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Axes</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Axes</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/plotting.html#plot_spectrogram_with_instantaneous_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.plotting.plot_spectrogram_with_instantaneous_features" title="Link to this definition">#</a></dt>
+<dd><p>Plot the spectrogram, instantaneous frequency, and strain’s waveform.</p>
+<p>This function generates a multi-panel plot consisting of:</p>
+<ol class="arabic simple">
+<li><p>A spectrogram of the gravitational wave strain, obtained using
+Short-Time Fourier Transform (STFT), visualizing the frequency evolution
+over time.</p></li>
+<li><p>The instantaneous frequency of the strain, plotted on top of the
+spectrogram to show the frequency changes in real time.</p></li>
+<li><p>The raw gravitational wave strain in the time domain, shown above the
+spectrogram for direct comparison.</p></li>
+</ol>
+<p>Key features of the plot:</p>
+<ul class="simple">
+<li><p><strong>Spectrogram</strong>: The frequency content of the gravitational wave signal
+is displayed over time using a color map (<cite>inferno</cite>), with the x-axis
+representing time (in milliseconds) and the y-axis representing frequency
+(in Hz).</p></li>
+<li><p><strong>Instantaneous Frequency</strong>: Plots the instantaneous frequency of the
+strain over time, highlighting the frequency variations.</p></li>
+<li><p><strong>Energy Normalization</strong>: The spectrogram uses a logarithmic scale for
+the energy (power spectral density, PSD), optionally normalized by the
+maximum energy value in the signal.</p></li>
+<li><p><strong>Dynamic Range Control</strong>: The color scale of the spectrogram can be
+adjusted via the <cite>vmin</cite> parameter to emphasize specific energy levels.</p></li>
+<li><p><strong>Time-Domain Waveform</strong>: A plot of the original strain data in the time
+domain is shown above the spectrogram, providing context for the signal’s
+evolution.</p></li>
+<li><p><strong>Segmentation</strong>: The user can specify the time (<cite>outseg</cite>) and frequency
+(<cite>outfreq</cite>) ranges to focus on specific parts of the data.</p></li>
+<li><p><strong>Customization</strong>: The plot has a black background, white grid lines, and
+labeled colorbars for clarity.</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
-<dt><strong>h_plus, h_cros</strong><span class="classifier">NDArray</span></dt><dd><p>GW polarizations.</p>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>strain_array</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>The time-domain strain data of the gravitational wave signal.</p>
 </dd>
-<dt><strong>parameters</strong><span class="classifier">dict</span></dt><dd><p>Sky position and time of the event, as requested by Bilby’s method:</p>
-<p><a href="#id1"><span class="problematic" id="id2">``</span></a>`
-{</p>
-<blockquote>
-<div><p>ra: 0,
-dec: 0,
-geocent_time: 0, # In GPS.
-psi: 0  # Binary polarization angle</p>
-</div></blockquote>
-<p>REF: <a class="reference external" href="https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response">https://lscsoft.docs.ligo.org/bilby/api/bilby.gw.detector.interferometer.Interferometer.html#bilby.gw.detector.interferometer.Interferometer.get_detector_response</a></p>
+<dt><strong>time_array</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Array of time stamps corresponding to the strain data.</p>
 </dd>
-<dt><strong>fs</strong><span class="classifier">int</span></dt><dd><p>Sampling frequency of the waveform.</p>
+<dt><strong>fs</strong><span class="classifier">int, optional</span></dt><dd><p>The sampling frequency of the data in Hz (default is 2^14, or 16384
+Hz).</p>
 </dd>
-<dt><strong>nfft</strong><span class="classifier">int</span></dt><dd><p>Length of the FFT window.</p>
+<dt><strong>outseg</strong><span class="classifier">tuple, optional</span></dt><dd><p>A tuple specifying the time range (start, end) in seconds for the
+x-axis. If <cite>None</cite>, the entire time range of the input data is used.</p>
 </dd>
-<dt><strong>window</strong><span class="classifier">str | tuple | Callable</span></dt><dd><p>Passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">sp.signal.get_window()</span></code>, unless Callable is given.
-In this case, a function <cite>window(length)</cite> is expected to return a
-NDArray.</p>
+<dt><strong>outfreq</strong><span class="classifier">tuple, optional</span></dt><dd><p>A tuple specifying the frequency range (start, end) in Hz for the
+y-axis. If <cite>None</cite>, the full frequency range (up to Nyquist frequency)
+is used.</p>
 </dd>
-<dt><strong>detector</strong><span class="classifier">str</span></dt><dd><p>GW detector into which the modes will be projected.
-Must exist in Bilby’s InterferometerList().</p>
+<dt><strong>window</strong><span class="classifier">numpy.ndarray, optional</span></dt><dd><p>The window function applied during STFT computation (default is a Tukey
+window).</p>
+</dd>
+<dt><strong>hop</strong><span class="classifier">int, optional</span></dt><dd><p>The hop size between successive STFT windows (default is 32).</p>
+</dd>
+<dt><strong>mfft</strong><span class="classifier">int, optional</span></dt><dd><p>The number of points in the FFT used for STFT computation (default is
+None).</p>
+</dd>
+<dt><strong>vmin, vmax</strong><span class="classifier">float, optional</span></dt><dd><p>The minimum/maximum value for the color scale in the spectrogram. This
+controls the dynamic range of the color map.</p>
+</dd>
+<dt><strong>spec_log</strong><span class="classifier">bool, optional</span></dt><dd><p>If true, represent <cite>np.log10(Sxx)</cite>.</p>
+</dd>
+<dt><strong>spec_norm</strong><span class="classifier">bool, optional</span></dt><dd><p>If true, normalize the spectrogram to the maximum energy value.</p>
+</dd>
+<dt><strong>spec_interpol</strong><span class="classifier">str, optional</span></dt><dd><p>Interpolation used for visual representation (default ‘Lanczos’). See
+<cite>matplotlib.pyplot.imshow</cite> for other options.</p>
+</dd>
+<dt><strong>if_line_width</strong><span class="classifier">int | float, optional</span></dt><dd><p>The line width of the instantaneous frequency plot (default is 2).</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>strains_projected: NDArray</dt><dd><p>Strain(s) projected. If only one detector specified, it is a 1d-array.
-Otherwise, a 2d-array with shape (3, strain).</p>
+<dt><strong>fig</strong><span class="classifier">matplotlib.figure.Figure</span></dt><dd><p>The figure object containing the complete plot.</p>
+</dd>
+<dt><strong>axs</strong><span class="classifier">List[matplotlib.axes.Axes]</span></dt><dd><p>A list of axes objects containing the spectrogram, the colorbar, and
+the time-domain plots.</p>
+</dd>
+<dt><strong>Sxx</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>The computed spectrogram (PSD values) of the input strain data.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <ul class="simple">
-<li><p>Strains are converted to frequency domain in order to project them,
-and hence must be windowed.</p></li>
-<li><p>Before the FFT, a Tukey window is used with <cite>alpha=0.04</cite>, therefore the
-initial length of the strains has to be taken into account since around
-2% of the beginning and the end of the signal will be damped.</p></li>
+<li><p>The y-axis of the spectrogram uses a kilohertz scale for readability.</p></li>
+<li><p>The time-domain waveform is plotted without axes labels for simplicity.</p></li>
+<li><p>Instantaneous frequency values below zero are masked to avoid displaying
+non-physical results.</p></li>
 </ul>
 </dd></dl>
 
@@ -398,20 +442,20 @@ initial length of the strains has to be taken into account since around
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="gwadama.datasets.html"
+       href="gwadama.ioo.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">gwadama.datasets</p>
+        <p class="prev-next-title">gwadama.ioo</p>
       </div>
     </a>
     <a class="right-next"
-       href="gwadama.dictools.html"
+       href="gwadama.synthetic.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">gwadama.dictools</p>
+        <p class="prev-next-title">gwadama.synthetic</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -434,7 +478,7 @@ initial length of the strains has to be taken into account since around
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.detectors.project"><code class="docutils literal notranslate"><span class="pre">project()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.plotting.plot_spectrogram_with_instantaneous_features"><code class="docutils literal notranslate"><span class="pre">plot_spectrogram_with_instantaneous_features()</span></code></a></li>
 </ul>
   </nav></div>
 

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.tat &#8212; GWADAMA 0.3.0 documentation</title>
+    <title>gwadama.tat &#8212; GWADAMA 0.4.0 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6e061ff1" />
   
   <!-- So that users can add custom icons -->
@@ -39,8 +39,8 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=e259d695"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/documentation_options.js?v=6c02275b"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.tat';</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -49,7 +49,7 @@
     <link rel="prev" title="gwadama.synthetic" href="gwadama.synthetic.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.3.0" />
+  <meta name="docsearch:version" content="0.4.0" />
   </head>
   
   
@@ -102,7 +102,7 @@
     <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
         <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
         <span class="navbar-project-name">GWADAMA</span>
-        <span class="navbar-project-version">v0.3.0</span>
+        <span class="navbar-project-version">v0.4.0</span>
     </a>
 </div></div>
     
@@ -266,6 +266,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.plotting.html">gwadama.plotting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">gwadama.tat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
@@ -334,49 +335,112 @@
 <p>tat.py</p>
 <p>Time analysis toolkit.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="gwadama.tat.find_merger">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">find_merger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#find_merger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.find_merger" title="Link to this definition">#</a></dt>
-<dd><p>Estimate the index position of the merger in the given strain.</p>
-<p>This function provides a rough estimate of the merger index position by
-locating the maximum of the absolute amplitude of the gravitational wave
-signal in the time domain. It assumes that the merger roughly corresponds
-to this peak, which holds for certain clean or high-SNR simulated CBC
-gravitational waves.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Warning<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-<p>This function may be replaced in the near future by a more formal estimator
-with a better model, such as a Gaussian fit for binary mergers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Caution<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-<p>This is a very ad-hoc method and may not be accurate for all datasets,
-especially depending on the sensitivity of the detector. This method
-assumes that the peak amplitude in the time domain corresponds closely to
-the merger, which may not hold for lower-SNR signals or noisy data.</p>
+<dt class="sig sig-object py" id="gwadama.tat.convolve">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">convolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hann'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/tat.html#convolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.convolve" title="Link to this definition">#</a></dt>
+<dd><p>Convolve a time series.</p>
+<p>Convolve a time series with a FIR filter using the overlap-save method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>h</strong><span class="classifier">np.ndarray</span></dt><dd><p>The gravitational wave strain data.</p>
+<dt><strong>strain</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>The input time series strain.</p>
+</dd>
+<dt><strong>fir</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>The FIR filter coefficients.</p>
+</dd>
+<dt><strong>window</strong><span class="classifier">str | tuple, optional</span></dt><dd><p>The window function to apply to the boundaries (default: ‘hann’).</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>int</dt><dd><p>The index of the estimated merger position in the strain data.</p>
+<dt>numpy.ndarray</dt><dd><p>The convolved time series, same length as input data.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>This function, based on the implementation of GWpy[R1eef69e3511f-1]_, differs in its
+implementation from the <cite>oaconvolve</cite> implementation of SciPy[R1eef69e3511f-2]_, which
+uses the overlap-add method:</p>
+<ul class="simple">
+<li><p><strong>Algorithm</strong>: Overlap-save discards edge artifacts after convolution,
+whereas overlap-add sums overlapping output segments.</p></li>
+<li><p><strong>Boundary Windowing</strong>: Explicitly applies a window (e.g., Hann) to the
+first/last <code class="docutils literal notranslate"><span class="pre">N/2</span></code> samples (where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the filter length) to suppress
+spectral leakage at boundaries. SciPy implementations do not modify input
+boundaries.</p></li>
+<li><p><strong>Edge Corruption</strong>: Intentionally tolerates edge corruption in a segment
+of length <code class="docutils literal notranslate"><span class="pre">N/2</span></code> at both ends, while SciPy’s output validity depends on
+the selected mode (<cite>full</cite>/<cite>valid</cite>/<cite>same</cite>).</p></li>
+<li><p><strong>Use Case Focus</strong>: Optimized for 1D time-series processing with
+boundary-aware windowing. SciPy’s <cite>oaconvolve</cite> is more general-purpose,
+focused in computational efficiency for large N-dimensional arrays
+and arbitrary convolution modes.</p></li>
+</ul>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r1eef69e3511f-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Based on <a class="reference external" href="https://gwpy.github.io/docs/stable/api/gwpy.timeseries.TimeSeries/#gwpy.timeseries.TimeSeries.convolve" title="(in GWpy v3.0.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">gwpy.timeseries.TimeSeries.convolve()</span></code></a>.</p>
+</div>
+<div class="citation" id="r1eef69e3511f-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>SciPy’s more general implementation <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.oaconvolve.html#scipy.signal.oaconvolve" title="(in SciPy v1.16.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.signal.oaconvolve()</span></code></a>.</p>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.tat.find_merger">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">find_merger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#find_merger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.find_merger" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the index of the merger in a gravitational-wave strain.</p>
+<p>This function provides a rough estimate of the merger time index by finding
+the position of the maximum absolute amplitude in the time-domain strain
+data. It assumes that the merger approximately coincides with this peak,
+which is often valid for certain clean or high‑SNR simulated CBC
+(compact binary coalescence) signals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>h</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>1D array containing the gravitational-wave strain.
+If the strain is split into polarisations, combine them in a complex
+array such as: <code class="docutils literal notranslate"><span class="pre">h</span> <span class="pre">=</span> <span class="pre">s_plus</span> <span class="pre">-</span> <span class="pre">1j</span> <span class="pre">*</span> <span class="pre">s_cross</span></code></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int</dt><dd><p>Index of the estimated merger position in <cite>h</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This method is <strong>ad hoc</strong> and may give misleading results on some data,
+particularly low-SNR or real detector data where noise fluctuations
+dominate the peak amplitude.</p>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Assumes that the peak amplitude in the time domain corresponds to
+the merger, which is a simplification.</p></li>
+<li><p>This function is a <strong>temporary placeholder</strong> and will be replaced in
+future versions by a more formal estimator (for example, a Gaussian
+fit around the expected merger region).</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">find_merger</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.tat.find_time_origin">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">find_time_origin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#find_time_origin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.find_time_origin" title="Link to this definition">#</a></dt>
-<dd><p>Find the index position of the origin of a time array.</p>
-<p>It is just a shortcut for <cite>np.argmin(np.abs(times))</cite>.</p>
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">find_time_origin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#find_time_origin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.find_time_origin" title="Link to this definition">#</a></dt>
+<dd><p>Return the index of the element closest to zero.</p>
+<p>Finds the position in the time array whose value is nearest to 0.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -386,7 +450,7 @@ the merger, which may not hold for lower-SNR signals or noisy data.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>_</strong><span class="classifier">int</span></dt><dd><p>Index position of the time origin (0).</p>
+<dt>int</dt><dd><p>Index position of the time origin (0).</p>
 </dd>
 </dl>
 </dd>
@@ -394,28 +458,102 @@ the merger, which may not hold for lower-SNR signals or noisy data.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="gwadama.tat.fir_from_transfer">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">fir_from_transfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transfer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntaps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hann'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncorner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/tat.html#fir_from_transfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.fir_from_transfer" title="Link to this definition">#</a></dt>
+<dd><p>Design a Type II FIR filter given an arbitrary transfer function</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>transfer</strong><span class="classifier"><cite>numpy.ndarray</cite></span></dt><dd><p>transfer function to start from, must have at least ten samples</p>
+</dd>
+<dt><strong>ntaps</strong><span class="classifier"><cite>int</cite></span></dt><dd><p>number of taps in the final filter, must be an even number</p>
+</dd>
+<dt><strong>window</strong><span class="classifier"><cite>str</cite>, <cite>numpy.ndarray</cite>, optional</span></dt><dd><p>window function to truncate with, default: <code class="docutils literal notranslate"><span class="pre">'hann'</span></code>
+see <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.get_window.html#scipy.signal.get_window" title="(in SciPy v1.16.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.signal.get_window()</span></code></a> for details on acceptable formats</p>
+</dd>
+<dt><strong>ncorner</strong><span class="classifier"><cite>int</cite>, optional</span></dt><dd><p>number of extra samples to zero off at low frequency, default: <cite>None</cite></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>out</strong><span class="classifier"><cite>numpy.ndarray</cite></span></dt><dd><p>A time domain FIR filter of length <cite>ntaps</cite></p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Based on <code class="xref py py-func docutils literal notranslate"><span class="pre">gwpy.signal.filter_design.fir_from_transfer()</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="gwadama.tat.gen_time_array">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">gen_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/tat.html#gen_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.gen_time_array" title="Link to this definition">#</a></dt>
-<dd><p>Generate a time array with constant sampling rate.</p>
-<p>Extension of numpy.arange which takes care of the case when an extra sample
-is produced due to round-off errors. When this happens, the extra sample is
-cut off.</p>
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">gen_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.floating" title="(in NumPy v2.3)"><span class="pre">floating</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#gen_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.gen_time_array" title="Link to this definition">#</a></dt>
+<dd><p>Generate a time array for a given time range and sampling frequency.</p>
+<p>Generate a time array for a given time range and sampling frequency with an
+optional consistency check.</p>
+<p>Floating-point precision can cause <cite>(t1 - t0) * fs</cite> to yield an unexpected 
+number of samples, leading to off-by-one errors in <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="(in NumPy v2.3)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.linspace()</span></code></a>.
+If <cite>length</cite> is provided, the function verifies that it matches the expected
+length using <cite>t1</cite> as reference. A mismatch raises will raise <cite>ValueError</cite>,
+ensuring consistency between the expected and actual number of samples.</p>
+<p>If <cite>length</cite> is not provided, the function simply calls
+<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="(in NumPy v2.3)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.linspace()</span></code></a> without performing the safety check.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>t0, t1: float</strong></dt><dd><p>Initial and final times of the array: [t0, t1).</p>
+<dt><strong>t0</strong><span class="classifier">float</span></dt><dd><p>Start time (inclusive).</p>
 </dd>
-<dt><strong>sr: int</strong></dt><dd><p>Sample rate.</p>
+<dt><strong>t1</strong><span class="classifier">float</span></dt><dd><p>Final time (exclusive).</p>
 </dd>
-<dt><strong>length: int</strong></dt><dd><p>Length of the final time array in samples.
-If due to round-off errors the length of the array is longer, it will
-be adjusted.</p>
+<dt><strong>fs</strong><span class="classifier">int</span></dt><dd><p>sampling frequency.</p>
+</dd>
+<dt><strong>length</strong><span class="classifier">int, optional</span></dt><dd><p>If provided, must match <cite>int((t1 - t0) * fs)</cite> exactly.
+Acts as a safeguard against miscalculations due to floating-point
+precision.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>times: NDArray</dt><dd><p>Time array.</p>
+<dt>numpy.ndarray</dt><dd><p>A 1D array of evenly spaced time values from <cite>t0</cite> (inclusive) to <cite>t1</cite>
+(exclusive).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If <cite>length</cite> is provided and does not match the expected number of
+samples.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.tat.is_arithmetic_progression">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">is_arithmetic_progression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#is_arithmetic_progression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.is_arithmetic_progression" title="Link to this definition">#</a></dt>
+<dd><p>Check if the array is an arithmetic progression.</p>
+<p>Check if the array is a progression with a constant increment, allowing for
+numerical tolerances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>arr</strong><span class="classifier">NDArray</span></dt><dd><p>Input array to check.</p>
+</dd>
+<dt><strong>rtol</strong><span class="classifier">float, optional</span></dt><dd><p>Relative tolerance for comparing floating-point values.
+Default is 1e-5.</p>
+</dd>
+<dt><strong>atol</strong><span class="classifier">float, optional</span></dt><dd><p>Absolute tolerance for comparing floating-point values.
+Default is 1e-8.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the array is an arithmetic progression (within a specified
+tolerance at their increments), False otherwise.</p>
 </dd>
 </dl>
 </dd>
@@ -424,67 +562,161 @@ be adjusted.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.tat.pad_time_array">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">pad_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/tat.html#pad_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.pad_time_array" title="Link to this definition">#</a></dt>
-<dd><p>Extend a time array by ‘pad’ number of samples.</p>
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">pad_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/tat.html#pad_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.pad_time_array" title="Link to this definition">#</a></dt>
+<dd><p>Extend a uniformly sampled time array by ‘pad’ number of samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>times: NDArray</strong></dt><dd><p>Time array.</p>
+<dt><strong>times: numpy.ndarray</strong></dt><dd><p>1D array of time samples. Must be uniformly sampled.</p>
 </dd>
-<dt><strong>pad: int | tuple</strong></dt><dd><p>If int, number of samples to add on both sides.
-If tuple, number of samples to add on each side.</p>
+<dt><strong>pad: int or Sequence of two ints</strong></dt><dd><p>Number of samples to add.
+* If int, the same number of samples is added on both sides.
+* If Sequence of length 2, interpreted as (pad_before, pad_after).</p>
+</dd>
+<dt><strong>numpy.ndarray</strong></dt><dd><p>New time array with the specified padding, using the same time step
+as the input.</p>
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>NDArray</dt><dd><p>Padded time array.</p>
+<dt>ValueError</dt><dd><p>If <cite>times</cite> is not uniformly sampled.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <ul class="simple">
-<li><p>Computes again the entire time array.</p></li>
-<li><p>Due to round-off errors some intermediate time values might be slightly
-different.</p></li>
+<li><p>The function recomputes the entire time array using
+<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="(in NumPy v2.3)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.linspace()</span></code></a>.</p></li>
+<li><p>Due to floating-point round-off, intermediate values may differ
+slightly from the input.</p></li>
 </ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pad_time_array</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">array([-0.1, 0.0, 0.1, 0.2, 0.3])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.tat.planck">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">planck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nleft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nright</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/tat.html#planck"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.planck" title="Link to this definition">#</a></dt>
+<dd><p>Return a Planck taper window.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>N</strong><span class="classifier"><cite>int</cite></span></dt><dd><p>Number of samples in the output window</p>
+</dd>
+<dt><strong>nleft</strong><span class="classifier"><cite>int</cite>, optional</span></dt><dd><p>Number of samples to taper on the left, should be less than <cite>N/2</cite></p>
+</dd>
+<dt><strong>nright</strong><span class="classifier"><cite>int</cite>, optional</span></dt><dd><p>Number of samples to taper on the right, should be less than <cite>N/2</cite></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>w</strong><span class="classifier"><cite>ndarray</cite></span></dt><dd><p>The window, with the maximum value normalized to 1 and at least one
+end tapered smoothly to 0.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Based on <code class="xref py py-func docutils literal notranslate"><span class="pre">gwpy.signal.window.planck()</span></code>.</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rf3726a7a761c-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>McKechan, D.J.A., Robinson, C., and Sathyaprakash, B.S. (April
+2010). “A tapering window for time-domain templates and simulated
+signals in the detection of gravitational waves from coalescing
+compact binaries”. Classical and Quantum Gravity 27 (8).
+<a href="#id3"><span class="problematic" id="id4">:doi:`10.1088/0264-9381/27/8/084020`</span></a></p>
+</div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.tat.resample">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/tat.html#resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.resample" title="Link to this definition">#</a></dt>
-<dd><p>Resample a single strain in time domain.</p>
-<p>Resample strain’s sampling rate using an interpolation in the time domain
-for upscalling to a constant rate, and then decimate it to the target rate.</p>
-<p>The upscaled sample rate is chosen as the minimum common multiple between
-the next integer value of the maximum sampling rate found in the original
-strain, and the target sample rate.</p>
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_atol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">90.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_min_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_cap_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frac_den_limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8192</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/tat.html#resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.resample" title="Link to this definition">#</a></dt>
+<dd><p>Resample (possibly irregularly-sampled) ‘strain’ onto a uniform grid at
+target sampling rate ‘fs’ (Hz).</p>
+<p>Logic:</p>
+<ol class="arabic simple">
+<li><p>Validate input.</p></li>
+<li><dl class="simple">
+<dt>If times are approximately uniform:</dt><dd><ul class="simple">
+<li><p>If fs_in == fs (within 0.5 Hz): return a copy aligned to the
+original start.</p></li>
+<li><p>Else: resample_poly directly from fs_in -&gt; fs (anti-aliasing
+included).</p></li>
+</ul>
+</dd>
+<dt>Else (times irregular):</dt><dd><ol class="loweralpha simple">
+<li><p>If max instantaneous rate &lt; fs: issue a warning and directly
+interpolate to fs via PCHIP (upsampling).</p></li>
+<li><dl class="simple">
+<dt>Otherwise:</dt><dd><ul class="simple">
+<li><p>Pick robust f_u from the ‘percentile’ of instantaneous rates.</p></li>
+<li><p>Enforce fs &lt;= f_u &lt;= min(max_inst_rate, f_cap_factor*fs), and
+f_u &gt;= f_min_factor*fs.</p></li>
+<li><p>PCHIP-uniformise at f_u, then resample_poly f_u -&gt; fs.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</li>
+</ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>strain: 1d-array</strong></dt><dd><p>Only one strain.</p>
+<dt><strong>strain</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>One-dimensional input strain samples, shape (N,).</p>
 </dd>
-<dt><strong>time: 1d-array | int | float</strong></dt><dd><p>Time points. If an Int or Float is given, it is interpreted as the
-former sampling rate, and assumed to be constant.</p>
+<dt><strong>times</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>One-dimensional, strictly increasing time stamps (seconds), shape (N,).
+No duplicates; must be sorted ascending.</p>
 </dd>
-<dt><strong>sample_rate: int</strong></dt><dd><p>Target sample rate.
-NOTE: It cannot be fractional.</p>
+<dt><strong>fs</strong><span class="classifier">int</span></dt><dd><p>Target sampling frequency in Hz. Must be a positive integer.</p>
 </dd>
-<dt><strong>full_output: bool, optional</strong></dt><dd><p>If True, also returns the new time points, the upscaled sampling rate,
-and the factor down.</p>
+<dt><strong>full_output</strong><span class="classifier">bool, default=True</span></dt><dd><p>If True, also return the output time grid, an input-rate estimate,
+and the (up, down) integers used in the final polyphase step.</p>
+</dd>
+<dt><strong>uniform_rtol</strong><span class="classifier">float, default=1e-6</span></dt><dd><p>Relative tolerance for the uniform-spacing check.</p>
+</dd>
+<dt><strong>uniform_atol</strong><span class="classifier">float, default=1e-12</span></dt><dd><p>Absolute tolerance for the uniform-spacing check.</p>
+</dd>
+<dt><strong>percentile</strong><span class="classifier">float, default=90.0</span></dt><dd><p>Percentile (in [0, 100]) of instantaneous sampling rates <cite>1/np.diff(times)</cite>
+used to choose the robust uniformisation rate <cite>f_u</cite> when input is irregular.</p>
+</dd>
+<dt><strong>f_min_factor</strong><span class="classifier">float, default=1.25</span></dt><dd><p>Lower bound multiplier for <cite>f_u</cite> relative to <cite>fs</cite> (i.e. <cite>f_u ≥ f_min_factor*fs</cite>)
+to leave margin for the FIR anti-alias filter.</p>
+</dd>
+<dt><strong>f_cap_factor</strong><span class="classifier">float, default=8.0</span></dt><dd><p>Upper bound multiplier for <cite>f_u</cite> relative to <cite>fs</cite> (i.e. <cite>f_u ≤ f_cap_factor*fs</cite>)
+to avoid excessively large intermediate grids. Must satisfy
+<cite>f_cap_factor ≥ f_min_factor</cite>. <cite>f_u</cite> is also capped by the maximum
+instantaneous rate.</p>
+</dd>
+<dt><strong>frac_den_limit</strong><span class="classifier">int, default=2048</span></dt><dd><p>Maximum allowed denominator when approximating the rate ratio with
+<cite>fractions.Fraction(…).limit_denominator</cite>. Larger values give a closer
+ratio but longer polyphase FIR filters (slower); smaller values shorten
+the filter at the cost of a tiny ratio error.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>strain: 1d-array</dt><dd><p>Strain at the new sampling rate.</p>
+<dt><strong>y</strong><span class="classifier">1d-array</span></dt><dd><p>Resampled strain at ‘fs’.</p>
 </dd>
-<dt>time: 1d-array, optional</dt><dd><p>New time points.</p>
+<dt><strong>t</strong><span class="classifier">1d-array (if full_output)</span></dt><dd><p>Time grid at ‘fs’, starting at times[0].</p>
 </dd>
-<dt>sr_up: int, optional</dt><dd><p>Upscaled sample rate.</p>
+<dt><strong>fs_in</strong><span class="classifier">int (if full_output)</span></dt><dd><p>Estimated original sampling frequency (rounded to nearest integer). For
+irregular inputs, this is the robust uniformisation rate if used;
+otherwise a robust estimate from the mean spacing.</p>
 </dd>
-<dt>factor_down: int, optional</dt><dd><p>Factor at which the signal is decimated after the upscalling.</p>
+<dt><strong>up, down</strong><span class="classifier">int, int (if full_output)</span></dt><dd><p>Up/down integers used in the final polyphase step. (0, 0) if N/A.</p>
 </dd>
 </dl>
 </dd>
@@ -492,15 +724,133 @@ and the factor down.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="gwadama.tat.shrink_time_array">
-<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">shrink_time_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/tat.html#shrink_time_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.shrink_time_array" title="Link to this definition">#</a></dt>
-<dd><p>Shrink a time array on both sides by ‘unpad’ number of samples.</p>
+<dt class="sig sig-object py" id="gwadama.tat.time_array_like">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">time_array_like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/tat.html#time_array_like"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.time_array_like" title="Link to this definition">#</a></dt>
+<dd><p>Generate a time array matching the length of the input array.</p>
+<p>Computes a time array starting from <cite>t0</cite> with evenly spaced values based 
+on the sampling frequency <cite>fs</cite>, matching the length of the input 1D array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>array</strong><span class="classifier">array_like</span></dt><dd><p>Input 1D array whose length determines the number of time samples.</p>
+</dd>
+<dt><strong>fs</strong><span class="classifier">float, optional</span></dt><dd><p>sampling frequency in Hz. Default is 4096.</p>
+</dd>
+<dt><strong>t0</strong><span class="classifier">float, optional</span></dt><dd><p>Start time in seconds. Default is 0.0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>A 1D array of evenly spaced time values starting at <cite>t0</cite> with spacing
+<cite>1/fs</cite> and the same length as the input array.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.tat.truncate_impulse">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">truncate_impulse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">impulse</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntaps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hann'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/tat.html#truncate_impulse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.truncate_impulse" title="Link to this definition">#</a></dt>
+<dd><p>Smoothly truncate a time domain impulse response</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>impulse</strong><span class="classifier"><cite>numpy.ndarray</cite></span></dt><dd><p>the impulse response to start from</p>
+</dd>
+<dt><strong>ntaps</strong><span class="classifier"><cite>int</cite></span></dt><dd><p>number of taps in the final filter</p>
+</dd>
+<dt><strong>window</strong><span class="classifier"><cite>str</cite>, <cite>numpy.ndarray</cite>, optional</span></dt><dd><p>window function to truncate with, default: <code class="docutils literal notranslate"><span class="pre">'hann'</span></code>
+see <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.get_window.html#scipy.signal.get_window" title="(in SciPy v1.16.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.signal.get_window()</span></code></a> for details on acceptable formats</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>out</strong><span class="classifier"><cite>numpy.ndarray</cite></span></dt><dd><p>the smoothly truncated impulse response</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Based on <code class="xref py py-func docutils literal notranslate"><span class="pre">gwpy.signal.filter_design.truncate_impulse()</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.tat.truncate_transfer">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">truncate_transfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transfer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncorner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/tat.html#truncate_transfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.truncate_transfer" title="Link to this definition">#</a></dt>
+<dd><p>Smoothly zero the edges of a frequency domain transfer function</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>transfer</strong><span class="classifier"><cite>numpy.ndarray</cite></span></dt><dd><p>transfer function to start from, must have at least ten samples</p>
+</dd>
+<dt><strong>ncorner</strong><span class="classifier"><cite>int</cite>, optional</span></dt><dd><p>number of extra samples to zero off at low frequency, default: <cite>None</cite></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>out</strong><span class="classifier"><cite>numpy.ndarray</cite></span></dt><dd><p>the smoothly truncated transfer function</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Based on <code class="xref py py-func docutils literal notranslate"><span class="pre">gwpy.signal.filter_design.truncate_transfer()</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.tat.whiten">
+<span class="sig-prename descclassname"><span class="pre">gwadama.tat.</span></span><span class="sig-name descname"><span class="pre">whiten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">asd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">_ScalarType_co</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flength</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hann'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highpass</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/tat.html#whiten"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.tat.whiten" title="Link to this definition">#</a></dt>
+<dd><p>Whiten a single strain signal using a FIR filter.</p>
+<p>Whiten a strain using the input amplitude spectral density ‘asd’ to
+design the FIR filter.</p>
+<p>This is a standalone implementation of GWpy’s whiten method.[Rbff3c05209a2-1]_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>strain</strong><span class="classifier">NDArray</span></dt><dd><p>Strain data points in time domain.</p>
+</dd>
+<dt><strong>asd</strong><span class="classifier">2d-array</span></dt><dd><p>Amplitude spectral density assumed for the ‘set_strain’.
+Its components are:
+- asd[0] = frequency points
+- asd[1] = ASD points
+NOTE: It must have a linear and constant sampling frequency!</p>
+</dd>
+<dt><strong>fs</strong><span class="classifier">int</span></dt><dd><p>The sampling frequency of the strain data.</p>
+</dd>
+<dt><strong>flength</strong><span class="classifier">int</span></dt><dd><p>Length (in samples) of the time-domain FIR whitening filter.</p>
+</dd>
+<dt><strong>window</strong><span class="classifier">str, np.ndarray, optional</span></dt><dd><p>window function to apply to timeseries prior to FFT,
+default: ‘hann’
+see <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.get_window.html#scipy.signal.get_window" title="(in SciPy v1.16.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.signal.get_window()</span></code></a> for details on acceptable
+formats.</p>
+</dd>
+<dt><strong>highpass</strong><span class="classifier">float, optional</span></dt><dd><p>Highpass corner frequency (in Hz) of the FIR whitening filter.</p>
+</dd>
+<dt><strong>normed</strong><span class="classifier">bool</span></dt><dd><p>If True, normalizes the strains to their maximum absolute amplitude.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>strain_w</strong><span class="classifier">NDArray</span></dt><dd><p>Whitened strain (in time domain).</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Computes again the entire time array.</p></li>
-<li><p>Due to round-off errors some intermediate time values might be slightly
-different.</p></li>
-</ul>
+<p>Due to filter settle-in, a segment of length <cite>0.5*fduration</cite> will be
+corrupted at the beginning and end of the output.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rbff3c05209a2-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Based on <a class="reference external" href="https://gwpy.github.io/docs/stable/api/gwpy.timeseries.TimeSeries/#gwpy.timeseries.TimeSeries.whiten" title="(in GWpy v3.0.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">gwpy.timeseries.TimeSeries.whiten()</span></code></a>.</p>
+</div>
+</div>
 </dd></dl>
 
 </section>
@@ -552,12 +902,19 @@ different.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.convolve"><code class="docutils literal notranslate"><span class="pre">convolve()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.find_merger"><code class="docutils literal notranslate"><span class="pre">find_merger()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.find_time_origin"><code class="docutils literal notranslate"><span class="pre">find_time_origin()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.fir_from_transfer"><code class="docutils literal notranslate"><span class="pre">fir_from_transfer()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.gen_time_array"><code class="docutils literal notranslate"><span class="pre">gen_time_array()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.is_arithmetic_progression"><code class="docutils literal notranslate"><span class="pre">is_arithmetic_progression()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.pad_time_array"><code class="docutils literal notranslate"><span class="pre">pad_time_array()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.planck"><code class="docutils literal notranslate"><span class="pre">planck()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.resample"><code class="docutils literal notranslate"><span class="pre">resample()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.shrink_time_array"><code class="docutils literal notranslate"><span class="pre">shrink_time_array()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.time_array_like"><code class="docutils literal notranslate"><span class="pre">time_array_like()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.truncate_impulse"><code class="docutils literal notranslate"><span class="pre">truncate_impulse()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.truncate_transfer"><code class="docutils literal notranslate"><span class="pre">truncate_transfer()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.tat.whiten"><code class="docutils literal notranslate"><span class="pre">whiten()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -595,7 +952,7 @@ different.</p></li>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

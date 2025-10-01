@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.fat &#8212; GWADAMA 0.3.0 documentation</title>
+    <title>gwadama.fat &#8212; GWADAMA 0.4.0 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6e061ff1" />
   
   <!-- So that users can add custom icons -->
@@ -39,8 +39,8 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=e259d695"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/documentation_options.js?v=6c02275b"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.fat';</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -49,7 +49,7 @@
     <link rel="prev" title="gwadama.dictools" href="gwadama.dictools.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.3.0" />
+  <meta name="docsearch:version" content="0.4.0" />
   </head>
   
   
@@ -102,7 +102,7 @@
     <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
         <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
         <span class="navbar-project-name">GWADAMA</span>
-        <span class="navbar-project-version">v0.3.0</span>
+        <span class="navbar-project-version">v0.4.0</span>
     </a>
 </div></div>
     
@@ -266,6 +266,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">gwadama.fat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.plotting.html">gwadama.plotting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
@@ -334,6 +335,14 @@
 <p>fat.py</p>
 <p>Frequency analysis toolkit.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="gwadama.fat.bandpass_filter">
+<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">bandpass_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_low</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_high</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/fat.html#bandpass_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.bandpass_filter" title="Link to this definition">#</a></dt>
+<dd><p>Apply a forward-backward digital bandpass filter.</p>
+<p>Apply a forward-backward digital bandpass filter to ‘signal’
+between frequencies ‘f_low’ and ‘f_high’ with an order of ‘f_order’.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="gwadama.fat.correct_phase">
 <span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">correct_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/fat.html#correct_phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.correct_phase" title="Link to this definition">#</a></dt>
 <dd><p>Manually correct a phase jump.</p>
@@ -366,8 +375,66 @@ specified jump.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="gwadama.fat.find_power_excess">
+<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">find_power_excess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nperseg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noverlap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/fat.html#find_power_excess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.find_power_excess" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the index of maximum broadband power excess in a 1D signal.</p>
+<p>This function provides a fast and simple estimate of the time region where
+the total broadband power in the input signal is maximised. A spectrogram
+is computed via Welch’s method, and the time slice with the highest total
+power (summed over all frequencies) is identified.</p>
+<p>Formally, at each time step <cite>t</cite>, the total power is estimated as:</p>
+<blockquote>
+<div><p>P(t) = ∑_f S(f, t)</p>
+</div></blockquote>
+<p>where S(f, t) is the estimated power spectral density at frequency <cite>f</cite> and
+time <cite>t</cite>.</p>
+<p>The accuracy of this estimate is limited by the spectrogram parameters
+chosen by the user (<cite>nperseg</cite>, <cite>noverlap</cite>), which determine the temporal
+resolution and frequency leakage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>strain</strong><span class="classifier">np.ndarray</span></dt><dd><p>Input signal (1D array).</p>
+</dd>
+<dt><strong>fs</strong><span class="classifier">int</span></dt><dd><p>sampling frequency in Hz.</p>
+</dd>
+<dt><strong>nperseg</strong><span class="classifier">int, optional</span></dt><dd><p>Length of each FFT segment (in samples).</p>
+</dd>
+<dt><strong>noverlap</strong><span class="classifier">int, optional</span></dt><dd><p>Number of overlapping samples between segments.</p>
+</dd>
+<dt><strong>return_time</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, also return the estimated time (in seconds) corresponding to
+the peak index.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>peak_index</strong><span class="classifier">int</span></dt><dd><p>Sample index (in the input array) corresponding to the centre of the
+most power-concentrated region.</p>
+</dd>
+<dt><strong>peak_time</strong><span class="classifier">float, optional</span></dt><dd><p>Time in seconds of the estimated peak, assuming the first sample occurs
+at t=0. Only returned if <cite>return_time=True</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>In real detector data, whitening or equalisation is recommended to avoid
+biasing the result towards dominant background frequencies.</p></li>
+<li><p>The returned index refers to the <em>centre</em> of the peak time bin in the
+spectrogram, mapped back to the corresponding sample index of the
+original signal.</p></li>
+<li><p>Spectrogram time resolution is limited by <cite>nperseg</cite> and <cite>noverlap</cite>; high
+accuracy is not guaranteed.</p></li>
+<li><p>This method assumes only one dominant transient is present in the input.
+It is not suitable for detecting or resolving multiple events.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="gwadama.fat.highpass_filter">
-<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">highpass_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_cut</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/fat.html#highpass_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.highpass_filter" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">highpass_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_cut</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/fat.html#highpass_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.highpass_filter" title="Link to this definition">#</a></dt>
 <dd><p>Apply a forward-backward digital highpass filter.</p>
 <p>Apply a forward-backward digital highpass filter to ‘signal’
 at frequency ‘f_cut’ with an order of ‘f_order’.</p>
@@ -375,7 +442,7 @@ at frequency ‘f_cut’ with an order of ‘f_order’.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.fat.instant_frequency">
-<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">instant_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_corrections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/fat.html#instant_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.instant_frequency" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">instant_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_corrections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/fat.html#instant_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.instant_frequency" title="Link to this definition">#</a></dt>
 <dd><p>Computes the instantaneous frequency of a time-domain signal.</p>
 <p>Computes the instantaneous frequency of a time-domain signal using the
 central difference method, with optional phase corrections.
@@ -385,7 +452,7 @@ If negative frequencies are detected, a warning is raised.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>signal</strong><span class="classifier">ndarray</span></dt><dd><p>The input time-domain signal.</p>
 </dd>
-<dt><strong>sample_rate</strong><span class="classifier">float</span></dt><dd><p>The sampling rate of the signal (in Hz).</p>
+<dt><strong>fs</strong><span class="classifier">float</span></dt><dd><p>The sampling frequency of the signal (in Hz).</p>
 </dd>
 <dt><strong>phase_corrections</strong><span class="classifier">list of tuples, optional</span></dt><dd><p>A list of phase corrections.
 Each tuple contains: (jump_start, jump_end, correction_factor).
@@ -405,59 +472,46 @@ If negative frequencies are detected, a RuntimeWarning is issued.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.fat.snr">
-<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">snr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('tukey',</span> <span class="pre">0.5)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/fat.html#snr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.snr" title="Link to this definition">#</a></dt>
-<dd><p>Signal to Noise Ratio.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="gwadama.fat.whiten">
-<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">whiten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flength</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highpass</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></span><a class="reference internal" href="_modules/gwadama/fat.html#whiten"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.whiten" title="Link to this definition">#</a></dt>
-<dd><p>Whiten a single strain signal.</p>
-<p>Whiten a strain using the input amplitude spectral density ‘asd’,
-and shrinking signals afterwarwds to ‘l_window’ to account for the edge
-effects introduced by the windowing.</p>
+<span class="sig-prename descclassname"><span class="pre">gwadama.fat.</span></span><span class="sig-name descname"><span class="pre">snr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('tukey',</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/fat.html#snr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.fat.snr" title="Link to this definition">#</a></dt>
+<dd><p>Compute the signal-to-noise ratio (SNR) of a signal segment.</p>
+<p>Compute the SNR of a signal with respect to a background spectrum
+(<cite>psd</cite> provided), or assuming the signal is already whitened
+(<cite>psd=None</cite>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>strain</strong><span class="classifier">NDArray</span></dt><dd><p>Strain data points in time domain.</p>
+<dt><strong>strain</strong><span class="classifier">array_like</span></dt><dd><p>Time-domain signal segment.</p>
 </dd>
-<dt><strong>asd</strong><span class="classifier">2d-array</span></dt><dd><p>Amplitude spectral density assumed for the ‘set_strain’.
-Its components are:
-- asd[0] = frequency points
-- asd[1] = ASD points
-NOTE: It must has a linear and constant sampling frequency!</p>
+<dt><strong>at</strong><span class="classifier">float</span></dt><dd><p>Sampling interval (seconds per sample).</p>
 </dd>
-<dt><strong>sample_rate</strong><span class="classifier">int</span></dt><dd><p>The thingy that makes things do correctly their thing.</p>
+<dt><strong>psd</strong><span class="classifier">array_like (freq_array, psd_array), optional</span></dt><dd><p>One-sided power spectral density of the background noise.
+If provided, the SNR is computed using this PSD.
+If None, the function assumes the signal is already whitened.</p>
 </dd>
-<dt><strong>flength</strong><span class="classifier">int</span></dt><dd><p>Length (in samples) of the time-domain FIR whitening filter.
-Passed in seconds (<cite>flength/sample_rate</cite>) to GWpy’s whiten() function
-as the ‘fduration’ parameter.</p>
+<dt><strong>window</strong><span class="classifier">str, tuple, or array_like, optional</span></dt><dd><p>Window to apply before the FFT. Passed to <cite>scipy.signal.get_window</cite>
+if a string/tuple. If an array, it must match the length of <cite>strain</cite>.</p>
 </dd>
-<dt><strong>pad</strong><span class="classifier">int, optional</span></dt><dd><p>Marging at each side of the strain to add (zero-pad) in order to avoid
-edge effects. The corrupted area at each side is <cite>0.5 * fduration</cite> in
-GWpy’s whiten().
-Will be cropped afterwards, thus no samples are added at the end of
-the call to this function.
-If given, ‘unpad’ will be ignored.</p>
-</dd>
-<dt><strong>unpad</strong><span class="classifier">int, optional</span></dt><dd><p>Marging at each side of the strain to crop.
-Will be ignored if ‘pad’ is given.</p>
-</dd>
-<dt><strong>highpass</strong><span class="classifier">float, optional</span></dt><dd><p>Highpass corner frequency (in Hz) of the FIR whitening filter.</p>
-</dd>
-<dt><strong>normed</strong><span class="classifier">bool</span></dt><dd><p>If True, normalizes the strains to their maximum absolute amplitude.</p>
-</dd>
-<dt><strong>**kwargs:</strong></dt><dd><p>Extra arguments passed to gwpy.timeseries.Timeseries.whiten().</p>
+<dt><strong>fbounds</strong><span class="classifier">array_like (f_min, f_max), optional</span></dt><dd><p>Frequency range (Hz) over which to compute the SNR. If None:
+* with <cite>psd</cite>, uses the min and max of the PSD frequencies,
+* otherwise uses (0, Nyquist).</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>strain_w</strong><span class="classifier">NDArray</span></dt><dd><p>Whitened strain (in time domain).</p>
+<dt><strong>snr</strong><span class="classifier">float</span></dt><dd><p>The computed signal-to-noise ratio.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The function uses a one-sided rFFT and sums over positive frequencies.</p></li>
+<li><p>In whitened space, PSD is assumed to be identity and the formula
+reduces to: <code class="docutils literal notranslate"><span class="pre">sqrt(2</span> <span class="pre">*</span> <span class="pre">Δt</span> <span class="pre">*</span> <span class="pre">Δf</span> <span class="pre">*</span> <span class="pre">Σ</span> <span class="pre">|h_w(f)|²)</span></code>.</p></li>
+<li><p>In non-whitened space, the formula used is:
+<code class="docutils literal notranslate"><span class="pre">sqrt(4</span> <span class="pre">*</span> <span class="pre">Δt²</span> <span class="pre">*</span> <span class="pre">Δf</span> <span class="pre">*</span> <span class="pre">Σ</span> <span class="pre">|h(f)|²</span> <span class="pre">/</span> <span class="pre">S_n(f))</span></code>.</p></li>
+</ul>
 </dd></dl>
 
 </section>
@@ -509,11 +563,12 @@ Will be ignored if ‘pad’ is given.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.fat.bandpass_filter"><code class="docutils literal notranslate"><span class="pre">bandpass_filter()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.fat.correct_phase"><code class="docutils literal notranslate"><span class="pre">correct_phase()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.fat.find_power_excess"><code class="docutils literal notranslate"><span class="pre">find_power_excess()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.fat.highpass_filter"><code class="docutils literal notranslate"><span class="pre">highpass_filter()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.fat.instant_frequency"><code class="docutils literal notranslate"><span class="pre">instant_frequency()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.fat.snr"><code class="docutils literal notranslate"><span class="pre">snr()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.fat.whiten"><code class="docutils literal notranslate"><span class="pre">whiten()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -551,7 +606,7 @@ Will be ignored if ‘pad’ is given.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

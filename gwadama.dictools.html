@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>gwadama.dictools &#8212; GWADAMA 0.3.0 documentation</title>
+    <title>gwadama.dictools &#8212; GWADAMA 0.4.0 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6e061ff1" />
   
   <!-- So that users can add custom icons -->
@@ -39,8 +39,8 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=e259d695"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/documentation_options.js?v=6c02275b"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gwadama.dictools';</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -49,7 +49,7 @@
     <link rel="prev" title="gwadama.detectors" href="gwadama.detectors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.3.0" />
+  <meta name="docsearch:version" content="0.4.0" />
   </head>
   
   
@@ -102,7 +102,7 @@
     <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
         <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
         <span class="navbar-project-name">GWADAMA</span>
-        <span class="navbar-project-version">v0.3.0</span>
+        <span class="navbar-project-version">v0.4.0</span>
     </a>
 </div></div>
     
@@ -266,6 +266,7 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">gwadama.dictools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.plotting.html">gwadama.plotting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
@@ -335,7 +336,7 @@
 <p>Collection of utility functions related to nested Python dictionaries.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.dictools.dict_to_stacked_array">
-<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">dict_to_stacked_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#dict_to_stacked_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.dict_to_stacked_array" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">dict_to_stacked_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#dict_to_stacked_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.dict_to_stacked_array" title="Link to this definition">#</a></dt>
 <dd><p>Stack the arrays inside a dict() to a 2d-array.</p>
 <p>Given a NON-nested dict whose values are flat numpy arrays, with potentially different
 lengths, stacks them in a homogeneous 2d-array aligned to the left,
@@ -420,6 +421,36 @@ Default is 1.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="gwadama.dictools.find_parent_key_of_nested_key">
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">find_parent_key_of_nested_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#find_parent_key_of_nested_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.find_parent_key_of_nested_key" title="Link to this definition">#</a></dt>
+<dd><p>Finds the top level key containing the second level ‘key’.</p>
+<p>Finds the key of the uppermost level of the nested ‘<a href="#id7"><span class="problematic" id="id8">dict_</span></a>’ which contains
+the second level entry with key ‘key’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dict_</strong><span class="classifier">dict</span></dt><dd><p>Nested dictionary.</p>
+</dd>
+<dt><strong>key</strong><span class="classifier">int | str</span></dt><dd><p>Key of the second level of ‘<a href="#id9"><span class="problematic" id="id10">dict_</span></a>’.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>key_top</strong><span class="classifier">int | str</span></dt><dd><p>Key of the uppermost level of ‘<a href="#id11"><span class="problematic" id="id12">dict_</span></a>’.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If ‘key’ is not found in the second level of ‘<a href="#id13"><span class="problematic" id="id14">dict_</span></a>’.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="gwadama.dictools.flatten_nested_dict">
 <span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">flatten_nested_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#flatten_nested_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.flatten_nested_dict" title="Link to this definition">#</a></dt>
 <dd><p>Turn any nested dictionary into a shallow (single level) one.</p>
@@ -437,13 +468,14 @@ element at each layer.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="gwadama.dictools.get_next_item">
-<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">get_next_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/dictools.html#get_next_item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.get_next_item" title="Link to this definition">#</a></dt>
-<dd><p>Get the next item in a nested dictionary.</p>
+<dt class="sig sig-object py" id="gwadama.dictools.get_first_value">
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">get_first_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/dictools.html#get_first_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.get_first_value" title="Link to this definition">#</a></dt>
+<dd><p>Get the first value in a nested dictionary.</p>
+<p>If <cite>dict_</cite> is not a python dictionary, the argument is returned as is.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>value</strong><span class="classifier">Any</span></dt><dd><p>Value of the next item in the dictionary.</p>
+<dt><strong>value</strong><span class="classifier">Any</span></dt><dd><p>Next value in <cite>dict_</cite>.</p>
 </dd>
 </dl>
 </dd>
@@ -471,53 +503,105 @@ element at each layer.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="gwadama.dictools.get_value_from_nested_dict">
-<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">get_value_from_nested_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/dictools.html#get_value_from_nested_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.get_value_from_nested_dict" title="Link to this definition">#</a></dt>
-<dd><p>Get a value from an arbitrarily-depth nested dictionary.</p>
+<dt class="sig sig-object py" id="gwadama.dictools.get_types">
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">get_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/dictools.html#get_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.get_types" title="Link to this definition">#</a></dt>
+<dd><p>Get all element types in a nested dictionary.</p>
+<p>Return all unique non-dict types from values in a (possibly nested)
+dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>dict_: dict</strong></dt><dd><p>Nested dictionary.</p>
-</dd>
-<dt><strong>keys: list</strong></dt><dd><p>Sequence of keys necessary to get to the element inside the nested
-dictionary.</p>
+<dt><strong>d</strong><span class="classifier">dict</span></dt><dd><p>Input dictionary.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>: Any</dt><dd><p>Value of the element inside the nested dictionary.</p>
+<dt><strong>types</strong><span class="classifier">set</span></dt><dd><p>Set of non-dict Python types.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.dictools.get_value_from_nested_dict">
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">get_value_from_nested_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#get_value_from_nested_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.get_value_from_nested_dict" title="Link to this definition">#</a></dt>
+<dd><p>Access a value from a nested dictionary using a sequence of keys.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dict_</strong><span class="classifier">dict</span></dt><dd><p>A dictionary which may contain further nested dictionaries.</p>
+</dd>
+<dt><strong>keys</strong><span class="classifier">iterable</span></dt><dd><p>A sequence of keys that defines the path to the target value.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Any</dt><dd><p>The value located at the nested key path.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The returned value is the original object stored in the dictionary and can
+be modified in-place. Use this behaviour with caution.</p>
+</div>
+<p class="rubric">Notes</p>
+<p>This function <em>only</em> traverses Python <cite>dict</cite> objects. If a path segment
+encounters a non-dict (e.g., a NumPy array), a <cite>KeyError</cite> is raised.
+This prevents accidental array indexing when a path is malformed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gwadama.dictools.replicate_structure">
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">replicate_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#replicate_structure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.replicate_structure" title="Link to this definition">#</a></dt>
+<dd><p>Create a new nested dictionary with the same structure as the input.</p>
+<p>Values of the new dictionary are set to None.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.dictools.set_value_to_nested_dict">
-<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">set_value_to_nested_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_missing_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gwadama/dictools.html#set_value_to_nested_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.set_value_to_nested_dict" title="Link to this definition">#</a></dt>
-<dd><p>Set a value to an arbitrarily-depth nested dictionary.</p>
-<dl class="field-list">
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">set_value_to_nested_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_missing_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#set_value_to_nested_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.set_value_to_nested_dict" title="Link to this definition">#</a></dt>
+<dd><p>Set a value in a nested dictionary using a sequence of keys.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
-<dt><strong>dict_: dict</strong></dt><dd><p>Nested dictionary.</p>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dict_: dict</strong></dt><dd><p>Target nested dictionary.</p>
 </dd>
-<dt><strong>keys: iterable</strong></dt><dd><p>Sequence of keys necessary to get to the element inside the nested
+<dt><strong>keys: iterable</strong></dt><dd><p>Sequence of keys necessary to reach the element inside the nested
 dictionary.</p>
 </dd>
-<dt><strong>value: Any</strong></dt><dd></dd>
-<dt><strong>add_missing_keys: bool</strong></dt><dd><p>If True, missing keys (layers) will be added to the nested
-dictionary.</p>
-<p>CAUTION: if <cite>add_missing_keys=True</cite>, no KeyError will be raised.</p>
+<dt><strong>value: Any</strong></dt><dd><p>Value to set at the target location.</p>
+</dd>
+<dt><strong>add_missing_keys: bool</strong></dt><dd><p>If True, missing intermediate keys are created as empty dicts.
+If False (default), a missing key raises <cite>KeyError</cite>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>TypeError</dt><dd><p>If <cite>dict_</cite> is not a dictionary.</p>
+</dd>
+<dt>KeyError</dt><dd><p>If an intermediate key is missing (and <cite>add_missing_keys</cite> is False),
+or if a non-dict object is encountered before the final key.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function <em>only</em> creates/traverses plain <cite>dict</cite> containers.</p></li>
+<li><p>It refuses to descend into non-dict objects, avoiding accidental array</p></li>
+</ul>
+<p>indexing or attribute misuse mid-path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gwadama.dictools.unroll_nested_dictionary_keys">
-<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">unroll_nested_dictionary_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#unroll_nested_dictionary_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.unroll_nested_dictionary_keys" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gwadama.dictools.</span></span><span class="sig-name descname"><span class="pre">unroll_nested_dictionary_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/gwadama/dictools.html#unroll_nested_dictionary_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gwadama.dictools.unroll_nested_dictionary_keys" title="Link to this definition">#</a></dt>
 <dd><p>Returns a list of all combinations of keys inside a nested dictionary.</p>
 <p>Useful to iterate over all keys of a nested dictionary without having to
 use multiple loops.</p>
@@ -593,11 +677,14 @@ If only the first layer is desired (no recursion at all), <cite>max_depth=1</cit
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.dict_to_stacked_array"><code class="docutils literal notranslate"><span class="pre">dict_to_stacked_array()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.fill"><code class="docutils literal notranslate"><span class="pre">fill()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.filter_nested_dict"><code class="docutils literal notranslate"><span class="pre">filter_nested_dict()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.find_parent_key_of_nested_key"><code class="docutils literal notranslate"><span class="pre">find_parent_key_of_nested_key()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.flatten_nested_dict"><code class="docutils literal notranslate"><span class="pre">flatten_nested_dict()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.get_depth"><code class="docutils literal notranslate"><span class="pre">get_depth()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.get_next_item"><code class="docutils literal notranslate"><span class="pre">get_next_item()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.get_first_value"><code class="docutils literal notranslate"><span class="pre">get_first_value()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.get_number_of_elements"><code class="docutils literal notranslate"><span class="pre">get_number_of_elements()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.get_types"><code class="docutils literal notranslate"><span class="pre">get_types()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.get_value_from_nested_dict"><code class="docutils literal notranslate"><span class="pre">get_value_from_nested_dict()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.replicate_structure"><code class="docutils literal notranslate"><span class="pre">replicate_structure()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.set_value_to_nested_dict"><code class="docutils literal notranslate"><span class="pre">set_value_to_nested_dict()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwadama.dictools.unroll_nested_dictionary_keys"><code class="docutils literal notranslate"><span class="pre">unroll_nested_dictionary_keys()</span></code></a></li>
 </ul>
@@ -637,7 +724,7 @@ If only the first layer is desired (no recursion at all), <cite>max_depth=1</cit
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

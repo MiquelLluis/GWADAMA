@@ -18,6 +18,7 @@ API Documentation
    gwadama.dictools
    gwadama.fat
    gwadama.ioo
+   gwadama.plotting
    gwadama.synthetic
    gwadama.tat
    gwadama.units

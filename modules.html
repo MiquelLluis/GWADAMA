@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API Documentation &#8212; GWADAMA 0.3.0 documentation</title>
+    <title>API Documentation &#8212; GWADAMA 0.4.0 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6e061ff1" />
   
   <!-- So that users can add custom icons -->
@@ -39,8 +39,8 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=e259d695"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/documentation_options.js?v=6c02275b"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'modules';</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -49,7 +49,7 @@
     <link rel="prev" title="&lt;no title&gt;" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.3.0" />
+  <meta name="docsearch:version" content="0.4.0" />
   </head>
   
   
@@ -102,7 +102,7 @@
     <a href="index.html" class="navbar-brand" style="color: inherit; cursor: pointer;">
         <img src="_static/gwadama-logo.png" class="navbar-project-icon" />
         <span class="navbar-project-name">GWADAMA</span>
-        <span class="navbar-project-version">v0.3.0</span>
+        <span class="navbar-project-version">v0.4.0</span>
     </a>
 </div></div>
     
@@ -262,6 +262,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gwadama.dictools.html">gwadama.dictools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.plotting.html">gwadama.plotting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
@@ -336,11 +337,13 @@ more use cases.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.datasets.html">gwadama.datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#notes">Notes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.Base"><code class="docutils literal notranslate"><span class="pre">Base</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.BaseInjected"><code class="docutils literal notranslate"><span class="pre">BaseInjected</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.CoReWaves"><code class="docutils literal notranslate"><span class="pre">CoReWaves</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.InjectedCoReWaves"><code class="docutils literal notranslate"><span class="pre">InjectedCoReWaves</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.InjectedSyntheticWaves"><code class="docutils literal notranslate"><span class="pre">InjectedSyntheticWaves</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.InjectedUnlabeledWaves"><code class="docutils literal notranslate"><span class="pre">InjectedUnlabeledWaves</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.SyntheticWaves"><code class="docutils literal notranslate"><span class="pre">SyntheticWaves</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.datasets.html#gwadama.datasets.UnlabeledWaves"><code class="docutils literal notranslate"><span class="pre">UnlabeledWaves</span></code></a></li>
 </ul>
@@ -353,27 +356,34 @@ more use cases.</p>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.dict_to_stacked_array"><code class="docutils literal notranslate"><span class="pre">dict_to_stacked_array()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.fill"><code class="docutils literal notranslate"><span class="pre">fill()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.filter_nested_dict"><code class="docutils literal notranslate"><span class="pre">filter_nested_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.find_parent_key_of_nested_key"><code class="docutils literal notranslate"><span class="pre">find_parent_key_of_nested_key()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.flatten_nested_dict"><code class="docutils literal notranslate"><span class="pre">flatten_nested_dict()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_depth"><code class="docutils literal notranslate"><span class="pre">get_depth()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_next_item"><code class="docutils literal notranslate"><span class="pre">get_next_item()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_first_value"><code class="docutils literal notranslate"><span class="pre">get_first_value()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_number_of_elements"><code class="docutils literal notranslate"><span class="pre">get_number_of_elements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_types"><code class="docutils literal notranslate"><span class="pre">get_types()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.get_value_from_nested_dict"><code class="docutils literal notranslate"><span class="pre">get_value_from_nested_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.replicate_structure"><code class="docutils literal notranslate"><span class="pre">replicate_structure()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.set_value_to_nested_dict"><code class="docutils literal notranslate"><span class="pre">set_value_to_nested_dict()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.dictools.html#gwadama.dictools.unroll_nested_dictionary_keys"><code class="docutils literal notranslate"><span class="pre">unroll_nested_dictionary_keys()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.fat.html">gwadama.fat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.bandpass_filter"><code class="docutils literal notranslate"><span class="pre">bandpass_filter()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.correct_phase"><code class="docutils literal notranslate"><span class="pre">correct_phase()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.find_power_excess"><code class="docutils literal notranslate"><span class="pre">find_power_excess()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.highpass_filter"><code class="docutils literal notranslate"><span class="pre">highpass_filter()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.instant_frequency"><code class="docutils literal notranslate"><span class="pre">instant_frequency()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.snr"><code class="docutils literal notranslate"><span class="pre">snr()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="gwadama.fat.html#gwadama.fat.whiten"><code class="docutils literal notranslate"><span class="pre">whiten()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.ioo.html">gwadama.ioo</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.CoReManager"><code class="docutils literal notranslate"><span class="pre">CoReManager</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.save_experiment_results"><code class="docutils literal notranslate"><span class="pre">save_experiment_results()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.save_to_hdf5"><code class="docutils literal notranslate"><span class="pre">save_to_hdf5()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.ioo.html#gwadama.ioo.write_nested_dict_to_hdf5"><code class="docutils literal notranslate"><span class="pre">write_nested_dict_to_hdf5()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gwadama.plotting.html">gwadama.plotting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.plotting.html#gwadama.plotting.plot_spectrogram_with_instantaneous_features"><code class="docutils literal notranslate"><span class="pre">plot_spectrogram_with_instantaneous_features()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.synthetic.html">gwadama.synthetic</a><ul>
@@ -384,12 +394,19 @@ more use cases.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.tat.html">gwadama.tat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.convolve"><code class="docutils literal notranslate"><span class="pre">convolve()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.find_merger"><code class="docutils literal notranslate"><span class="pre">find_merger()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.find_time_origin"><code class="docutils literal notranslate"><span class="pre">find_time_origin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.fir_from_transfer"><code class="docutils literal notranslate"><span class="pre">fir_from_transfer()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.gen_time_array"><code class="docutils literal notranslate"><span class="pre">gen_time_array()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.is_arithmetic_progression"><code class="docutils literal notranslate"><span class="pre">is_arithmetic_progression()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.pad_time_array"><code class="docutils literal notranslate"><span class="pre">pad_time_array()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.planck"><code class="docutils literal notranslate"><span class="pre">planck()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.resample"><code class="docutils literal notranslate"><span class="pre">resample()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.shrink_time_array"><code class="docutils literal notranslate"><span class="pre">shrink_time_array()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.time_array_like"><code class="docutils literal notranslate"><span class="pre">time_array_like()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.truncate_impulse"><code class="docutils literal notranslate"><span class="pre">truncate_impulse()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.truncate_transfer"><code class="docutils literal notranslate"><span class="pre">truncate_transfer()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="gwadama.tat.html#gwadama.tat.whiten"><code class="docutils literal notranslate"><span class="pre">whiten()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gwadama.units.html">gwadama.units</a></li>
@@ -464,7 +481,7 @@ more use cases.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>
