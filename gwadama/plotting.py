@@ -22,7 +22,7 @@ def plot_spectrogram_with_instantaneous_features(
     fs=2**14,
     outseg=None,
     outfreq=None,
-    window=sp.signal.windows.tukey(128,0.5),
+    window=None,
     hop=32,
     mfft=None,
     vmin=None,
@@ -135,6 +135,9 @@ def plot_spectrogram_with_instantaneous_features(
     
     """
     from gwadama.fat import instant_frequency
+
+    if window is None:
+        window = sp.signal.windows.tukey(128,0.5)
 
     # Compute the spectrogram using the ShortTimeFFT class.
     stfft_model = sp.signal.ShortTimeFFT(
