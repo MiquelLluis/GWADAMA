@@ -19,4 +19,4 @@ from . import fat
 from . import synthetic
 from . import tat
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
