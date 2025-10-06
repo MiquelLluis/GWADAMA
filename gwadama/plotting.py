@@ -5,6 +5,7 @@ Custom plotting functions
 """
 import warnings
 
+# from gwpy.timeseries import TimeSeries  # Lazy import
 import matplotlib as mpl
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -14,7 +15,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 import scipy as sp
+from typing import Literal, TypeAlias
 
+
+# ---- Typing ----
+
+IntInterval: TypeAlias = tuple[int, int]
+FloatInterval: TypeAlias = tuple[float, float]
+
+MaybeIntInterval: TypeAlias = IntInterval | None
+MaybeFloatInterval: TypeAlias = FloatInterval | None
+
+# ----
 
 def plot_spectrogram_with_instantaneous_features(
     strain_array,
@@ -258,3 +270,146 @@ def plot_spectrogram_with_instantaneous_features(
     fig.subplots_adjust(left=0.08, right=0.91, top=0.96, bottom=0.08)
     
     return fig, (ax, ax2, ax3), Sxx
+
+
+def q_transform_with_strain(
+    strain: NDArray,
+    *,
+    times: NDArray,
+    fs: int = 2**14,
+    outseg: MaybeFloatInterval = None,
+    outfreq: MaybeFloatInterval = None,
+    # Q-transform exclusive
+    qrange: FloatInterval = (4, 64),
+    gps: float | None = None,
+    search: float = 0.5,
+    whiten: bool = False,
+    norm: bool | Literal["median", "mean"] = False,
+    logf: bool = False,
+    # pcolormesh exclusive
+    color_norm: str | None = 'log',
+    vmin: float | None = None,
+    vmax: float | None = None,
+) -> tuple[Figure, tuple[Axes,Axes,Axes], NDArray]:
+    """Plot the multi-Q transform and strain's time-domain waveform.
+
+    This function generates a multi-panel plot consisting of:
+    
+    1. A Q-transform spectrogram of the gravitational wave strain, obtained
+       using GWpy's :meth:`TimeSeries.q_transform`.
+    2. The raw gravitational wave strain in the time domain, shown above the
+       spectrogram for direct comparison.
+
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the complete plot.
+    
+    axs : List[matplotlib.axes.Axes]
+        A list of axes objects containing the spectrogram, the colorbar, and
+        the time-domain plots.
+    
+    qspec_gwpy : gwpy.spectrogram.Spectrogram
+        The computed Q-transform interpolated spectrogram.
+    """
+    from gwpy.timeseries import TimeSeries
+
+    ts = TimeSeries(strain, times=times)
+    qspec_gwpy = ts.q_transform(
+        qrange=qrange,
+        frange=outfreq,
+        outseg=outseg,
+        gps=gps,
+        search=search,
+        whiten=whiten,
+        norm=norm, # type: ignore (GWpy type missing)
+        logf=logf
+    )
+    qspec = qspec_gwpy.value
+    # Clip values ≤ 0 before log10; changes propagate to the GWpy Spectrogram
+    # via the shared buffer.
+    qspec[qspec <= 0] = np.min(qspec[qspec > 0])
+
+    t_c = qspec_gwpy.xindex.value
+    f_c = qspec_gwpy.yindex.value
+    def centres_to_edges(c: np.ndarray) -> np.ndarray:
+        """Compute bin edges from bin centres (1D)."""
+        dc = np.diff(c)
+        left = c[0] - dc[0]/2
+        right = c[-1] + dc[-1]/2
+        mids = (c[:-1] + c[1:]) / 2
+        return np.concatenate(([left], mids, [right]))
+    t_e = centres_to_edges(t_c)      # (nt+1,)
+    f_e = centres_to_edges(f_c)      # (nf+1,)
+    
+    # If the user didn’t provide limits, derive safe defaults from finite data.
+    if vmin is None:
+        vmin = float(np.nanmin(qspec))
+    if vmax is None:
+        vmax = float(np.nanmax(qspec))
+    if not (np.isfinite(vmin) and np.isfinite(vmax)) or vmin >= vmax:
+        raise ValueError("Invalid colour limits: ensure finite vmin < vmax.")
+    
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax, clip=True) # type: ignore
+
+    fig = plt.figure(figsize=(10, 6))
+    # Define a grid with 5 rows: top waveform (1), gap (1), spectrogram (3)
+    gs = GridSpec(
+        nrows=4, ncols=2,
+        width_ratios=[60, 1],  # Main plot vs narrow colorbar
+        height_ratios=[1, 0.05, 6, 0.05],  # Top waveform, small gap, spectrogram
+        hspace=0.05, wspace=0.02
+    )
+    ax3 = fig.add_subplot(gs[0, 0])  # Top waveform
+    ax = fig.add_subplot(gs[2, 0], sharex=ax3)  # Spectrogram
+    ax2 = fig.add_subplot(gs[2, 1])  # Colorbar
+
+    # SPECTROGRAM (ax1)
+    pm = ax.pcolormesh(
+        t_e, f_e, qspec.T,
+        shading='auto',
+        cmap='inferno',
+        norm=color_norm,
+        vmax=vmax,
+        vmin=vmin
+    )
+    ax.set_facecolor('black')  # match the colormap minimum.
+    
+    # COLOURBAR (ax2)
+    cbar = fig.colorbar(
+        pm, cax=ax2,
+        extend='both'
+    )
+    
+    # LABELS, LIMITS, ETC
+    ax.grid(True, ls='--', alpha=.5)
+    # ...limits
+    if outseg is None:
+        ax.set_xlim(times[0], times[-1])
+    else:
+        ax.set_xlim(*outseg)
+    if outfreq is None:
+        ax.set_ylim(0, fs/2)
+    else:
+        ax.set_ylim(*outfreq)
+    # ...X ticks to milliseconds
+    ax.xaxis.set_major_formatter(
+        FuncFormatter(lambda x, _: f"{x*1e3:.1f}")  # seconds → milliseconds
+    )
+    # ...labels.
+    ax.set_xlabel('Time [ms]')
+    ax.set_ylabel('Frequency [Hz]')
+    cbar.set_label(r"Energy")
+
+    # GW IN TIME-DOMAIN ON TOP OF THE SPECTROGRAM (ax3)
+    ax3.plot(times, strain, c='black', lw=1, alpha=1)
+    ax3.set_xlim(ax.get_xlim())
+    ax3.set_ylim(np.min(strain), np.max(strain))
+    ax3.axis('off')
+
+    fig.subplots_adjust(left=0.08, right=0.91, top=0.96, bottom=0.08)
+    
+    return fig, (ax, ax2, ax3), qspec_gwpy
