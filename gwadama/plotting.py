@@ -30,21 +30,23 @@ MaybeFloatInterval: TypeAlias = FloatInterval | None
 
 # ----
 
+
 def plot_spectrogram_with_instantaneous_features(
-    strain_array,
-    time_array,
-    fs=2**14,
-    outseg=None,
-    outfreq=None,
-    window=None,
-    hop=32,
-    mfft=None,
-    vmin=None,
-    vmax=None,
-    spec_log=True,
-    spec_norm=True,
-    spec_interpol='lanczos',
-    if_line_width=2
+    strain: NDArray,
+    *,
+    time_array: NDArray,
+    fs: int = 2**14,
+    outseg: MaybeFloatInterval = None,
+    outfreq: MaybeFloatInterval = None,
+    window: NDArray|None = None,
+    hop: int = 32,
+    mfft: int|None = None,
+    vmin: float|None = None,
+    vmax: float|None = None,
+    spec_log: bool = True,
+    spec_norm: bool = True,
+    spec_interpol: str|None = 'lanczos',
+    if_line_width: float = 2
 ) -> tuple[Figure, tuple[Axes,Axes,Axes], NDArray]:
     """Plot the spectrogram, instantaneous frequency, and strain's waveform.
 
@@ -81,10 +83,10 @@ def plot_spectrogram_with_instantaneous_features(
 
     Parameters
     ----------
-    strain_array : numpy.ndarray
+    strain : NDArray
         The time-domain strain data of the gravitational wave signal.
     
-    time_array : numpy.ndarray
+    time_array : NDArray
         Array of time stamps corresponding to the strain data.
     
     fs : int, optional
@@ -100,7 +102,7 @@ def plot_spectrogram_with_instantaneous_features(
         y-axis. If `None`, the full frequency range (up to Nyquist frequency)
         is used.
     
-    window : numpy.ndarray, optional
+    window : NDArray, optional
         The window function applied during STFT computation (default is a Tukey
         window).
     
@@ -137,7 +139,7 @@ def plot_spectrogram_with_instantaneous_features(
         A list of axes objects containing the spectrogram, the colorbar, and
         the time-domain plots.
     
-    Sxx : numpy.ndarray
+    Sxx : NDArray
         The computed spectrogram (PSD values) of the input strain data.
 
     Notes
@@ -156,7 +158,7 @@ def plot_spectrogram_with_instantaneous_features(
         win=window, hop=hop, fs=fs, mfft=mfft,
         fft_mode='onesided', scale_to='psd'
     )
-    Sxx = stfft_model.spectrogram(strain_array)
+    Sxx = stfft_model.spectrogram(strain)
 
     # Optional scaling and normalisation.
     if spec_log:
@@ -185,7 +187,7 @@ def plot_spectrogram_with_instantaneous_features(
     norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax, clip=True) # type: ignore
 
     # Time-frequency grid
-    t0, t1, f0, f1 = stfft_model.extent(len(strain_array))
+    t0, t1, f0, f1 = stfft_model.extent(len(strain))
     t_origin = time_array[0]
     t0 += t_origin
     t1 += t_origin
@@ -215,8 +217,8 @@ def plot_spectrogram_with_instantaneous_features(
     # ...and Instant Frequency
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
-        instant_freq = instant_frequency(strain_array, fs=fs)
-    length = len(strain_array)
+        instant_freq = instant_frequency(strain, fs=fs)
+    length = len(strain)
     t1_instant = t_origin + (length-1)/fs
     instant_time = np.linspace(t_origin, t1_instant, length)
     mask = instant_freq >= 0  # Remove non-physical frequencies
@@ -262,9 +264,9 @@ def plot_spectrogram_with_instantaneous_features(
             cbar.set_label(r"$\mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
 
     # GW IN TIME-DOMAIN ON TOP OF THE SPECTROGRAM (ax3)
-    ax3.plot(time_array, strain_array, c='black', lw=1, alpha=1)
+    ax3.plot(time_array, strain, c='black', lw=1, alpha=1)
     ax3.set_xlim(ax.get_xlim())
-    ax3.set_ylim(np.min(strain_array), np.max(strain_array))
+    ax3.set_ylim(np.min(strain), np.max(strain))
     ax3.axis('off')
 
     fig.subplots_adjust(left=0.08, right=0.91, top=0.96, bottom=0.08)
