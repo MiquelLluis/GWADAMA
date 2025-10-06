@@ -17,6 +17,8 @@ from numpy.typing import NDArray
 import scipy as sp
 from typing import Literal, TypeAlias
 
+from .fat import instant_frequency
+
 
 # ---- Typing ----
 
@@ -146,8 +148,6 @@ def plot_spectrogram_with_instantaneous_features(
       non-physical results.
     
     """
-    from gwadama.fat import instant_frequency
-
     if window is None:
         window = sp.signal.windows.tukey(128,0.5)
 
