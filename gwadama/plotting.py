@@ -3,19 +3,23 @@
 Custom plotting functions
 
 """
+from __future__ import annotations
+from typing import Literal, TypeAlias, TYPE_CHECKING
 import warnings
 
 # from gwpy.timeseries import TimeSeries  # Lazy import
 import matplotlib as mpl
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 import scipy as sp
-from typing import Literal, TypeAlias
+
+if TYPE_CHECKING:
+    from gwpy.types import Array2D
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 from .fat import instant_frequency
 
@@ -292,7 +296,7 @@ def q_transform_with_strain(
     color_norm: str | None = 'log',
     vmin: float | None = None,
     vmax: float | None = None,
-) -> tuple[Figure, tuple[Axes,Axes,Axes], NDArray]:
+) -> tuple[Figure, tuple[Axes,Axes,Axes], Array2D]:
     """Plot the multi-Q transform and strain's time-domain waveform.
 
     This function generates a multi-panel plot consisting of:
