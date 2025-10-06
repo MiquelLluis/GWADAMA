@@ -31,7 +31,7 @@ MaybeFloatInterval: TypeAlias = FloatInterval | None
 # ----
 
 
-def plot_spectrogram_with_instantaneous_features(
+def spectrogram_with_strain_and_ifreq(
     strain: NDArray,
     *,
     time_array: NDArray,
