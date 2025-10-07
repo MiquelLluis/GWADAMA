@@ -38,7 +38,7 @@ MaybeFloatInterval: TypeAlias = FloatInterval | None
 def spectrogram_with_strain_and_ifreq(
     strain: NDArray,
     *,
-    time_array: NDArray,
+    times: NDArray,
     fs: int = 2**14,
     outseg: MaybeFloatInterval = None,
     outfreq: MaybeFloatInterval = None,
@@ -90,7 +90,7 @@ def spectrogram_with_strain_and_ifreq(
     strain : NDArray
         The time-domain strain data of the gravitational wave signal.
     
-    time_array : NDArray
+    times : NDArray
         Array of time stamps corresponding to the strain data.
     
     fs : int, optional
@@ -192,7 +192,7 @@ def spectrogram_with_strain_and_ifreq(
 
     # Time-frequency grid
     t0, t1, f0, f1 = stfft_model.extent(len(strain))
-    t_origin = time_array[0]
+    t_origin = times[0]
     t0 += t_origin
     t1 += t_origin
 
@@ -242,7 +242,7 @@ def spectrogram_with_strain_and_ifreq(
     ax.grid(True, ls='--', alpha=.4)
     # ...limits
     if outseg is None:
-        ax.set_xlim(time_array[0], time_array[-1])
+        ax.set_xlim(times[0], times[-1])
     else:
         ax.set_xlim(*outseg)
     if outfreq is None:
@@ -268,7 +268,7 @@ def spectrogram_with_strain_and_ifreq(
             cbar.set_label(r"$\mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
 
     # GW IN TIME-DOMAIN ON TOP OF THE SPECTROGRAM (ax3)
-    ax3.plot(time_array, strain, c='black', lw=1, alpha=1)
+    ax3.plot(times, strain, c='black', lw=1, alpha=1)
     ax3.set_xlim(ax.get_xlim())
     ax3.set_ylim(np.min(strain), np.max(strain))
     ax3.axis('off')
