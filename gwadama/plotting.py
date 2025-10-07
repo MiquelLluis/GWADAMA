@@ -273,7 +273,7 @@ def spectrogram_with_strain_and_ifreq(
     ax3.set_ylim(np.min(strain), np.max(strain))
     ax3.axis('off')
 
-    fig.subplots_adjust(left=0.08, right=0.91, top=0.96, bottom=0.08)
+    fig.set_constrained_layout_pads(w_pad=0.02, h_pad=0.02, wspace=0.02, hspace=0.02)
     
     return fig, (ax, ax2, ax3), Sxx
 
@@ -321,6 +321,11 @@ def q_transform_with_strain(
     qspec_gwpy : gwpy.spectrogram.Spectrogram
         The computed Q-transform interpolated spectrogram.
     """
+    # Disable GWpy rc overrides.
+    # Source: https://gwpy.readthedocs.io/en/stable/env/
+    import os
+    os.environ["GWPY_RCPARAMS"] = "0"
+
     from gwpy.timeseries import TimeSeries
 
     ts = TimeSeries(strain, times=times)
@@ -416,6 +421,6 @@ def q_transform_with_strain(
     ax3.set_ylim(np.min(strain), np.max(strain))
     ax3.axis('off')
 
-    fig.subplots_adjust(left=0.08, right=0.91, top=0.96, bottom=0.08)
+    fig.set_constrained_layout_pads(w_pad=0.02, h_pad=0.02, wspace=0.02, hspace=0.02)
     
     return fig, (ax, ax2, ax3), qspec_gwpy
