@@ -296,6 +296,7 @@ def q_transform_with_strain(
     color_norm: str | None = 'log',
     vmin: float | None = None,
     vmax: float | None = None,
+    extend: Literal['auto', 'neither', 'min', 'max', 'both'] = 'auto',
 ) -> tuple[Figure, tuple[Axes,Axes,Axes], Array2D]:
     """Plot the multi-Q transform and strain's time-domain waveform.
 
@@ -363,8 +364,6 @@ def q_transform_with_strain(
         vmax = float(np.nanmax(qspec))
     if not (np.isfinite(vmin) and np.isfinite(vmax)) or vmin >= vmax:
         raise ValueError("Invalid colour limits: ensure finite vmin < vmax.")
-    
-    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax, clip=True) # type: ignore
 
     fig = plt.figure(figsize=(10, 6))
     # Define a grid with 5 rows: top waveform (1), gap (1), spectrogram (3)
@@ -375,11 +374,11 @@ def q_transform_with_strain(
         hspace=0.05, wspace=0.02
     )
     ax3 = fig.add_subplot(gs[0, 0])  # Top waveform
-    ax = fig.add_subplot(gs[2, 0], sharex=ax3)  # Spectrogram
-    ax2 = fig.add_subplot(gs[2, 1])  # Colorbar
+    ax1 = fig.add_subplot(gs[2, 0], sharex=ax3)  # Spectrogram
+    ax2 = fig.add_subplot(gs[2, 1])  # Colourbar
 
     # SPECTROGRAM (ax1)
-    pm = ax.pcolormesh(
+    pm = ax1.pcolormesh(
         t_e, f_e, qspec.T,
         shading='auto',
         cmap='inferno',
@@ -387,40 +386,54 @@ def q_transform_with_strain(
         vmax=vmax,
         vmin=vmin
     )
-    ax.set_facecolor('black')  # match the colormap minimum.
-    
+    ax1.set_facecolor('black')  # match the colormap minimum.
+
+    # AUTO-EXTEND LOGIC
+    if extend == 'auto':
+        # Determine whether the plotted data will be clipped by vmin/vmax.
+        below = float(np.nanmin(qspec)) < vmin
+        above = float(np.nanmax(qspec)) > vmax
+        if below and above:
+            extend_resolved = 'both'
+        elif below:
+            extend_resolved = 'min'
+        elif above:
+            extend_resolved = 'max'
+        else:
+            extend_resolved = 'neither'
+    else:
+        # Manual.
+        extend_resolved = extend
+
     # COLOURBAR (ax2)
-    cbar = fig.colorbar(
-        pm, cax=ax2,
-        extend='both'
-    )
+    cbar = fig.colorbar(pm, cax=ax2, extend=extend_resolved)
     
     # LABELS, LIMITS, ETC
-    ax.grid(True, ls='--', alpha=.5)
+    ax1.grid(True, ls='--', alpha=.5)
     # ...limits
     if outseg is None:
-        ax.set_xlim(times[0], times[-1])
+        ax1.set_xlim(times[0], times[-1])
     else:
-        ax.set_xlim(*outseg)
+        ax1.set_xlim(*outseg)
     if outfreq is None:
-        ax.set_ylim(0, fs/2)
+        ax1.set_ylim(0, fs/2)
     else:
-        ax.set_ylim(*outfreq)
+        ax1.set_ylim(*outfreq)
     # ...X ticks to milliseconds
-    ax.xaxis.set_major_formatter(
+    ax1.xaxis.set_major_formatter(
         FuncFormatter(lambda x, _: f"{x*1e3:.1f}")  # seconds → milliseconds
     )
     # ...labels.
-    ax.set_xlabel('Time [ms]')
-    ax.set_ylabel('Frequency [Hz]')
+    ax1.set_xlabel('Time [ms]')
+    ax1.set_ylabel('Frequency [Hz]')
     cbar.set_label(r"Energy")
 
-    # GW IN TIME-DOMAIN ON TOP OF THE SPECTROGRAM (ax3)
+    # GW IN TIME-DOMAIN ON TOP (ax3)
     ax3.plot(times, strain, c='black', lw=1, alpha=1)
-    ax3.set_xlim(ax.get_xlim())
+    ax3.set_xlim(ax1.get_xlim())
     ax3.set_ylim(np.min(strain), np.max(strain))
     ax3.axis('off')
 
     fig.set_constrained_layout_pads(w_pad=0.02, h_pad=0.02, wspace=0.02, hspace=0.02)
     
-    return fig, (ax, ax2, ax3), qspec_gwpy
+    return fig, (ax1, ax2, ax3), qspec_gwpy
