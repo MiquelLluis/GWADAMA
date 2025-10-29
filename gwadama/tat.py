@@ -15,10 +15,10 @@ from scipy.signal import resample_poly
 
 
 
-def _build_uniform_grid(t0: float, t1: float, fs: float) -> np.ndarray:
+def _build_uniform_grid(t0: float, t1: float, fs: float, dtype=np.float64) -> np.ndarray:
     """Closed interval grid [t0, t1] with step 1/fs."""
     n = int(np.floor((t1 - t0) * fs)) + 1
-    return np.linspace(t0, t1, n, endpoint=True)
+    return np.linspace(t0, t1, n, endpoint=True, dtype=dtype)
 
 
 def resample(
@@ -155,7 +155,7 @@ def resample(
         # If already at the target rate (within ~0.5 Hz), just align to exact
         # integer fs
         if abs(fs_in - fs) < 0.5:
-            t = _build_uniform_grid(t0, t1, fs=float(fs))
+            t = _build_uniform_grid(t0, t1, fs=float(fs), dtype=strain.dtype)
             y = PchipInterpolator(times, strain, extrapolate=False)(t)
             if full_output:
                 return y, t, int(round(fs_in)), 0, 0
@@ -164,12 +164,12 @@ def resample(
         # Proper rate conversion with polyphase FIR
         up, down = _ratio_ud(fs, fs_in)
         # Align a uniform grid at the original cadence
-        t_u = _build_uniform_grid(t0, t1, fs=fs_in)
+        t_u = _build_uniform_grid(t0, t1, fs=fs_in, dtype=strain.dtype)
         # Interpolate once onto that grid
         y_u = PchipInterpolator(times, strain, extrapolate=False)(t_u)
         y = resample_poly(y_u, up, down)
         # Build output time grid (anchored at t0, step 1/fs)
-        t = t0 + np.arange(len(y)) / fs
+        t = t0 + np.arange(len(y), dtype=strain.dtype) / fs
         if full_output:
             return y, t, int(round(fs_in)), up, down
         return y
@@ -187,7 +187,7 @@ def resample(
             f"below target ({fs} Hz). Directly interpolating to the target "
             "grid; anti-alias filtering is unnecessary."
         )
-        t = _build_uniform_grid(t0, t1, fs=float(fs))
+        t = _build_uniform_grid(t0, t1, fs=float(fs), dtype=strain.dtype)
         y = PchipInterpolator(times, strain, extrapolate=False)(t)
         if full_output:
             # Use a robust estimate of the original cadence for reporting
@@ -214,7 +214,7 @@ def resample(
     if f_u < fs:
         f_u = float(fs)
 
-    t_u = _build_uniform_grid(t0, t1, fs=f_u)
+    t_u = _build_uniform_grid(t0, t1, fs=f_u, dtype=strain.dtype)
     y_u = PchipInterpolator(times, strain, extrapolate=False)(t_u)
 
     up, down = _ratio_ud(float(fs), f_u)
@@ -311,8 +311,13 @@ def time_array_like(array, fs=4096, t0=0.0):
         `1/fs` and the same length as the input array.
     
     """
+    array = np.asarray(array)
+    dtype = array.dtype
+    if not np.issubdtype(dtype, np.floating):
+        # Default to double precission.
+        dtype = np.float64
     n = len(array)
-    return np.linspace(t0, t0+n/fs, n, endpoint=False, dtype=array.dtype)
+    return np.linspace(t0, t0+n/fs, n, endpoint=False, dtype=dtype)
 
 
 

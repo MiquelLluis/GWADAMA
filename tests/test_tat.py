@@ -211,9 +211,10 @@ def test_time_array_like_basic(simple_sine):
     """
     fs = 100
     t0 = 123
-    times = time_array_like(simple_sine, fs=fs, t0=t0)
+    signal = simple_sine[0]
+    times = time_array_like(signal, fs=fs, t0=t0)
 
-    assert len(times) == len(simple_sine)
+    assert len(times) == len(signal)
     assert_allclose(np.diff(times), 1/fs)
     assert times[0] == t0
     # Note: the last point is implicitly checked by the combination of the
