@@ -994,41 +994,102 @@ class Base:
                 )
                 strain[:] *= norm_coef_function(strain)
     
-    def whiten(self,
-               *,
-               flength: int,
-               asd_array: NDArray|None = None,
-               highpass: int|None = None,
-               normed=False,
-               shrink: int = 0,
-               window: str | tuple = 'hann',
-               verbose=False):
+    def whiten(
+            self,
+            *,
+            flength: int,
+            asd_array: NDArray | None = None,
+            highpass: int | None = None,
+            normed: bool = False,
+            shrink: int | tuple[int, int] | dict = 0,
+            window: str | tuple = 'hann',
+            verbose: bool = False):
         """Whiten the strains.
 
-        TODO
-        
-        Calling this method performs the whitening of all strains.
+        When `asd_array` is None, the ASD is estimated **per strain** using Welch
+        on the **full** (unshrunk) signal. Otherwise the provided ASD is used.
 
-        If `asd_array` is None, the ASD will be estimated for each strain using
-        SciPy's Welch method with median average and the same parameters used
-        for whitening.
-        
-        Note
-        ----
-        Original (non-whitened) strains will be stored in the
-        'strains_original' attribute.
-        
+        When `shrink` is non-zero, reduce the data actually whitened:
+        1) Determine the final, user-requested inner segment per strain
+            (removing `shrink_left` / `shrink_right` samples).
+        2) Add the whitening filter settle-in margins to both sides
+            (assumed `flength//2`) to form the *whitening chunk*.
+        3) Whiten only that chunk.
+        4) Drop the settle-in margins from the whitened chunk, leaving exactly
+            the requested shrunk segment.
+
+        If there is not enough room to include settle-in margins on a side,
+        whitening falls back to the full strain and shrinking is done afterwards
+        via `shrink_strains`.
+
+        Parameters
+        ----------
+        flength : int
+            FIR whitening length (in samples).
+        asd_array : np.ndarray | None
+            Two-row array [freqs, ASD(f)] to use for whitening. If None, ASD is
+            estimated per strain from Welch (median average) with the same params.
+        highpass : int | None
+            Optional high-pass frequency passed to `tat.whiten`.
+        normed : bool
+            Normalise whitened output inside `tat.whiten`.
+        shrink : int | (int,int) | dict[id,(int,int)]
+            Requested removal (left, right) of samples per strain id.
+            - int: symmetric removal for all (L=R=int),
+            - tuple: (L, R) for all,
+            - dict: per-id (L, R).
+        window : str | tuple
+            Window for Welch and FFT in whitening.
+        verbose : bool
+            Show a progress bar.
+
+        Notes
+        -----
+        - The settle-in margin is taken as `flength//2` samples (same convention
+        as in the injected variant’s docstring).  # see BaseInjected.whiten note
         """
+
         if self.whitened:
             raise RuntimeError("dataset already whitened")
-
         if self.strains is None:
             raise RuntimeError("no strains have been given or generated yet")
-        
+
+        # Keep a copy of originals (full-length) for reference and consistency.
         self.strains_original = deepcopy(self.strains)
-        
-        loop_aux = tqdm(self.items(), total=len(self)) if verbose else self.items()
-        for *keys, strain in loop_aux:
+
+        # Normalise `shrink` into a per-id dict of (left, right).
+        shrink_dict: dict[str | int, np.ndarray] = {}
+        if isinstance(shrink, int) and shrink == 0:
+            shrink_dict = {}
+        else:
+            shrink_dict = self._format_padding(shrink)  # accepts int/tuple/dict → {id: np.array([L,R])}
+
+        settle = flength // 2  # filter settle-in margin on each side
+
+        # IDs that must be shrunk later because we whitened the full strain
+        # (not enough room to pre-trim while keeping margins).
+        shrink_later: dict[str | int, tuple[int, int]] = {}
+
+        loop = tqdm(self.items(), total=len(self)) if verbose else self.items()
+        for *keys, strain in loop:
+            clas, id_ = keys[0], keys[1]
+            N = len(strain)
+
+            # Decide per-id shrink pair (L, R).
+            if id_ in shrink_dict:
+                L, R = map(int, shrink_dict[id_])
+            else:
+                L, R = 0, 0
+
+            # Sanity / degeneracy guards.
+            if L < 0 or R < 0:
+                raise ValueError(f"`shrink` must be non-negative; got {(L,R)} for id {id_}")
+            if L + R >= N:
+                # Nothing meaningful to whiten; fall back to standard behaviour:
+                L, R = 0, 0
+                # (Let whitening run on the full strain; no post-shrink either.)
+
+            # ASD per strain if not supplied: estimate from the full, unshrunk array.
             if asd_array is None:
                 freqs, psd = sp.signal.welch(
                     strain,
@@ -1041,34 +1102,102 @@ class Base:
                     scaling='density',  # default
                     average='median'
                 )
-                asd_array = np.stack((freqs, psd))
-                asd_array[1] **= 0.5
+                asd_here = np.stack((freqs, psd))
+                asd_here[1] **= 0.5
+            else:
+                asd_here = asd_array
 
-            strain_w = tat.whiten(
-                strain, asd=asd_array, fs=self.fs, flength=flength,
-                highpass=highpass, normed=normed
-            )
-            # Update strains attribute.
-            dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
-        
-        if shrink > 0:
-            self.shrink_strains(shrink)
+            if (L + R) == 0:
+                # No special shrinking: whiten the whole signal.
+                chunk = strain
+                w = tat.whiten(
+                    chunk, asd=asd_here, fs=self.fs, flength=flength,
+                    highpass=highpass, normed=normed
+                )
+                out = w
+                # Replace
+                dictools.set_value_to_nested_dict(self.strains, keys, out)
+                if self._track_times:
+                    # Preserve times as-is
+                    # (no length change, no slice)
+                    pass
+            else:
+                # Try to whiten only the needed region + settle margins.
+                # Final requested inner segment (global indices):
+                final_start = L
+                final_end_excl = N - R  # exclusive
 
+                # Whitening chunk bounds (include settle margins when possible):
+                start_w = max(0, final_start - settle)
+                end_w = min(N, final_end_excl + settle)
+
+                can_compact = (start_w > 0) or (end_w < N)
+                chunk_len = end_w - start_w
+                final_len = max(0, final_end_excl - final_start)
+
+                # If margins do not fit (e.g., chunk_len < final_len), fall back.
+                if (not can_compact) or (chunk_len < final_len) or (chunk_len <= 0):
+                    # Whiten whole signal; we’ll shrink afterwards.
+                    w = tat.whiten(
+                        strain, asd=asd_here, fs=self.fs, flength=flength,
+                        highpass=highpass, normed=normed
+                    )
+                    dictools.set_value_to_nested_dict(self.strains, keys, w)
+                    shrink_later[id_] = (L, R)
+                    continue
+
+                # Whiten only the compact chunk
+                chunk = strain[start_w:end_w]
+                wchunk = tat.whiten(
+                    chunk, asd=asd_here, fs=self.fs, flength=flength,
+                    highpass=highpass, normed=normed
+                )
+
+                # Remove the settle margins to leave exactly the requested inner segment.
+                # Amount to cut from left/right *within* the whitened chunk:
+                left_cut = final_start - start_w                        # ≥ 0
+                right_cut = max(0, end_w - (N - R))                    # ≥ 0
+
+                out = wchunk[left_cut: (len(wchunk) - right_cut) if right_cut > 0 else None]
+
+                # Defensive: ensure we produced the intended length when possible.
+                if len(out) != final_len:
+                    # If numerical/rounding peculiarities appear, clip to final_len when safe.
+                    if final_len > 0:
+                        out = out[:final_len]
+
+                # Replace strain with compact, already-shrunk output.
+                dictools.set_value_to_nested_dict(self.strains, keys, out)
+
+                # Keep times in sync if tracked.
+                if self._track_times:
+                    times = self.get_times(*keys)
+                    i0 = start_w + left_cut
+                    i1 = end_w - right_cut
+                    t_out = times[i0:i1]
+                    dictools.set_value_to_nested_dict(self.times, keys, t_out)  # pyright: ignore[reportArgumentType]
+
+        # If some IDs could not be compact-whitened, shrink them now in one go.
+        if shrink_later:
+            self.shrink_strains(shrink_later, logpad=True)
+
+        # Mark as whitened and record params (store the user argument for `shrink`).
         self.whitened = True
         self.whiten_params = {
-            "asd_array": asd_array,  # Only saved in Base (clean).
+            "asd_array": asd_array,  # Per-strain ASD was used when None; we keep the provided one if any.
             "flength": flength,
             "highpass": highpass,
             "normed": normed,
             "shrink": shrink,
-            "window": window
+            "window": window,
         }
 
-        self._after_whiten(shrink)
+        self._after_whiten()
 
-    def _after_whiten(self, shrink):
+    def _after_whiten(self):
         """Hook for side-effects after `whiten`."""
-        if self.Xtrain and shrink == 0:
+        self.max_length = self._find_max_length()        
+        if getattr(self, "Xtrain", None):
             self._update_train_test_subsets()
 
     def build_train_test_subsets(self, train_size: int | float):
@@ -2307,15 +2436,17 @@ class BaseInjected(Base):
             if verbose:
                 print("Strain exported to", file)
     
-    def whiten(self,
-               *,
-               flength: int,
-               highpass: int|None = None,
-               normed=False,
-               shrink: int = 0,
-               window: str | tuple = 'hann',
-               verbose=False,
-               asd_array=None):
+    def whiten(
+        self,
+        *,
+        flength: int,
+        highpass: int|None = None,
+        normed: bool = False,
+        shrink: int | tuple[int, int] | dict = 0,
+        window: str | tuple = 'hann',
+        verbose: bool = False,
+        asd_array=None  # ignored
+    ):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
@@ -2338,7 +2469,7 @@ class BaseInjected(Base):
         normed : bool
             Normalization applied after the whitening filter.
 
-        shrink : int
+        shrink : int | (int,int) | dict[id,(int,int)]
             Margin at each side of the strain to crop (for each strain ID), in
             order to avoid edge effects. The corrupted area at each side is
             `0.5 * flength`, which corresponds to the amount of samples it
@@ -2373,7 +2504,7 @@ class BaseInjected(Base):
             # Update strains attribute.
             dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         
-        if shrink > 0:
+        if shrink:
             self.shrink_strains(shrink)
 
         self.whitened = True
@@ -2385,7 +2516,7 @@ class BaseInjected(Base):
             'window': window
         }
 
-        self._after_whiten(shrink)
+        self._after_whiten()
 
     def get_xtrain_array(self,
                          length: int|None = None,
@@ -4407,8 +4538,8 @@ class InjectedCoReWaves(BaseInjected):
 
         return injected, scale
     
-    def _after_whiten(self, shrink):
-        super()._after_whiten(shrink)
+    def _after_whiten(self):
+        super()._after_whiten()
         self._update_merger_positions()
 
 
