@@ -24,3 +24,5 @@ gravitational-wave data-related operations:
 ## TODO
 
 - Refactor dataset classes with proper subclass inheritance and composition. Both Base and BaseInjected need to be abstracted into independent class _strategies_, and implement generic but functional base dataset classes.
+
+- Ensure consistent casting allowing to choose between float32 and float64 at initialisation time.

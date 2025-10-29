@@ -312,7 +312,7 @@ def time_array_like(array, fs=4096, t0=0.0):
     
     """
     n = len(array)
-    return np.linspace(t0, t0+n/fs, n, endpoint=False)
+    return np.linspace(t0, t0+n/fs, n, endpoint=False, dtype=array.dtype)
 
 
 
