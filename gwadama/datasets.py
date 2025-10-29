@@ -549,7 +549,10 @@ class Base:
     # which by the nature of their operations need it.
     # Currently I have to update the side-effects manually on each inherited
     # method by hand (see CoReWaves for example).
-    def pad_strains(self, padding: int | ArrayLike | dict, window=None, logpad=True) -> None:
+    def pad_strains(self,
+                    padding: int | ArrayLike | dict,
+                    window: str | tuple | list | Callable | None = None,
+                    logpad=True) -> None:
         """
         Pad strains with zeros on both sides.
 
@@ -608,7 +611,7 @@ class Base:
 
         for clas, id_, *keys in self.keys():
             # Apply window if given
-            strain = window_func(self.get_strain(clas, id_, *keys))
+            strain = window_func(self.get_strain(clas, id_, *keys)) # pyright: ignore[reportPossiblyUnboundVariable]
             
             # Pad the strain
             pad_left, pad_right = padding[id_]
@@ -634,7 +637,7 @@ class Base:
                     self.strains_original,
                     [clas,id_,*keys]
                 )
-                strain_nw = window_func(strain_nw)
+                strain_nw = window_func(strain_nw) # pyright: ignore[reportPossiblyUnboundVariable]
                 strain_nw = np.pad(strain_nw, (pad_left, pad_right), mode='constant')
                 dictools.set_value_to_nested_dict(self.strains_original, [clas,id_,*keys], strain_nw)
 
@@ -1154,7 +1157,9 @@ class Base:
         self.Xtrain, self.Ytrain = self._build_subset_strains(id_train)
         self.Xtest, self.Ytest = self._build_subset_strains(id_test)
     
-    def get_xtrain_array(self, length=None, classes='all'):
+    def get_xtrain_array(self,
+                         length: int | None = None,
+                         classes: str | list = 'all') -> tuple[NDArray, list]:
         """Get the train subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the train subset into an homogeneous numpy array
@@ -2309,7 +2314,8 @@ class BaseInjected(Base):
                normed=False,
                shrink: int = 0,
                window: str | tuple = 'hann',
-               verbose=False):
+               verbose=False,
+               asd_array=None):
         """Whiten injected strains.
         
         Calling this method performs the whitening of all injected strains.
@@ -2342,6 +2348,8 @@ class BaseInjected(Base):
             Window to apply to the strain prior to FFT, 'hann' by default.
             see :func:`scipy.signal.get_window` for details on acceptable
             formats.
+
+        asd_array : Ignored
         
         """
         if self.whitened:
@@ -2383,7 +2391,7 @@ class BaseInjected(Base):
                          length: int|None = None,
                          classes: str | list = 'all',
                          snr: int | list | str = 'all',
-                         with_metadata: bool = False):
+                         with_metadata: bool = False) -> tuple[NDArray, list, pd.DataFrame]:
         """Get the train subset stacked in a zero-padded Numpy 2d-array.
 
         Stacks all signals in the train subset into an homogeneous numpy array
