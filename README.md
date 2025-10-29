@@ -19,3 +19,8 @@ gravitational-wave data-related operations:
 
 
 ## [DOCUMENTATION](https://miquellluis.github.io/GWADAMA/)
+
+
+## TODO
+
+- Refactor dataset classes with proper subclass inheritance and composition. Both Base and BaseInjected need to be abstracted into independent class _strategies_, and implement generic but functional base dataset classes.
