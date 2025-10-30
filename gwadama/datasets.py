@@ -1202,8 +1202,8 @@ class Base:
         # If some IDs could not be compact-whitened, shrink them now in one go.
         if shrink_later:
             # only remaining CURRENT strains here; originals will be shrunk
-            # in the hook.
-            self.shrink_strains(shrink_later, logpad=True, target="current")
+            # in the hook, alongside pad logging.
+            self.shrink_strains(shrink_later, logpad=False, target="current")
 
         # Mark as whitened and record params (store the user argument for `shrink`).
         self.whitened = True
@@ -1227,8 +1227,7 @@ class Base:
         # if shrink was requested, apply the absolute crop to the originals.
         shrink = self.whiten_params['shrink']
         if shrink and self.strains_original is not None:
-            # pads already logged
-            self.shrink_strains(shrink, logpad=False, target='original')
+            self.shrink_strains(shrink, logpad=True, target='original')
 
     def build_train_test_subsets(self, train_size: int | float):
         """Generate a random Train and Test subsets.
