@@ -832,3 +832,267 @@ def is_arithmetic_progression(arr: NDArray, rtol=1e-5, atol=1e-8) -> bool:
         return False
     
     return np.allclose(np.diff(arr), step, rtol=rtol, atol=atol)
+
+
+def normalise(
+    x: NDArray,
+    *,
+    mode: str = 'peak',
+    inplace: bool = False,
+    eps: float = 0.0
+) -> NDArray:
+    """
+    Normalise a 1D signal using one of several predefined strategies.
+
+    This is a convenience wrapper around specialised normalisation routines:
+
+    - ``mode="peak"``: normalise by the peak absolute amplitude
+      (see ``peak_amp_normalise``). Good for bounding signals in [-1, 1],
+      but not robust.
+    - ``mode="l2"``: normalise by the L2/Euclidean norm
+      (see ``l2_normalise``). Sensitive to outliers and to signal length.
+    - ``mode="mad"``: robust normalisation by median and MAD
+      (see ``mad_normalise``). Less sensitive to a few large samples.
+
+    Parameters
+    ----------
+    x : ndarray
+        Input 1D array to be normalised.
+    
+    mode : {'peak', 'l2', 'mad'}, optional
+        Normalisation strategy to use. Defaults to ``'peak'``.
+    
+    inplace : bool, optional
+        If True, try to normalise `x` in place and return the same array.
+        If False (default), return a new normalised array.
+    
+    eps : float, optional
+        Minimum scale to use in the underlying normalisation. If the computed
+        scale is not greater than `eps`, the scale is set to 1.0 to avoid
+        division by zero. The exact behaviour depends on the selected mode.
+
+    Returns
+    -------
+    ndarray
+        The normalised array. If `inplace=True`, this is usually the same
+        object as `x`.
+
+    Raises
+    ------
+    ValueError
+        If `mode` is not one of the supported values.
+
+    Notes
+    -----
+    - Each underlying function will raise if `x` is not 1-dimensional.
+    - For integer arrays and `inplace=True`, the underlying functions may
+      promote to float before assigning.
+    """
+    if mode == 'peak':
+        return peak_amp_normalise(x, inplace=inplace, eps=eps)
+    if mode == 'l2':
+        return l2_normalise(x, inplace=inplace, eps=eps)
+    if mode == 'mad':
+        return mad_normalise(x, inplace=inplace, eps=eps)
+    
+    raise ValueError(f"mode '{mode}' not available")
+
+
+def peak_amp_normalise(
+    x: NDArray,
+    *,
+    inplace: bool = False,
+    eps: float = 0.0
+) -> NDArray:
+    """
+    Normalise a 1D signal by its peak absolute amplitude.
+
+    The scale is defined as::
+
+        scale = max(|x_i|)
+
+    and the output is::
+
+        x_norm = x / scale
+
+    If the peak is not greater than `eps` (e.g. the signal is all zeros),
+    a scale of 1.0 is used to avoid division by zero.
+
+    Parameters
+    ----------
+    x : NDArray
+        Input 1D array to be normalised.
+    inplace : bool, optional
+        If True, normalise `x` in place and return the same array. If False
+        (default), return a new normalised array.
+    eps : float, optional
+        Minimum peak value to use. If `max(|x|) <= eps`, fall back to 1.0.
+
+    Returns
+    -------
+    NDArray
+        The normalised array. If `inplace=True`, this is the same object as `x`.
+
+    Raises
+    ------
+    ValueError
+        If `x` is not 1-dimensional.
+
+    Notes
+    -----
+    - This is not a robust normalisation: a single large sample determines the
+      scale.
+    - For integer input arrays and `inplace=True`, the array is promoted to
+      float during normalisation.
+    """
+    if x.ndim != 1:
+        raise ValueError("this function can only be applied to 1D arrays")
+    
+    peak = np.max(np.abs(x))
+    scale = peak if peak > eps else 1.0  # avoid divide-by-zero
+
+    if not inplace:
+        return x / scale
+    
+    # inplace=True
+    if not np.issubdtype(x.dtype, np.floating):
+        # promote to float to avoid integer division / casting issues
+        x[:] = x.astype(float) / scale
+    else:
+        x /= scale
+
+    return x
+
+
+def l2_normalise(
+    x: NDArray,
+    *,
+    inplace: bool = False,
+    eps: float = 0.0
+) -> NDArray:
+    """
+    Normalise a 1D signal by its L2 (Euclidean) norm.
+
+    The scale is defined as::
+
+        scale = ||x||_2 = sqrt(sum(x_i**2))
+
+    and the output is::
+
+        x_norm = x / scale
+
+    If the L2 norm is not greater than `eps` (e.g. the signal is all zeros),
+    a scale of 1.0 is used to avoid division by zero.
+
+    Parameters
+    ----------
+    x : NDArray
+        Input 1D array to be normalised.
+    inplace : bool, optional
+        If True, normalise `x` in place and return the same array. If False
+        (default), return a new normalised array.
+    eps : float, optional
+        Minimum L2 value to use. If `||x||_2 <= eps`, fall back to 1.0.
+
+    Returns
+    -------
+    NDArray
+        The normalised array. If `inplace=True`, this is the same object as `x`.
+
+    Raises
+    ------
+    ValueError
+        If `x` is not 1-dimensional.
+
+    Notes
+    -----
+    - This is sensitive to outliers and to signal length (unlike RMS = L2/√N).
+    - For integer input arrays and `inplace=True`, the array is promoted to
+      float during normalisation.
+    """
+    if x.ndim != 1:
+        raise ValueError("this function can only be applied to 1D arrays")
+    
+    l2 = np.linalg.norm(x)
+    scale = l2 if l2 > eps else 1.0  # avoid divide-by-zero
+
+    if not inplace:
+        return x / scale
+    
+    # inplace=True
+    if not np.issubdtype(x.dtype, np.floating):
+        # promote to float to avoid integer division / casting issues
+        x[:] = x.astype(float) / scale
+    else:
+        x /= scale
+
+    return x
+
+
+def mad_normalise(
+    x: NDArray,
+    *,
+    inplace: bool = False,
+    eps: float = 0.0
+) -> NDArray:
+    """Normalise a 1D array by its median and MAD.
+
+    The array is first centred by subtracting its median, and then scaled by
+    its MAD, i.e.
+        x_norm = (x - median(x)) / MAD(x),
+    where
+        MAD(x) = median(|x - median(x)|).
+
+    This produces a per-array, length-independent scaling that is much less
+    sensitive to a few large samples than standard-deviation-based
+    normalisation.
+
+    Parameters
+    ----------
+    x : NDArray
+        Input 1D array to be normalised.
+    
+    inplace : bool, optional
+        If True, normalise `x` in place and return the same array. If False
+        (default), return a new normalised array.
+    
+    eps : float, optional
+        Minimum MAD value to use. If the computed MAD is not greater than `eps`
+        (e.g. when the array is nearly constant), the function falls back to a
+        scale of 1.0 to avoid division by zero.
+
+    Returns
+    -------
+    NDArray
+        The normalised array. If `inplace=True`, this is the same object as
+        `x`.
+
+    Raises
+    ------
+    ValueError
+        If `x` is not 1-dimensional.
+
+    Notes
+    -----
+    - For integer input arrays, consider passing a float array instead, or set
+      `inplace=False` so the output is a new float array.
+    """
+    if x.ndim != 1:
+        raise ValueError("this function can only be applied to 1D arrays")
+
+    med = np.median(x)
+    mad = np.median(np.abs(x - med))
+    scale = mad if mad > eps else 1.0  # avoid divide-by-zero
+
+    if not inplace:
+        return (x - med) / scale
+
+    # inplace=True
+    if not np.issubdtype(x.dtype, np.floating):
+        # promote to float to avoid integer division / casting issues
+        x[:] = (x.astype(float) - med) / scale
+    else:
+        x -= med
+        x /= scale
+
+    return x
