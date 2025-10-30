@@ -683,8 +683,7 @@ def whiten(strain: NDArray,
            fs: int,
            flength: int,
            window: str|tuple = 'hann',
-           highpass: float|None = None,
-           normed: bool = True) -> np.ndarray:
+           highpass: float|None = None) -> np.ndarray:
     """Whiten a single strain signal using a FIR filter.
 
     Whiten a strain using the input amplitude spectral density 'asd' to
@@ -718,9 +717,6 @@ def whiten(strain: NDArray,
 
     highpass : float, optional
         Highpass corner frequency (in Hz) of the FIR whitening filter.
-
-    normed : bool
-        If True, normalizes the strains to their maximum absolute amplitude.
 
     Returns
     -------
@@ -787,12 +783,6 @@ def whiten(strain: NDArray,
     # Convolve with filter
     strain_whitened = convolve(strain_detrended, fir_filter, window=window)
     strain_whitened *= np.sqrt(2 * dt)  # scaling factor
-
-    # Normalize if needed
-    if normed:
-        max_abs = np.max(np.abs(strain_whitened))
-        if max_abs != 0:
-            strain_whitened /= max_abs
 
     return strain_whitened
 

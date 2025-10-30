@@ -957,7 +957,7 @@ class Base:
                     strain_windowed
                 )
 
-    def normalise(self, mode='amplitude', all_strains=False):
+    def normalise(self, mode='peak', all_strains=False):
         """Normalise strains.
 
         Normalise strains to the indicated `mode`, and optionally to
@@ -966,7 +966,7 @@ class Base:
         Parameters
         ----------
         mode : str, optional
-            Normalisation method. Available: amplitude, l2
+            Normalisation method. Available: peak, l2, mad.
 
         all_strains : bool, optional
             If True, normalise also `self.strains_original`.
@@ -975,16 +975,9 @@ class Base:
         -----
         - TODO: Generalise this method to BaseInjected for when `all=True`.
         
-        """
-        if mode == 'amplitude':
-            norm_coef_function = lambda x: 1/np.max(np.abs(x))
-        elif mode == 'l2':
-            norm_coef_function = lambda x: 1/np.linalg.norm(x)
-        else:
-            raise ValueError
-        
+        """        
         for *_, strain in self.items():
-            strain[:] *= norm_coef_function(strain)
+            tat.normalise(strain, mode=mode, inplace=True)
         
         if all_strains and (self.strains_original is not None):
             for keys in dictools.unroll_nested_dictionary_keys(self.strains_original):
@@ -992,7 +985,7 @@ class Base:
                     self.strains_original,
                     keys
                 )
-                strain[:] *= norm_coef_function(strain)
+                tat.normalise(strain, mode=mode, inplace=True)
     
     def whiten(
             self,
@@ -1000,7 +993,7 @@ class Base:
             flength: int,
             asd_array: NDArray | None = None,
             highpass: int | None = None,
-            normed: bool = False,
+            normed: bool | str = False,
             shrink: int | tuple[int, int] | dict = 0,
             window: str | tuple = 'hann',
             verbose: bool = False):
@@ -1031,8 +1024,10 @@ class Base:
             estimated per strain from Welch (median average) with the same params.
         highpass : int | None
             Optional high-pass frequency passed to `tat.whiten`.
-        normed : bool
-            Normalise whitened output inside `tat.whiten`.
+        normed : bool | str
+            If True, normalise whitened output to the peak amplitude.
+            If str, normalise using one of the available methods in `tat`:
+            {peak, l2, mad}.
         shrink : int | (int,int) | dict[id,(int,int)]
             Requested removal (left, right) of samples per strain id.
             - int: symmetric removal for all (L=R=int),
@@ -1112,8 +1107,11 @@ class Base:
                 chunk = strain
                 w = tat.whiten(
                     chunk, asd=asd_here, fs=self.fs, flength=flength,
-                    highpass=highpass, normed=normed
+                    highpass=highpass
                 )
+                if normed:
+                    mode = normed if isinstance(normed, str) else 'peak'
+                    tat.normalise(w, mode=mode, inplace=True)
                 out = w
                 # Replace
                 dictools.set_value_to_nested_dict(self.strains, keys, out)
@@ -1140,8 +1138,12 @@ class Base:
                     # Whiten whole signal; we’ll shrink afterwards.
                     w = tat.whiten(
                         strain, asd=asd_here, fs=self.fs, flength=flength,
-                        highpass=highpass, normed=normed
+                        highpass=highpass
                     )
+                    if normed:
+                        mode = normed if isinstance(normed, str) else 'peak'
+                        tat.normalise(w, mode=mode, inplace=True)
+                    
                     dictools.set_value_to_nested_dict(self.strains, keys, w)
                     shrink_later[id_] = (L, R)
                     continue
@@ -1150,8 +1152,11 @@ class Base:
                 chunk = strain[start_w:end_w]
                 wchunk = tat.whiten(
                     chunk, asd=asd_here, fs=self.fs, flength=flength,
-                    highpass=highpass, normed=normed
+                    highpass=highpass
                 )
+                if normed:
+                    mode = normed if isinstance(normed, str) else 'peak'
+                    tat.normalise(wchunk, mode=mode, inplace=True)
 
                 # Remove the settle margins to leave exactly the requested inner segment.
                 # Amount to cut from left/right *within* the whitened chunk:
@@ -2369,9 +2374,13 @@ class BaseInjected(Base):
                 fs=self.fs,
                 flength=self.whiten_params['flength'],
                 window=self.whiten_params['window'],
-                highpass=self.whiten_params['highpass'],
-                normed=self.whiten_params['normed']
+                highpass=self.whiten_params['highpass']
             )
+            normed = self.whiten_params['normed']
+            if normed:
+                # default to 'peak' if the value is True instead of a string.
+                mode = normed if isinstance(normed, str) else 'peak'
+                tat.normalise(injected, mode=mode, inplace=True)
             
         return injected, scale
 
@@ -2456,7 +2465,7 @@ class BaseInjected(Base):
         *,
         flength: int,
         highpass: int|None = None,
-        normed: bool = False,
+        normed: bool | str = False,
         shrink: int | tuple[int, int] | dict = 0,
         window: str | tuple = 'hann',
         verbose: bool = False,
@@ -2481,8 +2490,10 @@ class BaseInjected(Base):
         highpass : float, optional
             Frequency cutoff.
         
-        normed : bool
-            Normalization applied after the whitening filter.
+        normed : bool | str
+            If True, normalise whitened output to the peak amplitude.
+            If str, normalise using one of the available methods in `tat`:
+            {peak, l2, mad}.
 
         shrink : int | (int,int) | dict[id,(int,int)]
             Margin at each side of the strain to crop (for each strain ID), in
@@ -2514,8 +2525,11 @@ class BaseInjected(Base):
         for *keys, strain in loop_aux:
             strain_w = tat.whiten(
                 strain, asd=self.asd_array, fs=self.fs,
-                highpass=highpass, flength=flength, window=window, normed=normed
+                highpass=highpass, flength=flength, window=window
             )
+            if normed:
+                mode = normed if isinstance(normed, str) else 'peak'
+                tat.normalise(strain_w, mode=mode, inplace=True)
             # Update strains attribute.
             dictools.set_value_to_nested_dict(self.strains, keys, strain_w)
         

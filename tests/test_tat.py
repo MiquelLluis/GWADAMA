@@ -776,29 +776,6 @@ def test_whiten_output_length_matches_input():
     assert out.shape == strain.shape
 
 
-def test_whiten_normalization():
-    """Output should be normalized to unit maximum when normed=True."""
-    N = 1024
-    strain = np.random.randn(N)
-    freqs = np.linspace(0, 256, N//2+1)
-    vals = np.ones_like(freqs)
-    asd = np.vstack([freqs, vals])
-    out = whiten(strain, asd=asd, fs=512, flength=32, normed=True)
-    assert np.max(np.abs(out)) == pytest.approx(1.0, rel=1e-6)
-
-
-def test_whiten_no_normalization():
-    """Output should not be normalized when normed=False."""
-    N = 1024
-    strain = np.random.randn(N)
-    freqs = np.linspace(0, 256, N//2+1)
-    vals = np.ones_like(freqs)
-    asd = np.vstack([freqs, vals])
-    out = whiten(strain, asd=asd, fs=512, flength=32, normed=False)
-    # Typically max abs != 1.0 after whitening
-    assert not np.isclose(np.max(np.abs(out)), 1.0)
-
-
 # Test actual whitening property
 #-------------------------------
 
@@ -815,7 +792,7 @@ def test_whiten_psd_flat_with_window():
     freqs = np.fft.rfftfreq(N, 1/fs)
     asd = np.vstack([freqs, slope])
 
-    out = whiten(coloured, asd=asd, fs=fs, flength=512, normed=False)
+    out = whiten(coloured, asd=asd, fs=fs, flength=512)
 
     # Welch PSD estimate (for lower statistical variance)
     f, psd_out = sp.signal.welch(out, fs=fs, nperseg=512, noverlap=256, window="hann")
