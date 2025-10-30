@@ -1585,6 +1585,21 @@ class Base:
         
         return stacked_signals, lengths
 
+    def highpass(self, f_cut: int, f_order: int = 8):
+        """Apply a highpass filter to all signals."""
+
+        for *keys, strain in self.items():
+            strain_filtered = fat.highpass_filter(
+                strain, f_cut=f_cut, f_order=f_order, fs=self.fs
+            )
+            dictools.set_value_to_nested_dict(self.strains, keys, strain_filtered)
+        
+        self._after_highpass()
+    
+    def _after_highpass(self):
+        if self.Xtrain:
+            self._update_train_test_subsets()
+
         
 
 
