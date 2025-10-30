@@ -422,7 +422,7 @@ class Base:
         """
         return dictools.find_parent_key_of_nested_key(self.strains, id)
 
-    def get_strain(self, *indices, normalize=False) -> NDArray:
+    def get_strain(self, *indices, normalise=False) -> NDArray:
         """Get a single strain from the complete index coordinates.
         
         This is just a shortcut to avoid having to write several squared
@@ -436,8 +436,8 @@ class Base:
         *indices : str | int
             The indices of the strain to retrieve.
         
-        normalize : bool
-            If True, the returned strain will be normalized to its maximum
+        normalise : bool
+            If True, the returned strain will be normalised to its maximum
             amplitude.
         
         Returns
@@ -450,7 +450,7 @@ class Base:
             raise ValueError("indices do not match the layout of 'self.strains'")
 
         strain = dictools.get_value_from_nested_dict(self.strains, indices)
-        if normalize:
+        if normalise:
             strain /= np.max(np.abs(strain))
 
         return strain
@@ -3411,14 +3411,14 @@ class UnlabeledBaseMixin:
     # Attributes expected to exist:
     classes: dict[str, Any]
 
-    def get_strain(self, *indices, normalize=False):
+    def get_strain(self, *indices, normalise=False):
         # Add the dummy class name (if ommited) as the first index, so that the
         # user does not need to write it explicitly:
         class_label = next(iter(self.classes.keys()))
         if indices[0] != class_label:
             indices = (next(iter(self.classes.keys())), *indices)
 
-        return super().get_strain(*indices, normalize=normalize) # pyright: ignore[reportAttributeAccessIssue]
+        return super().get_strain(*indices, normalise=normalise) # pyright: ignore[reportAttributeAccessIssue]
     get_strain.__doc__ = Base.get_strain.__doc__
 
     def get_times(self, *indices) -> NDArray:
