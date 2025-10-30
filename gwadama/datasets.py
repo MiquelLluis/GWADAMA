@@ -718,7 +718,12 @@ class Base:
 
         self.pad_strains(padding_dict, window=window, logpad=logpad)
 
-    def shrink_strains(self, padding: int | tuple | dict, logpad=True) -> None:
+    def shrink_strains(
+        self,
+        padding: int | tuple | dict,
+        logpad=True,
+        target: str = 'both',
+    ) -> None:
         """Shrink strains by a specified padding.
 
         Shrink strains (and their associated time arrays if present) by the
@@ -749,51 +754,53 @@ class Base:
             If False, the changes will not be reflected in the `self.padding`
             attribute.
 
-        Notes
-        -----
-        This method shrinks `strains_original` as well.
-
+        target : {"both", "current", "original"}
+            Where to apply the crop:
+            
+            - "both" (default): current strains (and times) + originals (if present)
+            - "current": only `self.strains` (and `self.times`, if any)
+            - "original": only `self.strains_original`
+            
+            Example case: after whitening, the original strains are kept in
+            `self.strains_original`, but attribute `self.strains` won't point
+            to the same object anymore. We need to extend the operation to the
+            original strains to ensure consistence with future operations.
         """
         padding = self._format_padding(padding)
 
         for clas, id_, *keys in self.keys():
             # Same shrinking limits for all possible strains below ID layer.
-            pad_left, pad_right = padding[id_]
+            L, R = padding[id_]
 
-            if pad_left < 0 or pad_right < 0:
+            if L < 0 or R < 0:
                 raise ValueError(
                     "all pads must be positive integers; got padding "
-                    f"({pad_left}, {pad_right}) for ID '{id_}'."
+                    f"({L}, {R}) for ID '{id_}'."
                 )
 
             # Convert right pad 0 → None to avoid [:-0] becoming [:0].
-            pad_right = None if pad_right == 0 else -pad_right
+            R = None if R == 0 else -R
 
-            strain = self.get_strain(clas, id_, *keys)
-            strain = strain[pad_left:pad_right]
-            dictools.set_value_to_nested_dict(self.strains, [clas,id_,*keys], strain)
+            # --- current strains (and times) ---
+            if target in ("both", "current"):
+                strain = self.get_strain(clas, id_, *keys)
+                strain = strain[L:R]
+                dictools.set_value_to_nested_dict(self.strains, [clas,id_,*keys], strain)
 
-            if self._track_times:
-                times = self.get_times(clas, id_, *keys)
-                times = times[pad_left:pad_right]
-                dictools.set_value_to_nested_dict(self.times, [clas,id_,*keys], times) # pyright: ignore[reportArgumentType]
+                if self._track_times:
+                    times = self.get_times(clas, id_, *keys)
+                    times = times[L:R]
+                    dictools.set_value_to_nested_dict(self.times, [clas,id_,*keys], times) # pyright: ignore[reportArgumentType]
             
-            if self.strains is not self.strains_original:
-                # Example case: after whitening, the original strains are kept
-                # in `self.strains_original`, but attribute `self.strains`
-                # won't point to the same object anymore. 
-                # We need to extend the operation to the original strains to
-                # ensure consistence with future operations.
+            # --- original strains only ---
+            if target in ("both", "original") and self.strains_original is not None:
                 orig_keys = self._project_keys_for_original(keys)
                 strainw = dictools.get_value_from_nested_dict(
-                    self.strains_original,
-                    [clas,id_,*orig_keys]
+                    self.strains_original, [clas, id_, *orig_keys]
                 )
-                strainw = strainw[pad_left:pad_right]
+                strainw = strainw[L:R]
                 dictools.set_value_to_nested_dict(
-                    self.strains_original,
-                    [clas,id_,*orig_keys],
-                    strainw
+                    self.strains_original, [clas, id_, *orig_keys], strainw
                 )
 
         if logpad:
