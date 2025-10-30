@@ -1006,49 +1006,59 @@ class Base:
             verbose: bool = False):
         """Whiten the strains.
 
-        When `asd_array` is None, the ASD is estimated **per strain** using Welch
-        on the **full** (unshrunk) signal. Otherwise the provided ASD is used.
+        When `asd_array` is None, the ASD is estimated **per strain** using
+        Welch on the **full** (unshrunk) signal. Otherwise the provided ASD is
+        used.
 
         When `shrink` is non-zero, reduce the data actually whitened:
+        
         1) Determine the final, user-requested inner segment per strain
-            (removing `shrink_left` / `shrink_right` samples).
+           (removing `shrink_left` / `shrink_right` samples).
         2) Add the whitening filter settle-in margins to both sides
-            (assumed `flength//2`) to form the *whitening chunk*.
+           (assumed `flength//2`) to form the *whitening chunk*.
         3) Whiten only that chunk.
         4) Drop the settle-in margins from the whitened chunk, leaving exactly
-            the requested shrunk segment.
+           the requested shrunk segment.
 
         If there is not enough room to include settle-in margins on a side,
-        whitening falls back to the full strain and shrinking is done afterwards
-        via `shrink_strains`.
+        whitening falls back to the full strain and shrinking is done
+        afterwards via `shrink_strains`.
 
         Parameters
         ----------
         flength : int
             FIR whitening length (in samples).
+        
         asd_array : np.ndarray | None
             Two-row array [freqs, ASD(f)] to use for whitening. If None, ASD is
-            estimated per strain from Welch (median average) with the same params.
+            estimated per strain from Welch (median average) with the same
+            params.
+        
         highpass : int | None
             Optional high-pass frequency passed to `tat.whiten`.
+        
         normed : bool | str
-            If True, normalise whitened output to the peak amplitude.
-            If str, normalise using one of the available methods in `tat`:
-            {peak, l2, mad}.
+            If True, normalise whitened output to the peak amplitude. If str,
+            normalise using one of the available methods in `tat`: {peak, l2,
+            mad}.
+        
         shrink : int | (int,int) | dict[id,(int,int)]
-            Requested removal (left, right) of samples per strain id.
-            - int: symmetric removal for all (L=R=int),
-            - tuple: (L, R) for all,
-            - dict: per-id (L, R).
+            Requested removal (left, right) of samples per strain id. - int:
+            symmetric removal for all (L=R=int), - tuple: (L, R) for all, -
+            dict: per-id (L, R).
+        
         window : str | tuple
             Window for Welch and FFT in whitening.
+        
         verbose : bool
             Show a progress bar.
 
         Notes
         -----
-        - The settle-in margin is taken as `flength//2` samples (same convention
-        as in the injected variant’s docstring).  # see BaseInjected.whiten note
+        - The settle-in margin is taken as `flength//2` samples (same
+          convention as in the injected variant’s docstring).
+        - If shrink is specified, it will be propagated to the copy of the
+          original strains as well.
         """
 
         if self.whitened:
@@ -1191,7 +1201,9 @@ class Base:
 
         # If some IDs could not be compact-whitened, shrink them now in one go.
         if shrink_later:
-            self.shrink_strains(shrink_later, logpad=True)
+            # only remaining CURRENT strains here; originals will be shrunk
+            # in the hook.
+            self.shrink_strains(shrink_later, logpad=True, target="current")
 
         # Mark as whitened and record params (store the user argument for `shrink`).
         self.whitened = True
@@ -1211,6 +1223,12 @@ class Base:
         self.max_length = self._find_max_length()        
         if getattr(self, "Xtrain", None):
             self._update_train_test_subsets()
+        
+        # if shrink was requested, apply the absolute crop to the originals.
+        shrink = self.whiten_params['shrink']
+        if shrink and self.strains_original is not None:
+            # pads already logged
+            self.shrink_strains(shrink, logpad=False, target='original')
 
     def build_train_test_subsets(self, train_size: int | float):
         """Generate a random Train and Test subsets.
