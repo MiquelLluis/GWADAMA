@@ -292,9 +292,15 @@ class Base:
         if hasattr(self, 'labels') and self.labels is not None:
             raise AttributeError("`labels` attribute already present.")
 
-        self.labels = {}
+        labels = {}
+        seen = set()
         for clas, id_ in self.keys(max_depth=2):
-            self.labels[id_] = self.classes[clas]
+            if id_ in seen:
+                raise ValueError(f"duplicated identifier in dataset: {id_!r}")
+            seen.add(id_)
+            labels[id_] = self.classes[clas]
+        
+        self.labels = labels
 
     def _gen_empty_strains_dict(self) -> dict:
         return {clas: {} for clas in self.classes}
