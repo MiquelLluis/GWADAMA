@@ -297,6 +297,8 @@ def q_transform_with_strain(
     vmin: float | None = None,
     vmax: float | None = None,
     extend: Literal['auto', 'neither', 'min', 'max', 'both'] = 'auto',
+    # general
+    figsize: tuple = (10, 6)
 ) -> tuple[Figure, tuple[Axes,Axes,Axes], Array2D]:
     """Plot the multi-Q transform and strain's time-domain waveform.
 
@@ -365,7 +367,7 @@ def q_transform_with_strain(
     if not (np.isfinite(vmin) and np.isfinite(vmax)) or vmin >= vmax:
         raise ValueError("Invalid colour limits: ensure finite vmin < vmax.")
 
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=figsize)
     # Define a grid with 5 rows: top waveform (1), gap (1), spectrogram (3)
     gs = GridSpec(
         nrows=4, ncols=2,
