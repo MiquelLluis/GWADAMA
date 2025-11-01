@@ -284,7 +284,7 @@ def q_transform_with_strain(
     times: NDArray,
     fs: int = 2**14,
     outseg: MaybeFloatInterval = None,
-    outfreq: MaybeFloatInterval = None,
+    outfreq: FloatInterval = (0, np.inf),
     # Q-transform exclusive
     qrange: FloatInterval = (4, 64),
     gps: float | None = None,
@@ -415,7 +415,7 @@ def q_transform_with_strain(
         ax1.set_xlim(times[0], times[-1])
     else:
         ax1.set_xlim(*outseg)
-    if outfreq is None:
+    if np.isinf(outfreq[1]):
         ax1.set_ylim(0, fs/2)
     else:
         ax1.set_ylim(*outfreq)
