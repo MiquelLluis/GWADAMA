@@ -410,6 +410,8 @@ def q_transform_with_strain(
     
     # LABELS, LIMITS, ETC
     ax1.grid(True, ls='--', alpha=.5)
+    if logf:
+        ax1.set_yscale('log')
     # ...limits
     if outseg is None:
         ax1.set_xlim(times[0], times[-1])
