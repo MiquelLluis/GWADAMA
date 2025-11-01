@@ -235,7 +235,17 @@ class Base:
         whitening_info = "Whitened" if whitened else "NOT whitened"
         
         # Train/Test split information
-        split_info = "Performed" if train_test_split else "NOT performed"
+        if train_test_split:
+            split_info_l1 = "                "
+            split_info_l2 = "    Train size: "
+            split_info_l3 = "    Test size:  "
+            for clas, ic in self.classes.items():
+                split_info_l1 += f"{clas:^10s}"
+                split_info_l2 += f"{np.sum(self.Ytrain==ic):^10d}"
+                split_info_l3 += f"{np.sum(self.Ytest==ic):^10d}"            
+            split_info = "\n" + "\n".join([split_info_l1, split_info_l2, split_info_l3])
+        else:
+            split_info = "NOT performed"
         
         # Construct the string
         summary = [
@@ -246,8 +256,8 @@ class Base:
             f"  Sampling frequency: {fs} Hz" if fs else "  Sampling frequency: Not specified",
             f"  Time Tracking: {'Enabled' if time_tracking else 'Disabled'}",
             f"  Whitening: {whitening_info}",
-            f"  Train/Test Split: {split_info}",
             f"  Metadata Shape: {metadata_shape}",
+            f"  Train/Test Split: {split_info}",
             "=" * (len(class_name) + 24)  # Add a separator line matching the header length
         ]
         
