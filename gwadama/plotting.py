@@ -259,11 +259,11 @@ def spectrogram_with_strain_and_ifreq(
 
     match (spec_log, spec_norm):
         case True, True:
-            cbar.set_label(r"Norm. $\log_{10}\, \mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
+            cbar.set_label(r"Norm. $\log_{10}\, \mathrm{PSD}$")
         case True, False:
-            cbar.set_label(r"$\log_{10}\, \mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
+            cbar.set_label(r"$\log_{10}\, \mathrm{PSD}$")
         case False, True:
-            cbar.set_label(r"Norm. $\mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
+            cbar.set_label(r"Norm. $\mathrm{PSD}$")
         case False, False:
             cbar.set_label(r"$\mathrm{PSD}\;[\mathrm{strain}^2/\mathrm{Hz}]$")
 
