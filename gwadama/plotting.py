@@ -47,6 +47,7 @@ def spectrogram_with_strain_and_ifreq(
     mfft: int|None = None,
     vmin: float|None = None,
     vmax: float|None = None,
+    extend: Literal['auto', 'neither', 'min', 'max', 'both'] = 'auto',
     spec_log: bool = True,
     spec_norm: bool = True,
     spec_interpol: str|None = 'lanczos',
@@ -120,6 +121,9 @@ def spectrogram_with_strain_and_ifreq(
     vmin, vmax : float, optional
         The minimum/maximum value for the color scale in the spectrogram. This
         controls the dynamic range of the color map.
+
+    extend : str
+        TODO
     
     spec_log : bool, optional
         If true, represent `np.log10(Sxx)`.
@@ -230,12 +234,29 @@ def spectrogram_with_strain_and_ifreq(
     instant_time = instant_time[mask]
     ax.plot(instant_time, instant_freq, 'purple', lw=if_line_width)
     
+    # AUTO-EXTEND LOGIC
+    if extend == 'auto':
+        # Determine whether the plotted data will be clipped by vmin/vmax.
+        below = float(np.nanmin(_Sxx)) < vmin
+        above = float(np.nanmax(_Sxx)) > vmax
+        if below and above:
+            extend_resolved = 'both'
+        elif below:
+            extend_resolved = 'min'
+        elif above:
+            extend_resolved = 'max'
+        else:
+            extend_resolved = 'neither'
+    else:
+        # Manual.
+        extend_resolved = extend
+
     # COLOURBAR (ax2)
     cbar = fig.colorbar(
         im, cax=ax2,
         boundaries=np.linspace(vmin, vmax, 256),
         ticks=np.linspace(vmin, vmax, 6),
-        extend='both'
+        extend=extend_resolved
     )
     
     # LABELS, LIMITS, ETC
