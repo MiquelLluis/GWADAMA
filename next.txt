@@ -1,0 +1,13 @@
+
+
+GWADAMA DEV (En pausa fins acabar el paper de Clawdia)
+
+- Implementar la generalització per poder convertir qualsevol dataset a l'espai White.
+    Continuar la generalització suggerida pel chatgpt. Estic ara amb el BaseInjected, la gestió del soroll. Hi ha 2x2 casos: espai whiten o no, i soroll sintètic o real proveït (pre-generat). Tots es poden combinar.
+    
+    NEXT: Ja tinc generat el codi del GPT i implementada la primera secció. M'he adonat que ja toca generalitzar la classe NonwhiteGaussianNoise (fent una base i tal). Pot ser deuria desplaçar tot el relacionat amb el soroll i l'ús de la PSD/ASD al gestor de soroll (la classe de soroll), incloent la combinació de casos.
+        Però abans d'això, acabar de corregir el _configure_psd_and_noise pegat del GPT, vaig per l'instanciació de self.noise.
+
+- Possibilitar la creació de datasets de només sorolls per a tests nuls de forma eficient. Aara mateix l'única opció nadiua és crear un clean dataset qualsevol i posar SNR=0, el qual consumeix memòria innecessaria.
+
+- Traduïr açò.
