@@ -1,6 +1,5 @@
-
-
-GWADAMA DEV (En pausa fins acabar el paper de Clawdia)
+- The Base and BaseInjected datasets couple should be more general, building from
+  unlabeled data as in UnlabeledWaves. 
 
 - Implementar la generalització per poder convertir qualsevol dataset a l'espai White.
     Continuar la generalització suggerida pel chatgpt. Estic ara amb el BaseInjected, la gestió del soroll. Hi ha 2x2 casos: espai whiten o no, i soroll sintètic o real proveït (pre-generat). Tots es poden combinar.

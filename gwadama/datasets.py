@@ -9,12 +9,6 @@ There are two basic type of datasets, clean and injected:
 
 - Injected datasets' classes inherit from the BaseInjected class, and
   optionally from other UserDefined(Base) classes.
-
-Notes
------
-- TODO: The Base and BaseInjected couple should be more general, building from
-  unlabeled data as in UnlabeledWaves. 
-
 """
 from copy import deepcopy
 import itertools
