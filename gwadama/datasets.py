@@ -2341,7 +2341,7 @@ class BaseInjected(Base):
 
     def _perform_injections(self, randomize_noise, injections_per_snr, verbose,
                             inject_kwargs, snr_list, times_old, pbar):
-        """Main injection processing loop."""
+        """Main injection loop."""
         for clas, id_ in dictools.unroll_nested_dictionary_keys(self.strains_original):
             # Clean signals are assumed to be already filtered if necessary.
             strain_clean = self.strains_original[clas][id_]
