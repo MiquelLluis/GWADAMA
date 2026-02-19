@@ -251,10 +251,10 @@ class NonwhiteGaussianNoise:
     def _gen_noise(self):
         """Generate the noise array."""
         length = int(self.duration * self.fs)
-        
-        # Positive frequencies + 0
-        n = length // 2
-        f = np.arange(0, self.freq_nyquist, self.freq_nyquist/n)
+
+        # Positive frequencies + 0 (deterministic length, robust to float rounding)
+        f = np.fft.rfftfreq(length, d=1/self.fs)
+        n_freq = len(f)
         i_cut = np.argmax(f >= self.freq_cutoff)
         
         # Noise components of the positive and zero frequencies in Fourier space
@@ -262,7 +262,7 @@ class NonwhiteGaussianNoise:
         psd = self.psd(f)
         psd[:i_cut] = 0  # Ensure no components are computed under the cutoff frequency.
         nf = np.sqrt(length * self.fs * psd) / 2
-        nf = nf*self.rng.normal(size=n) + 1j*nf*self.rng.normal(size=n)
+        nf = nf*self.rng.normal(size=n_freq) + 1j*nf*self.rng.normal(size=n_freq)
         
         # The final noise array realization
         self.noise = np.fft.irfft(nf, n=length)
